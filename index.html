@@ -8,7 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-    
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
+
     <script>
         tailwind.config = {
             theme: {
@@ -105,10 +109,10 @@
 
         @keyframes shimmer {
             0% {
-                background-position: -200% center;
+                background-position: 200% center;
             }
             100% {
-                background-position: 200% center;
+                background-position: -200% center;
             }
         }
 
@@ -119,33 +123,18 @@
             background: linear-gradient(
                 90deg,
                 #1A1A18 0%,
-                #1A1A18 40%,
-                #FF9678 50%,
-                #1A1A18 60%,
+                #1A1A18 35%,
+                #FF9678 45%,
+                #FFFFFF 50%,
+                #FF9678 55%,
+                #1A1A18 65%,
                 #1A1A18 100%
             );
             background-size: 200% auto;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: shimmer 2s linear infinite;
-            position: relative;
-        }
-
-        .loading-text::after {
-            content: attr(data-text);
-            position: absolute;
-            left: 0;
-            top: 100%;
-            transform: scaleY(-1) translateY(10px);
-            opacity: 0.15;
-            filter: blur(2px);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background: linear-gradient(to bottom, #1A1A18, transparent);
-            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+            animation: shimmer 2.5s ease-in-out infinite;
         }
 
         .roll-in {
@@ -224,7 +213,7 @@
                 <!-- Loading State -->
                 <div id="loading-state" class="hidden mt-12">
                     <div class="loading-container">
-                        <span id="loading-text" class="loading-text roll-in" data-text="Warming up the engines...">Warming up the engines...</span>
+                        <span id="loading-text" class="loading-text roll-in">Warming up the engines...</span>
                     </div>
                     <div class="flex items-center justify-center gap-2 mt-6 opacity-40">
                         <div class="w-2 h-2 bg-ink rounded-full animate-bounce" style="animation-delay: 0s;"></div>
@@ -473,7 +462,6 @@
                     currentPhraseIndex = (currentPhraseIndex + 1) % loadingPhrases.length;
                     const newPhrase = loadingPhrases[currentPhraseIndex];
                     textEl.textContent = newPhrase;
-                    textEl.setAttribute('data-text', newPhrase);
 
                     // Roll in new phrase
                     textEl.classList.remove('roll-out');

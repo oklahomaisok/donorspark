@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="sparkGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF9678"/>
+      <stop offset="100%" stop-color="#FFB89E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle with ink color -->
+  <circle cx="16" cy="16" r="15" fill="#1A1A18"/>
+
+  <!-- Stylized "D" that doubles as a spark/flame shape -->
+  <!-- The D's curve suggests upward momentum like a spark rising -->
+  <path
+    d="M10 8
+       L10 24
+       L14 24
+       C22 24 24 20 24 16
+       C24 12 22 8 14 8
+       Z
+       M13 11
+       L14 11
+       C19 11 21 13 21 16
+       C21 19 19 21 14 21
+       L13 21
+       Z"
+    fill="url(#sparkGrad)"
+    fill-rule="evenodd"
+  />
+
+  <!-- Spark accent - small diamond/star burst at top right of D -->
+  <path
+    d="M22 7 L23.5 9.5 L26 8 L23.5 10.5 L25 13 L22.5 11 L20 13 L21.5 10.5 L19 9 L21.5 9.5 Z"
+    fill="#FF9678"
+  />
+</svg>
