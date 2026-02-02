@@ -108,11 +108,11 @@
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: -100% center;
+            0%, 100% {
+                background-position: 100% center;
             }
-            100% {
-                background-position: 200% center;
+            50% {
+                background-position: 0% center;
             }
         }
 
@@ -123,18 +123,18 @@
             background: linear-gradient(
                 90deg,
                 #1A1A18 0%,
-                #1A1A18 30%,
-                #FF9678 40%,
+                #1A1A18 25%,
+                #FF9678 35%,
                 #FFFFFF 50%,
-                #FF9678 60%,
-                #1A1A18 70%,
+                #FF9678 65%,
+                #1A1A18 75%,
                 #1A1A18 100%
             );
             background-size: 200% auto;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: shimmer 1.5s ease-in-out infinite alternate;
+            animation: shimmer 2s ease-in-out infinite;
         }
 
         .roll-in {
