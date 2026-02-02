@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DonorSpark | Story Decks That Move Donors to Give</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Instrument Serif', 'serif'],
+                    },
+                    colors: {
+                        salmon: '#FF9678',
+                        periwinkle: '#CCD7E4',
+                        sage: '#C8DFA8',
+                        cream: '#F5F2EA',
+                        ink: '#1A1A18',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F5F2EA; 
+            color: #1A1A18;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, .serif {
+            font-family: 'Instrument Serif', serif;
+            letter-spacing: -0.02em;
+            line-height: 0.95;
+        }
+
+        .card {
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .hover-card:hover {
+            transform: translateY(-4px);
+        }
+
+        /* Blob Animations */
+        @keyframes drift {
+            0% { transform: translate(0,0) scale(1); }
+            100% { transform: translate(-30px, -20px) scale(1.1); }
+        }
+        .animate-drift {
+            animation: drift 15s linear infinite alternate;
+        }
+
+        /* Text Balance */
+        .text-balance {
+            text-wrap: balance;
+        }
+
+        /* Custom Input Styling */
+        .input-wrapper:focus-within {
+            box-shadow: 0 0 0 2px #1A1A18;
+        }
+
+        /* Smooth Anchor Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="antialiased" style="display:none;">
+
+    <!-- Password Gate -->
+    <script>
+        const PASSWORD = 'donorspark2026';
+        const stored = sessionStorage.getItem('ds_auth');
+        if (stored === 'true') {
+            document.body.style.display = 'block';
+        } else {
+            const pwd = prompt('Enter password to preview:');
+            if (pwd === PASSWORD) {
+                sessionStorage.setItem('ds_auth', 'true');
+                document.body.style.display = 'block';
+            } else {
+                document.body.innerHTML = '<div style="display:flex;height:100vh;align-items:center;justify-content:center;font-family:sans-serif;"><p>Access denied. <a href="" style="color:#FF9678;">Try again</a></p></div>';
+                document.body.style.display = 'block';
+            }
+        }
+    </script>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-50 px-6 py-4 mix-blend-multiply pointer-events-none">
+        <div class="flex justify-between items-center max-w-[1400px] mx-auto pointer-events-auto">
+            <div class="text-2xl serif font-medium tracking-tight">DonorSpark.</div>
+            <a href="#pricing" class="text-sm font-medium hover:opacity-60 transition-opacity uppercase tracking-widest text-[10px]">Get Your Deck</a>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-[1400px] mx-auto px-4 pt-20 pb-12 flex flex-col gap-4">
+
+        <!-- Hero Section -->
+        <section class="relative min-h-[60vh] flex flex-col justify-center items-center text-center card bg-white/40 p-8 md:p-12 border border-ink/5">
+            
+            <!-- Animated Blobs -->
+            <div class="absolute top-[10%] right-[10%] w-64 h-64 bg-salmon rounded-full blur-[80px] opacity-40 animate-drift"></div>
+            <div class="absolute bottom-[10%] left-[10%] w-80 h-80 bg-sage rounded-full blur-[80px] opacity-40 animate-drift" style="animation-delay: -5s;"></div>
+
+            <div class="relative z-10 max-w-4xl mx-auto">
+                <p class="text-sm uppercase tracking-widest opacity-60 mb-4">Story Decks for Nonprofits</p>
+                <h1 class="text-5xl md:text-7xl lg:text-8xl mb-6">
+                    We turn your mission into <br/><span class="italic">shareable slide decks</span> that move donors to give.
+                </h1>
+
+                <p class="text-xl md:text-2xl opacity-60 max-w-2xl mx-auto mb-8 leading-relaxed text-balance">
+                    Emotionally engaging, beautifully designed decks that tell your nonprofit's story — so board members, volunteers, and supporters can spread your impact in seconds.
+                </p>
+
+                <!-- Input Action -->
+                <div id="input-form" class="bg-white p-2 rounded-full shadow-lg max-w-lg mx-auto flex items-center gap-2 input-wrapper border border-ink/10">
+                    <input type="text" id="nonprofit-url" placeholder="Enter your nonprofit's website URL..." class="flex-grow bg-transparent px-6 py-3 outline-none text-ink placeholder:text-ink/40 w-full">
+                    <button id="submit-btn" onclick="generateDeck()" class="bg-ink text-cream px-6 py-3 rounded-full font-medium hover:scale-105 transition-transform whitespace-nowrap">
+                        Get Free Deck →
+                    </button>
+                </div>
+                <p id="status-text" class="mt-4 text-xs uppercase tracking-widest opacity-40">Paste your URL. Get a custom story deck instantly.</p>
+
+                <!-- Loading State -->
+                <div id="loading-state" class="hidden mt-8">
+                    <div class="flex items-center justify-center gap-3">
+                        <svg class="animate-spin h-5 w-5 text-ink" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-sm opacity-60">Building your story deck...</span>
+                    </div>
+                    <p class="mt-2 text-xs opacity-40">This usually takes 30-60 seconds</p>
+                </div>
+
+                <!-- Result Preview -->
+                <div id="result-preview" class="hidden mt-8 max-w-md mx-auto">
+                    <p class="text-sm opacity-60 mb-4">Your deck is ready!</p>
+                    <a id="deck-link" href="#" target="_blank" class="block group">
+                        <div class="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-shadow">
+                            <img id="og-preview" src="" alt="Deck Preview" class="w-full">
+                            <div class="absolute inset-0 bg-ink/0 group-hover:bg-ink/10 transition-colors flex items-center justify-center">
+                                <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-white px-4 py-2 rounded-full text-sm font-medium">View Deck →</span>
+                            </div>
+                        </div>
+                    </a>
+                    <button onclick="resetForm()" class="mt-4 text-xs uppercase tracking-widest opacity-40 hover:opacity-60">Generate another deck</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Problem Section (Dark Mode) -->
+        <section class="card bg-ink text-cream p-8 md:p-20 min-h-[70vh] flex flex-col justify-center relative">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                <div>
+                    <h2 class="text-5xl md:text-7xl mb-8">
+                        You're doing the work. <span class="text-salmon italic">But your story isn't traveling.</span>
+                    </h2>
+                    <p class="text-lg opacity-70 leading-relaxed max-w-md">
+                        A board member asks for something to share. A volunteer wants to explain your mission. You send your website link or a PDF annual report.
+                    </p>
+                </div>
+                
+                <div class="flex flex-col gap-12">
+                    <div class="border-l border-cream/20 pl-8">
+                        <h3 class="text-3xl serif mb-3">Here's what happens next: Nothing.</h3>
+                        <p class="opacity-60">Because websites don't get forwarded. 40-page reports don't get read. And that Canva doc you made at 11pm doesn't make anyone feel the weight of what you do.</p>
+                    </div>
+
+                    <div class="border-l border-cream/20 pl-8">
+                        <h3 class="text-3xl serif mb-3">The gap isn't your impact.</h3>
+                        <p class="opacity-60">It's how you package it. Donors don't give to missions they don't understand. You need something scannable, shareable, and emotionally resonant.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works (Bento Grid) -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-12">
+            
+            <div class="col-span-1 md:col-span-3 text-center py-12">
+                <h2 class="text-5xl md:text-6xl">From Mission to Movement</h2>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="card bg-white p-10 flex flex-col justify-between min-h-[320px] hover-card border border-ink/5 group">
+                <div class="w-12 h-12 bg-salmon/20 rounded-full flex items-center justify-center mb-6 text-salmon font-serif text-xl italic group-hover:scale-110 transition-transform">1</div>
+                <div>
+                    <h3 class="text-3xl serif mb-4">Share Your Website</h3>
+                    <p class="text-sm opacity-60 leading-relaxed">Paste your URL. We extract your mission, impact data, beneficiary stories, and translate them into a narrative arc.</p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="card bg-sage p-10 flex flex-col justify-between min-h-[320px] hover-card group">
+                <div class="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic group-hover:scale-110 transition-transform">2</div>
+                <div>
+                    <h3 class="text-3xl serif mb-4">We Build Your Story</h3>
+                    <p class="text-sm opacity-80 leading-relaxed">A custom 10-slide deck that answers: Why does this org exist? Who do they serve? What changes because of them?</p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="card bg-white p-10 flex flex-col justify-between min-h-[320px] hover-card border border-ink/5 group">
+                <div class="w-12 h-12 bg-periwinkle/40 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic group-hover:scale-110 transition-transform">3</div>
+                <div>
+                    <h3 class="text-3xl serif mb-4">Your Story Spreads</h3>
+                    <p class="text-sm opacity-60 leading-relaxed">Send it to donors. Hand it to volunteers. Attach it to grant applications. Use it free or unlock the full version.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials (Full Width) -->
+        <section class="card bg-periwinkle mt-4 p-8 md:p-20">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 divide-y md:divide-y-0 md:divide-x divide-ink/10">
+                
+                <div class="px-4">
+                    <p class="serif text-2xl md:text-3xl mb-6">"We've had a website for five years. This is the first time someone outside our org could explain what we do in under a minute."</p>
+                    <div class="text-xs uppercase tracking-widest opacity-60">
+                        Sarah Chen<br>Executive Director, Youth Futures Fund
+                    </div>
+                </div>
+
+                <div class="px-4 pt-8 md:pt-0">
+                    <p class="serif text-2xl md:text-3xl mb-6">"I sent this to three board members asking for connections. All three forwarded it. That's never happened before."</p>
+                    <div class="text-xs uppercase tracking-widest opacity-60">
+                        Marcus Johnson<br>Development Director, CHA
+                    </div>
+                </div>
+
+                <div class="px-4 pt-8 md:pt-0">
+                    <p class="serif text-2xl md:text-3xl mb-6">"Our volunteers used to stumble when recruiting. Now they just pull up the deck. Recruitment is up 40%."</p>
+                    <div class="text-xs uppercase tracking-widest opacity-60">
+                        Jennifer Martinez<br>Founder, Arts Access Collective
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="py-24">
+            <div class="text-center mb-16">
+                <h2 class="text-6xl md:text-7xl mb-4">Pick Your Plan</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                
+                <!-- Free -->
+                <div class="card bg-white border border-ink/10 p-10 flex flex-col">
+                    <div class="mb-8">
+                        <h3 class="text-3xl serif">Free Forever</h3>
+                        <p class="text-sm opacity-50 mt-2">Perfect for getting started</p>
+                    </div>
+                    <ul class="space-y-4 mb-12 flex-grow">
+                        <li class="flex gap-3 text-sm"><span class="opacity-30">✓</span> Custom 10-slide impact deck</li>
+                        <li class="flex gap-3 text-sm"><span class="opacity-30">✓</span> Built instantly</li>
+                        <li class="flex gap-3 text-sm"><span class="opacity-30">✓</span> Light DonorSpark branding</li>
+                    </ul>
+                    <button class="w-full py-4 border border-ink/20 rounded-full hover:bg-ink hover:text-white transition-colors">Get Free Deck</button>
+                </div>
+
+                <!-- Professional -->
+                <div class="card bg-salmon p-10 flex flex-col transform md:-translate-y-4 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-ink text-white text-[10px] uppercase font-bold px-3 py-1 rounded-bl-xl">Most Popular</div>
+                    <div class="mb-8">
+                        <h3 class="text-3xl serif">Professional</h3>
+                        <div class="flex items-baseline gap-1 mt-2">
+                            <span class="text-xl">$9.99</span>
+                            <span class="opacity-70 text-sm">/mo</span>
+                        </div>
+                        <p class="text-xs opacity-70 mt-1">For orgs ready to grow</p>
+                    </div>
+                    <ul class="space-y-4 mb-12 flex-grow">
+                        <li class="flex gap-3 text-sm font-medium"><span class="text-ink">✓</span> Remove all branding</li>
+                        <li class="flex gap-3 text-sm font-medium"><span class="text-ink">✓</span> 1 revision per month</li>
+                        <li class="flex gap-3 text-sm font-medium"><span class="text-ink">✓</span> Make it fully yours</li>
+                    </ul>
+                    <button class="w-full py-4 bg-ink text-salmon rounded-full hover:scale-105 transition-transform">Start Trial</button>
+                </div>
+
+                <!-- Premium -->
+                <div class="card bg-ink text-cream p-10 flex flex-col">
+                    <div class="mb-8">
+                        <h3 class="text-3xl serif">Premium</h3>
+                        <div class="flex items-baseline gap-1 mt-2">
+                            <span class="text-xl">$49</span>
+                            <span class="opacity-70 text-sm">/mo</span>
+                        </div>
+                        <p class="text-xs opacity-50 mt-1">Your storytelling partner</p>
+                    </div>
+                    <ul class="space-y-4 mb-12 flex-grow opacity-80">
+                        <li class="flex gap-3 text-sm"><span class="opacity-50">✓</span> Everything in Professional</li>
+                        <li class="flex gap-3 text-sm"><span class="opacity-50">✓</span> Unlimited revisions</li>
+                        <li class="flex gap-3 text-sm"><span class="opacity-50">✓</span> Individual impact stories</li>
+                    </ul>
+                    <button class="w-full py-4 border border-cream/20 rounded-full hover:bg-cream hover:text-ink transition-colors">Contact Us</button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Final CTA -->
+        <section class="card bg-white p-8 md:p-32 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-salmon via-sage to-periwinkle"></div>
+            
+            <div class="relative z-10 max-w-3xl mx-auto">
+                <h2 class="text-5xl md:text-7xl mb-6">Ready to give your impact the story it deserves?</h2>
+                <p class="text-lg opacity-60 mb-12">Get your custom deck instantly. No credit card required.</p>
+                
+                <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+                    <input type="text" placeholder="What's your nonprofit's website?" class="bg-cream px-6 py-4 rounded-full w-full md:w-96 outline-none focus:ring-1 focus:ring-ink">
+                    <button class="bg-ink text-white px-8 py-4 rounded-full w-full md:w-auto hover:scale-105 transition-transform">
+                        Get My Free Deck
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="max-w-[1400px] mx-auto px-10 pb-10 flex justify-between items-end opacity-40 uppercase tracking-widest text-[10px]">
+        <div>
+            <div class="font-bold mb-1">DonorSpark</div>
+            <div>Your impact. Finally shareable.</div>
+        </div>
+        <div>© 2024 DonorSpark. All rights reserved.</div>
+    </footer>
+
+    <script>
+        // n8n Webhook URL - Update this with your actual webhook URL
+        const N8N_WEBHOOK_URL = 'https://hallpassdigital.app.n8n.cloud/webhook/donorspark';
+
+        async function generateDeck() {
+            const urlInput = document.getElementById('nonprofit-url');
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                alert('Please enter a nonprofit website URL');
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('input-form').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('status-text').textContent = 'Building your story deck...';
+            document.getElementById('result-preview').classList.add('hidden');
+
+            try {
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        'Nonprofit Website URL': url,
+                        'Organization Name (optional)': ''
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.deckUrl) {
+                    // Show result
+                    document.getElementById('loading-state').classList.add('hidden');
+                    document.getElementById('result-preview').classList.remove('hidden');
+                    document.getElementById('og-preview').src = result.ogImageUrl || result.deckUrl + 'og-image.png';
+                    document.getElementById('deck-link').href = result.deckUrl;
+                    document.getElementById('status-text').textContent = 'Your deck is ready!';
+                } else {
+                    throw new Error(result.message || 'Failed to generate deck');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('input-form').classList.remove('hidden');
+                document.getElementById('status-text').textContent = 'Something went wrong. Please try again.';
+                document.getElementById('status-text').classList.add('text-red-500');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('nonprofit-url').value = '';
+            document.getElementById('input-form').classList.remove('hidden');
+            document.getElementById('result-preview').classList.add('hidden');
+            document.getElementById('status-text').textContent = 'Paste your URL. Get a custom story deck instantly.';
+            document.getElementById('status-text').classList.remove('text-red-500');
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('nonprofit-url')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') generateDeck();
+        });
+    </script>
+
+</body>
+</html>
