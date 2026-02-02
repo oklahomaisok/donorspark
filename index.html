@@ -107,34 +107,38 @@
             }
         }
 
-        @keyframes shimmer {
-            0%, 100% {
-                background-position: 100% center;
-            }
-            50% {
-                background-position: 0% center;
-            }
+        @keyframes shimmer-slide {
+            0% { left: -30%; }
+            50% { left: 100%; }
+            50.01% { left: 100%; }
+            100% { left: -30%; }
         }
 
         .loading-text {
             font-family: 'Instrument Serif', serif;
             font-size: 2rem;
             font-style: italic;
+            color: #1A1A18;
+            position: relative;
+            display: inline-block;
+        }
+
+        .loading-text::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -30%;
+            width: 30%;
+            height: 100%;
             background: linear-gradient(
                 90deg,
-                #1A1A18 0%,
-                #1A1A18 25%,
-                #FF9678 35%,
-                #FFFFFF 50%,
-                #FF9678 65%,
-                #1A1A18 75%,
-                #1A1A18 100%
+                transparent 0%,
+                rgba(255, 150, 120, 0.6) 30%,
+                rgba(255, 255, 255, 0.9) 50%,
+                rgba(255, 150, 120, 0.6) 70%,
+                transparent 100%
             );
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: shimmer 2s ease-in-out infinite;
+            animation: shimmer-slide 2s ease-in-out infinite;
         }
 
         .roll-in {
@@ -194,11 +198,11 @@
             <div class="relative z-10 max-w-4xl mx-auto">
                 <p class="text-sm uppercase tracking-widest opacity-60 mb-4">Story Decks for Nonprofits</p>
                 <h1 class="text-5xl md:text-7xl lg:text-8xl mb-6">
-                    We turn your mission into <br/><span class="italic">sharable carousels</span> that move donors to give.
+                    Donors won't give to a mission <br/><span class="italic">they don't understand.</span>
                 </h1>
 
                 <p class="text-xl md:text-2xl opacity-60 max-w-2xl mx-auto mb-8 leading-relaxed text-balance">
-                    Emotionally engaging, beautifully designed decks that tell your nonprofit's story — so board members, volunteers, and supporters can spread your impact in seconds.
+                    We turn your mission into an Instagram-style story deck they can swipe through in 60 seconds.
                 </p>
 
                 <!-- Input Action -->
