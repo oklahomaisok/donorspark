@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/decks/:path*",
+      "destination": "https://oklahomaisok.github.io/nonprofit-decks/:path*"
+    }
+  ]
+}
