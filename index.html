@@ -181,7 +181,7 @@
                 </h1>
 
                 <p class="text-xl md:text-2xl opacity-60 max-w-2xl mx-auto mb-8 leading-relaxed text-balance">
-                    We turn your mission into an Instagram-style story deck they can swipe through in 60 seconds.
+                    We turn your nonprofit's story into a slide deck — built for phones, made for sharing.
                 </p>
 
                 <!-- Input Action -->
@@ -486,6 +486,11 @@
             // Start the fun loading animation
             startLoadingAnimation();
 
+            // Scroll loading state into center of viewport
+            setTimeout(() => {
+                document.getElementById('loading-state').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+
             try {
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
@@ -518,6 +523,11 @@
                     document.getElementById('og-preview').src = result.ogImageUrl || result.deckUrl + 'og-image.png';
                     document.getElementById('deck-link').href = result.deckUrl;
                     document.getElementById('status-text').textContent = 'Your deck is ready!';
+
+                    // Scroll result preview into center of viewport
+                    setTimeout(() => {
+                        document.getElementById('result-preview').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
                 } else {
                     throw new Error(result.message || 'Failed to generate deck');
                 }
