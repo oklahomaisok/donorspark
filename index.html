@@ -210,10 +210,15 @@
                 <div id="result-preview" class="hidden mt-8 max-w-md mx-auto">
                     <p class="text-sm opacity-60 mb-4">Your deck is ready!</p>
                     <a id="deck-link" href="#" target="_blank" class="block group">
-                        <div class="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-shadow">
-                            <img id="og-preview" src="" alt="Deck Preview" class="w-full">
+                        <div id="preview-container" class="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-shadow bg-ink">
+                            <img id="og-preview" src="" alt="Deck Preview" class="w-full" onerror="this.style.display='none'; document.getElementById('preview-fallback').style.display='flex';">
+                            <div id="preview-fallback" class="hidden aspect-[1200/630] flex-col items-center justify-center text-cream p-8 text-center">
+                                <div class="text-4xl mb-2">✨</div>
+                                <div class="text-xl font-medium mb-1" id="fallback-org-name">Your Impact Deck</div>
+                                <div class="text-sm opacity-60">Click to view</div>
+                            </div>
                             <div class="absolute inset-0 bg-ink/0 group-hover:bg-ink/10 transition-colors flex items-center justify-center">
-                                <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-white px-4 py-2 rounded-full text-sm font-medium">View Deck →</span>
+                                <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-ink px-4 py-2 rounded-full text-sm font-medium">View Deck →</span>
                             </div>
                         </div>
                     </a>
@@ -500,6 +505,16 @@
                     stopLoadingAnimation();
                     document.getElementById('loading-state').classList.add('hidden');
                     document.getElementById('result-preview').classList.remove('hidden');
+
+                    // Reset preview state
+                    document.getElementById('og-preview').style.display = 'block';
+                    document.getElementById('preview-fallback').style.display = 'none';
+
+                    // Set org name for fallback
+                    if (result.orgName) {
+                        document.getElementById('fallback-org-name').textContent = result.orgName + ' Impact Deck';
+                    }
+
                     document.getElementById('og-preview').src = result.ogImageUrl || result.deckUrl + 'og-image.png';
                     document.getElementById('deck-link').href = result.deckUrl;
                     document.getElementById('status-text').textContent = 'Your deck is ready!';
