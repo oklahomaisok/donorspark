@@ -506,6 +506,24 @@
                 const result = await response.json();
 
                 if (result.deckUrl) {
+                    // Wait for deck URL to be live before showing result
+                    const waitForUrl = async (url, maxAttempts = 15, delayMs = 2000) => {
+                        for (let i = 0; i < maxAttempts; i++) {
+                            try {
+                                const res = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+                                // no-cors returns opaque response, but if it doesn't throw, URL exists
+                                return true;
+                            } catch (e) {}
+                            await new Promise(r => setTimeout(r, delayMs));
+                        }
+                        return false;
+                    };
+
+                    // If workflow says deck isn't ready yet, poll client-side
+                    if (!result.deckReady) {
+                        await waitForUrl(result.deckUrl);
+                    }
+
                     // Stop loading animation and show result
                     stopLoadingAnimation();
                     document.getElementById('loading-state').classList.add('hidden');
