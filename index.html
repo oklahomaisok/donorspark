@@ -107,11 +107,9 @@
             }
         }
 
-        @keyframes shimmer-slide {
-            0% { left: -30%; }
-            50% { left: 100%; }
-            50.01% { left: 100%; }
-            100% { left: -30%; }
+        @keyframes fade-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         .loading-text {
@@ -119,26 +117,7 @@
             font-size: 2rem;
             font-style: italic;
             color: #1A1A18;
-            position: relative;
-            display: inline-block;
-        }
-
-        .loading-text::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -30%;
-            width: 30%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(255, 150, 120, 0.6) 30%,
-                rgba(255, 255, 255, 0.9) 50%,
-                rgba(255, 150, 120, 0.6) 70%,
-                transparent 100%
-            );
-            animation: shimmer-slide 2s ease-in-out infinite;
+            animation: fade-pulse 2s ease-in-out infinite;
         }
 
         .roll-in {
