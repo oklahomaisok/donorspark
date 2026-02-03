@@ -1,8 +1,9 @@
 {
+  "trailingSlash": true,
   "rewrites": [
     {
-      "source": "/decks/:path*",
-      "destination": "https://oklahomaisok.github.io/nonprofit-decks/:path*"
+      "source": "/decks/(.*)",
+      "destination": "https://oklahomaisok.github.io/nonprofit-decks/$1"
     }
   ]
 }
