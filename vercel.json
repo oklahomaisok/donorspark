@@ -6,7 +6,7 @@
     },
     {
       "source": "/decks/:path*",
-      "destination": "https://decks.donorspark.app/:path*"
+      "destination": "https://donorspark-decks.vercel.app/:path*"
     }
   ]
 }
