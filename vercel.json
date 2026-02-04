@@ -1,9 +1,12 @@
 {
-  "trailingSlash": true,
   "rewrites": [
     {
-      "source": "/decks/(.*)",
-      "destination": "https://oklahomaisok.github.io/nonprofit-decks/$1"
+      "source": "/api/:path*",
+      "destination": "https://api.donorspark.app/api/:path*"
+    },
+    {
+      "source": "/decks/:path*",
+      "destination": "https://decks.donorspark.app/:path*"
     }
   ]
 }
