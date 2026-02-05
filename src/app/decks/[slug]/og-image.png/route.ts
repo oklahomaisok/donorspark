@@ -12,6 +12,18 @@ export async function GET(
     return NextResponse.json({ error: 'OG image not found' }, { status: 404 });
   }
 
-  // Redirect to the actual Vercel Blob URL
-  return NextResponse.redirect(deck.ogImageUrl, 302);
+  // Proxy the image from Vercel Blob (some platforms don't follow redirects)
+  try {
+    const response = await fetch(deck.ogImageUrl);
+    const imageBuffer = await response.arrayBuffer();
+
+    return new NextResponse(imageBuffer, {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch {
+    return NextResponse.json({ error: 'Failed to fetch OG image' }, { status: 502 });
+  }
 }
