@@ -35,6 +35,11 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
   const headingFont = fonts.headingFont || 'Montserrat';
   const bodyFont = fonts.bodyFont || 'Roboto';
 
+  // Check if heading font is serif (serif fonts look bad in all caps)
+  const isSerifFont = isSerif(headingFont);
+  // Use uppercase for sans-serif, mixed case for serif
+  const headlineCase = isSerifFont ? '' : 'uppercase';
+
   // Compute high-contrast CTA button color
   const ctaButtonColor = getHighContrastButtonColor(primary, accent);
 
@@ -72,7 +77,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
       `<div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center animate-on-scroll" style="animation-delay: ${i * 0.15}s"><div class="text-3xl md:text-4xl font-black font-display text-[var(--accent)] mb-1"><span class="count-up" data-target="${escAttr(m.value)}">${escHtml(m.value)}</span></div><div class="text-[10px] md:text-xs uppercase tracking-wider text-neutral-300 font-medium">${escHtml(m.label)}</div></div>`
     ).join('\n');
     const gridCols = metricsData.length <= 2 ? 'grid-cols-1 max-w-xs mx-auto' : 'grid-cols-2';
-    metricsHtml = `<h2 class="text-2xl md:text-3xl mb-8 text-white font-display font-black uppercase tracking-tight animate-on-scroll text-center">By The <span class="text-[var(--accent)]">Numbers</span></h2><div class="${gridCols} grid gap-4">${cards}</div>`;
+    metricsHtml = `<h2 class="text-2xl md:text-3xl mb-8 text-white font-display font-black ${headlineCase} tracking-tight animate-on-scroll text-center">By The <span class="text-[var(--accent)]">Numbers</span></h2><div class="${gridCols} grid gap-4">${cards}</div>`;
   }
 
   const testimonialsData = testimonials.length >= 3 ? testimonials : [
@@ -162,7 +167,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
             <div class="absolute inset-0 z-0">${heroMediaHtml}<div class="absolute inset-0 bg-black/40"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div></div>
             <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-between">
                 <div class="flex animate-on-scroll items-start justify-between"><span class="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold border border-[var(--accent)]/30 px-2 py-1 rounded bg-[var(--primary)]/80 backdrop-blur-md">Impact Deck</span></div>
-                <div class="mt-auto"><h1 class="leading-[0.9] animate-on-scroll text-4xl md:text-5xl tracking-wide font-display uppercase text-white mb-4 drop-shadow-lg">${escHtml(headlineTop)}<br><span class="text-[var(--accent)]">${escHtml(headlineBottom)}</span></h1><div class="animate-on-scroll"><p class="text-sm text-neutral-100 max-w-[90%] border-l-4 border-[var(--accent)] pl-4 font-medium">${escHtml(heroHook)}</p></div></div>
+                <div class="mt-auto"><h1 class="leading-[0.9] animate-on-scroll text-4xl md:text-5xl tracking-wide font-display ${headlineCase} text-white mb-4 drop-shadow-lg">${escHtml(headlineTop)}<br><span class="text-[var(--accent)]">${escHtml(headlineBottom)}</span></h1><div class="animate-on-scroll"><p class="text-sm text-neutral-100 max-w-[90%] border-l-4 border-[var(--accent)] pl-4 font-medium">${escHtml(heroHook)}</p></div></div>
                 <div class="pt-4 border-t border-white/10 flex justify-between items-end animate-on-scroll">${yearFounded ? `<div class="flex flex-col"><span class="text-[10px] text-neutral-300 uppercase mb-1 tracking-wider">Established</span><span class="font-display text-sm text-white">Since ${yearFounded}</span></div>` : '<div></div>'}<div class="text-[var(--accent)] flex items-center gap-2 text-xs uppercase tracking-widest font-bold">Scroll <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div></div>
             </div>
         </section>
@@ -171,7 +176,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
             <div class="absolute inset-0 z-0"><img src="${actionImg}" class="w-full h-full object-cover" alt="Action"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[02]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">Our Mission</span></header>
-                <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-white font-display font-black uppercase tracking-tight leading-none mb-3">Building A<br><span class="text-[var(--accent)]">Better Future</span></h2><div class="w-12 h-1 bg-[var(--accent)] mb-4"></div><p class="text-sm text-neutral-100 leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
+                <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-white font-display font-black ${headlineCase} tracking-tight leading-none mb-3">Building A<br><span class="text-[var(--accent)]">Better Future</span></h2><div class="w-12 h-1 bg-[var(--accent)] mb-4"></div><p class="text-sm text-neutral-100 leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
             </div>
         </section>
         <!-- Slide 3: Challenge & Solution -->
@@ -179,7 +184,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
             <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[03]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">The Challenge</span></header>
-                <div class="flex-grow flex flex-col justify-center"><div class="animate-on-scroll bg-white/5 border border-white/10 rounded-lg p-6"><div class="flex items-center gap-3 mb-4"><div class="p-2 bg-[var(--accent)]/20 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h2 class="text-xl md:text-2xl text-white font-display font-black uppercase">${escHtml(need.headline)}</h2></div><p class="text-sm text-neutral-200 leading-relaxed">${escHtml(need.description)}</p></div><div class="flex justify-center my-4 animate-on-scroll text-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v15"/><path d="m19 12-7 7-7-7"/></svg></div><div class="animate-on-scroll bg-gradient-to-br from-[var(--accent)]/10 to-transparent border border-[var(--accent)]/30 rounded-lg p-6"><div class="flex items-center gap-3 mb-4"><div class="p-2 bg-[var(--accent)] rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3 class="text-xl text-[var(--accent)] font-display font-black uppercase">Our Solution</h3></div><p class="text-sm text-neutral-200 leading-relaxed">${escHtml(solution)}</p></div></div>
+                <div class="flex-grow flex flex-col justify-center"><div class="animate-on-scroll bg-white/5 border border-white/10 rounded-lg p-6"><div class="flex items-center gap-3 mb-4"><div class="p-2 bg-[var(--accent)]/20 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h2 class="text-xl md:text-2xl text-white font-display font-black ${headlineCase}">${escHtml(need.headline)}</h2></div><p class="text-sm text-neutral-200 leading-relaxed">${escHtml(need.description)}</p></div><div class="flex justify-center my-4 animate-on-scroll text-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v15"/><path d="m19 12-7 7-7-7"/></svg></div><div class="animate-on-scroll bg-gradient-to-br from-[var(--accent)]/10 to-transparent border border-[var(--accent)]/30 rounded-lg p-6"><div class="flex items-center gap-3 mb-4"><div class="p-2 bg-[var(--accent)] rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3 class="text-xl text-[var(--accent)] font-display font-black ${headlineCase}">Our Solution</h3></div><p class="text-sm text-neutral-200 leading-relaxed">${escHtml(solution)}</p></div></div>
             </div>
         </section>
         <!-- Slide 4: Programs -->
@@ -187,7 +192,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
             <div class="absolute inset-0 z-0"><img src="${groupImg}" class="w-full h-full object-cover" alt="Programs"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[04]</span><div class="p-2 bg-white/10 rounded-full backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></div></header>
-                <div class="flex-grow flex flex-col justify-center"><div class="mb-6 animate-on-scroll"><h2 class="text-3xl md:text-4xl text-white font-display font-black tracking-tighter uppercase leading-none drop-shadow-xl">What We<br><span class="text-[var(--accent)]">Offer</span></h2></div><div class="animate-on-scroll bg-[var(--primary)]/70 p-4 rounded-lg backdrop-blur-md border border-white/10"><p class="leading-relaxed text-sm text-neutral-100 mb-4 font-medium">We deliver impactful programs designed to create lasting change in our community.</p>${programsHtml ? `<div class="flex flex-wrap gap-2">${programsHtml}</div>` : ''}</div></div>
+                <div class="flex-grow flex flex-col justify-center"><div class="mb-6 animate-on-scroll"><h2 class="text-3xl md:text-4xl text-white font-display font-black tracking-tighter ${headlineCase} leading-none drop-shadow-xl">What We<br><span class="text-[var(--accent)]">Offer</span></h2></div><div class="animate-on-scroll bg-[var(--primary)]/70 p-4 rounded-lg backdrop-blur-md border border-white/10"><p class="leading-relaxed text-sm text-neutral-100 mb-4 font-medium">We deliver impactful programs designed to create lasting change in our community.</p>${programsHtml ? `<div class="flex flex-wrap gap-2">${programsHtml}</div>` : ''}</div></div>
             </div>
         </section>
         ${showMetricsSlide ? `<!-- Slide 5: Metrics -->
@@ -204,7 +209,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
-                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="uppercase leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-8">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg" style="background-color: ${ctaButtonColor.bg}; color: ${ctaButtonColor.text};"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>${contactEmail ? `<p class="mt-6 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}</div>
+                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-8">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg" style="background-color: ${ctaButtonColor.bg}; color: ${ctaButtonColor.text};"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>${contactEmail ? `<p class="mt-6 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}</div>
             </div>
         </section>
         <!-- Slide ${showMetricsSlide ? '8' : '7'}: DonorSpark -->
@@ -319,6 +324,21 @@ function escHtml(s: string): string {
 
 function escAttr(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Common serif fonts - these look bad in all caps
+const SERIF_FONTS = [
+  'playfair', 'lora', 'merriweather', 'garamond', 'baskerville', 'crimson',
+  'cormorant', 'spectral', 'source serif', 'pt serif', 'noto serif', 'bitter',
+  'vollkorn', 'cardo', 'old standard', 'alike', 'domine', 'newsreader',
+  'roboto slab', 'arvo', 'zilla slab', 'libre baskerville', 'eb garamond',
+  'dm serif', 'fraunces', 'bodoni', 'didot', 'times', 'georgia', 'palatino',
+  'cambria', 'charter', 'iowan', 'new york', 'instrument serif',
+];
+
+function isSerif(fontName: string): boolean {
+  const lower = fontName.toLowerCase();
+  return SERIF_FONTS.some(serif => lower.includes(serif)) || lower.includes('serif');
 }
 
 function getHighContrastButtonColor(bgColor: string, accentColor: string): { bg: string; text: string } {
