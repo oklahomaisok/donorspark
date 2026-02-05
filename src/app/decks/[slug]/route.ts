@@ -6,11 +6,12 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
   const deck = await getDeckBySlug(slug);
+  const debug = req.nextUrl.searchParams.get('debug') === 'true';
 
   if (!deck || !deck.deckUrl) {
     return NextResponse.json({
@@ -30,6 +31,16 @@ export async function GET(
       cache: 'no-store',
     });
     const html = await response.text();
+
+    if (debug) {
+      return NextResponse.json({
+        slug,
+        deckUrl: deck.deckUrl,
+        htmlLength: html.length,
+        htmlPreview: html.substring(0, 500),
+        containsNewPrograms: html.includes('Child &amp; Family Advocacy'),
+      });
+    }
 
     return new NextResponse(html, {
       headers: {
