@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { tasks } from '@trigger.dev/sdk/v3';
 import { nanoid } from 'nanoid';
 import { slugify } from '@/lib/slugify';
-import { createDeck, getUserByClerkId, incrementUserDecks } from '@/db/queries';
+import { createDeck } from '@/db/queries';
 import type { generateDeckTask } from '@/trigger/tasks/generate-deck';
 
 // Simple in-memory rate limiter
@@ -46,19 +45,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    // Check auth (optional - anonymous users can generate)
-    let clerkId: string | null = null;
-    try {
-      const authResult = await auth();
-      clerkId = authResult.userId;
-    } catch {
-      // Clerk not available, treat as anonymous
-      clerkId = null;
-    }
-
-    // Apply rate limiting
-    const rateLimitKey = clerkId || `ip:${ip}`;
-    const limit = clerkId ? RATE_LIMIT_AUTHENTICATED : RATE_LIMIT_ANONYMOUS;
+    // Apply rate limiting by IP (Clerk auth disabled for now)
+    const rateLimitKey = `ip:${ip}`;
+    const limit = RATE_LIMIT_ANONYMOUS;
     const { allowed, remaining } = checkRateLimit(rateLimitKey, limit);
 
     if (!allowed) {
@@ -66,12 +55,6 @@ export async function POST(req: NextRequest) {
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
       );
-    }
-    let dbUserId: number | null = null;
-
-    if (clerkId) {
-      const user = await getUserByClerkId(clerkId);
-      dbUserId = user?.id ?? null;
     }
 
     // Generate unique slug
@@ -87,17 +70,12 @@ export async function POST(req: NextRequest) {
 
     // Create DB record
     await createDeck({
-      userId: dbUserId,
+      userId: null,
       slug,
       orgName: orgName || url,
       orgUrl: url,
       triggerRunId: handle.id,
     });
-
-    // Increment user deck count
-    if (clerkId) {
-      await incrementUserDecks(clerkId);
-    }
 
     return NextResponse.json({
       slug,

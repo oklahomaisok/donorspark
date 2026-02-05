@@ -1,4 +1,3 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -13,7 +12,7 @@ function isPublicPath(pathname: string): boolean {
   return false;
 }
 
-export default clerkMiddleware(async (auth, req: NextRequest) => {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Skip password check for public paths
@@ -30,9 +29,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     return NextResponse.redirect(url);
   }
 
-  // Continue with Clerk auth available
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
