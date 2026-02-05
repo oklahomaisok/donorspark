@@ -45,26 +45,36 @@ export async function completeDeck(slug: string, data: {
   sector?: string;
   brandData?: BrandData;
 }) {
-  await db.update(decks)
-    .set({
-      status: 'complete',
-      deckUrl: data.deckUrl,
-      ogImageUrl: data.ogImageUrl,
-      sector: data.sector,
-      brandData: data.brandData as unknown as Record<string, unknown>,
-      updatedAt: new Date(),
-    })
-    .where(eq(decks.slug, slug));
+  try {
+    await db.update(decks)
+      .set({
+        status: 'complete',
+        deckUrl: data.deckUrl,
+        ogImageUrl: data.ogImageUrl,
+        sector: data.sector,
+        brandData: data.brandData as unknown as Record<string, unknown>,
+        updatedAt: new Date(),
+      })
+      .where(eq(decks.slug, slug));
+  } catch (error) {
+    console.error('completeDeck error details:', error);
+    throw error;
+  }
 }
 
 export async function failDeck(slug: string, errorMessage: string) {
-  await db.update(decks)
-    .set({
-      status: 'failed',
-      errorMessage,
-      updatedAt: new Date(),
-    })
-    .where(eq(decks.slug, slug));
+  try {
+    await db.update(decks)
+      .set({
+        status: 'failed',
+        errorMessage,
+        updatedAt: new Date(),
+      })
+      .where(eq(decks.slug, slug));
+  } catch (error) {
+    console.error('failDeck error (deck still generated but DB not updated):', error);
+    // Don't rethrow - deck generation succeeded, just DB update failed
+  }
 }
 
 export async function getDeckBySlug(slug: string) {

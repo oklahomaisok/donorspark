@@ -106,13 +106,18 @@ export const generateDeckTask = task({
       metadata.set('progress', 90);
       const { deckUrl, ogImageUrl } = await deploy(slug, deckHtml, ogPngBuffer);
 
-      // Mark complete in DB
-      await completeDeck(slug, {
-        deckUrl,
-        ogImageUrl,
-        sector: brandData.sector,
-        brandData,
-      });
+      // Mark complete in DB (non-blocking - deck exists even if this fails)
+      try {
+        await completeDeck(slug, {
+          deckUrl,
+          ogImageUrl,
+          sector: brandData.sector,
+          brandData,
+        });
+      } catch (dbError) {
+        console.error('DB update failed but deck was generated:', dbError);
+        // Continue - the deck exists and is accessible
+      }
 
       metadata.set('step', 'Complete!');
       metadata.set('progress', 100);
