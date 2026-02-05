@@ -21,7 +21,7 @@ export async function GET(
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Content-Disposition': 'inline',
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=300',
       },
     });
   } catch {
