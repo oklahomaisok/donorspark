@@ -22,10 +22,17 @@ export function processBrandData(
   let bodyFont = mapToGoogleFont(detectedFonts.body);
 
   if (!headingFont) {
-    headingFont = claudeData.fonts?.headingFont || (claudeData.fonts?.headingStyle === 'serif' ? 'Playfair Display' : 'Montserrat');
+    // Try mapping Claude's font suggestion through the Google Font mapper
+    const claudeHeading = claudeData.fonts?.headingFont;
+    headingFont = mapToGoogleFont(claudeHeading);
+
+    if (!headingFont) {
+      // Final fallback: use style hint or default to sans-serif
+      headingFont = claudeData.fonts?.headingStyle === 'serif' ? 'Lora' : 'Montserrat';
+    }
   }
   if (!bodyFont) {
-    bodyFont = isSerifFont(headingFont) ? 'Source Serif 4' : 'Roboto';
+    bodyFont = isSerifFont(headingFont) ? 'Source Serif 4' : 'Inter';
   }
 
   const colors = resolveColors(claudeData, visionColors, logoColors);
