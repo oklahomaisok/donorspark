@@ -118,7 +118,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=${headingFont.replace(/ /g, '+')}:wght@400;500;700;900&family=${bodyFont.replace(/ /g, '+')}:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=${headingFont.replace(/ /g, '+')}:wght@400;500;700;900&family=${bodyFont.replace(/ /g, '+')}:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
     <style>
         :root { --primary: ${primary}; --secondary: ${secondary}; --accent: ${accent}; --header-bg: ${headerBgColor || primary}; --header-text: ${headerTextDark ? '#1a1a1a' : '#ffffff'}; }
         body { font-family: '${bodyFont}', sans-serif; background-color: color-mix(in srgb, var(--primary) 85%, black); color: white; }
@@ -210,15 +210,16 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
         <!-- Slide ${showMetricsSlide ? '8' : '7'}: DonorSpark -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-white border-neutral-200 border relative shadow-2xl rounded-xl">
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center items-center text-center">
-                <p class="text-neutral-500 text-sm mb-6 animate-on-scroll">This Story Deck was made by</p>
-                <a href="https://www.donorspark.app" target="_blank" rel="noopener" class="animate-on-scroll">
-                    <img src="${siteUrl}/donorsparklogo.png" alt="DonorSpark" class="h-16 md:h-24 w-auto mb-8">
-                </a>
-                <a href="https://www.donorspark.app" target="_blank" rel="noopener" class="animate-on-scroll inline-flex items-center gap-2 px-6 py-3 bg-[#C15A36] text-white font-bold rounded-full hover:bg-[#a84d2e] transition-colors">
+                <div class="animate-on-scroll flex items-center gap-3 mb-8">
+                    <span class="text-neutral-600 text-2xl md:text-3xl" style="font-family: 'Instrument Serif', serif;">Made with</span>
+                    <a href="https://donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link">
+                        <img src="${siteUrl}/donorsparklogo.png" alt="DonorSpark" class="h-10 md:h-14 w-auto">
+                    </a>
+                </div>
+                <a href="https://donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link animate-on-scroll inline-flex items-center gap-2 px-6 py-3 bg-[#C15A36] text-white font-bold rounded-full hover:bg-[#a84d2e] transition-colors">
                     Get a free story deck
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
-                <p class="text-neutral-400 text-xs mt-8 animate-on-scroll">www.donorspark.app</p>
             </div>
         </section>
     </main>
@@ -298,12 +299,13 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
     </script>
     <script>
     (function(){
-      var T='https://www.donorspark.app/api/track',S='${slug}';
+      var T='${siteUrl}/api/track',S='${slug}';
       var sid;
       try{sid=sessionStorage.getItem('ds_sid');if(!sid){sid='ds_'+Math.random().toString(36).substr(2,9)+Date.now().toString(36);sessionStorage.setItem('ds_sid',sid);}}catch(e){sid='ds_'+Math.random().toString(36).substr(2,9)+Date.now().toString(36);}
       function t(e){var d=JSON.stringify({slug:S,event:e,sessionId:sid});if(navigator.sendBeacon){navigator.sendBeacon(T,new Blob([d],{type:'application/json'}));}else{fetch(T,{method:'POST',headers:{'Content-Type':'application/json'},body:d,keepalive:true});}}
       t('view');
       var b=document.getElementById('ds-donate-btn');if(b)b.addEventListener('click',function(){t('click');});
+      document.querySelectorAll('.ds-link').forEach(function(el){el.addEventListener('click',function(){t('donorspark_click');});});
     })();
     </script>
 </body>
