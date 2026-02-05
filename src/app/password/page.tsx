@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function PasswordPage() {
+function PasswordForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,5 +67,17 @@ export default function PasswordPage() {
         <p className="mt-8 text-xs text-ink/30">Contact us for access</p>
       </div>
     </div>
+  );
+}
+
+export default function PasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="animate-pulse text-ink/40">Loading...</div>
+      </div>
+    }>
+      <PasswordForm />
+    </Suspense>
   );
 }
