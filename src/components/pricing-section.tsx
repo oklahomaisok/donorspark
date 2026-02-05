@@ -134,18 +134,25 @@ export function PricingSection({ onGetFreeClick }: PricingSectionProps) {
               <div className="mb-6">
                 <div className="flex items-baseline gap-1">
                   <span className="text-5xl font-bold">
-                    ${isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                    ${isAnnual ? Math.round(plan.annualPrice / 12) : plan.monthlyPrice}
                   </span>
                   {plan.monthlyPrice > 0 && (
                     <span className={`text-sm ${plan.featured ? 'opacity-70' : 'opacity-50'}`}>
-                      /{isAnnual ? 'year' : 'month'}
+                      /month
                     </span>
                   )}
                 </div>
-                {isAnnual && savings > 0 && (
-                  <span className="inline-block mt-2 text-xs font-medium text-sage bg-sage/20 px-2 py-1 rounded-full">
-                    Save {savings}%
-                  </span>
+                {isAnnual && plan.monthlyPrice > 0 && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className={`text-sm ${plan.featured ? 'opacity-70' : 'opacity-50'}`}>
+                      Billed ${plan.annualPrice}/year
+                    </span>
+                    {savings > 0 && (
+                      <span className="text-xs font-medium text-sage bg-sage/20 px-2 py-1 rounded-full">
+                        Save {savings}%
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 
