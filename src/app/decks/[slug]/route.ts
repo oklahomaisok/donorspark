@@ -27,8 +27,11 @@ export async function GET(
 
   // Proxy the deck HTML from Vercel Blob
   try {
-    const response = await fetch(deck.deckUrl, {
+    // Add timestamp to bust any caching
+    const fetchUrl = `${deck.deckUrl}?t=${Date.now()}`;
+    const response = await fetch(fetchUrl, {
       cache: 'no-store',
+      next: { revalidate: 0 },
     });
     const html = await response.text();
 
