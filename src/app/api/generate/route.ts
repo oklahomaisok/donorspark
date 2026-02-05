@@ -47,7 +47,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Check auth (optional - anonymous users can generate)
-    const { userId: clerkId } = await auth();
+    let clerkId: string | null = null;
+    try {
+      const authResult = await auth();
+      clerkId = authResult.userId;
+    } catch {
+      // Clerk not available, treat as anonymous
+      clerkId = null;
+    }
 
     // Apply rate limiting
     const rateLimitKey = clerkId || `ip:${ip}`;
