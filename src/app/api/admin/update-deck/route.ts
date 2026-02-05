@@ -22,10 +22,17 @@ export async function POST(request: NextRequest) {
   }
 
   // Fetch deck from database
-  const [deck] = await db.select().from(decks).where(eq(decks.slug, slug)).limit(1);
+  const result = await db.select().from(decks).where(eq(decks.slug, slug)).limit(1);
+  const deck = result[0];
 
   if (!deck) {
-    return NextResponse.json({ error: 'Deck not found' }, { status: 404 });
+    // Debug: List all slugs in the database
+    const allDecks = await db.select({ slug: decks.slug }).from(decks).limit(20);
+    return NextResponse.json({
+      error: 'Deck not found',
+      searchedSlug: slug,
+      availableSlugs: allDecks.map(d => d.slug)
+    }, { status: 404 });
   }
 
   if (!deck.brandData) {
