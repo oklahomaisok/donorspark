@@ -1,39 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Nav } from '@/components/nav';
 import { GenerationProgress } from '@/components/generation-progress';
 import Link from 'next/link';
 
-const SITE_PASSWORD = 'donorspark2026';
-
 type Phase = 'idle' | 'generating' | 'complete' | 'error';
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('donorspark_auth');
-    if (stored === 'true') {
-      setIsAuthenticated(true);
-    }
-    setIsCheckingAuth(false);
-  }, []);
-
-  function handlePasswordSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (passwordInput === SITE_PASSWORD) {
-      localStorage.setItem('donorspark_auth', 'true');
-      setIsAuthenticated(true);
-      setPasswordError(false);
-    } else {
-      setPasswordError(true);
-    }
-  }
-
   const [url, setUrl] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
   const [runId, setRunId] = useState('');
@@ -90,49 +64,6 @@ export default function Home() {
     setResult(null);
     setError('');
     setOgFailed(false);
-  }
-
-  // Show loading state while checking auth
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <div className="animate-pulse text-ink/40">Loading...</div>
-      </div>
-    );
-  }
-
-  // Show password gate if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-xl max-w-md w-full text-center border border-ink/5">
-          <h1 className="text-3xl md:text-4xl font-medium mb-2">DonorSpark</h1>
-          <p className="text-ink/50 mb-8 text-sm">Private Beta Access</p>
-
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <input
-              type="password"
-              value={passwordInput}
-              onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false); }}
-              placeholder="Enter password"
-              className={`w-full px-6 py-4 rounded-full bg-cream outline-none text-center text-lg ${passwordError ? 'ring-2 ring-red-400' : 'focus:ring-2 focus:ring-ink'}`}
-              autoFocus
-            />
-            {passwordError && (
-              <p className="text-red-500 text-sm">Incorrect password</p>
-            )}
-            <button
-              type="submit"
-              className="w-full bg-ink text-cream py-4 rounded-full font-medium hover:scale-105 transition-transform"
-            >
-              Enter
-            </button>
-          </form>
-
-          <p className="mt-8 text-xs text-ink/30">Contact us for access</p>
-        </div>
-      </div>
-    );
   }
 
   return (
