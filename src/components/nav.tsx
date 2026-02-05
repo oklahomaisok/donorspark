@@ -6,8 +6,8 @@ import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 export function Nav() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-4 h-16 bg-white/80 backdrop-blur-md border-b border-ink/5">
-      <Link href="/" className="font-bold text-ink tracking-tight">
-        DonorSpark
+      <Link href="/" className="flex items-center">
+        <img src="/donorsparklogo.png" alt="DonorSpark" className="h-8" />
       </Link>
       <div className="flex items-center gap-4">
         <SignedOut>

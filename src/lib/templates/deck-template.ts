@@ -82,7 +82,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
     `<div class="testimonial-card card-pos-${i} w-full h-full rounded-2xl bg-white p-6 shadow-xl flex flex-col overflow-hidden"><div class="mb-4"><svg class="w-10 h-10 text-[var(--accent)]" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg></div><p class="text-[var(--primary)] text-sm leading-relaxed flex-grow mb-6">${escHtml(t.quote)}</p><div class="flex items-center gap-3 pt-4 border-t border-neutral-100"><div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-[var(--accent)]/30"><img src="${t.portrait || ''}" alt="${escAttr(t.author)}" class="w-full h-full object-cover"></div><div><div class="text-[var(--primary)] font-bold text-sm">${escHtml(t.author)}</div><div class="text-neutral-400 text-xs">${escHtml(t.role)}</div></div></div></div>`
   ).join('\n');
 
-  const totalSlides = showMetricsSlide ? 7 : 6;
+  const totalSlides = showMetricsSlide ? 8 : 7;
   let paginationDots = '';
   for (let i = 0; i < totalSlides; i++) {
     paginationDots += '<div class="w-2 h-2 rounded-full bg-neutral-400 cursor-pointer hover:bg-[var(--accent)] transition-all"></div>\n';
@@ -203,7 +203,20 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-between">
                 <header class="flex justify-between items-center animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${showMetricsSlide ? '07' : '06'}]</span><div class="w-2.5 h-2.5 bg-[var(--accent)] rounded-full animate-pulse"></div></header>
                 <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="uppercase leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-8">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 bg-[var(--accent)] text-[var(--primary)] font-black rounded hover:bg-white transition-all hover:scale-105 shadow-lg shadow-[var(--accent)]/20"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>${contactEmail ? `<p class="mt-6 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}</div>
-                <div class="flex items-center justify-center pt-6 border-t border-white/10 animate-on-scroll"><a href="https://www.donorspark.app" target="_blank" rel="noopener"><img src="${config.imageBaseUrl}/donorspark_badge.png" alt="Made with DonorSpark" style="height: 64px; width: auto; opacity: 1;"></a></div>
+            </div>
+        </section>
+        <!-- Slide ${showMetricsSlide ? '8' : '7'}: DonorSpark -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-white border-neutral-200 border relative shadow-2xl rounded-xl">
+            <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center items-center text-center">
+                <p class="text-neutral-500 text-sm mb-6 animate-on-scroll">This Story Deck was made by</p>
+                <a href="https://www.donorspark.app" target="_blank" rel="noopener" class="animate-on-scroll">
+                    <img src="${siteUrl}/donorsparklogo.png" alt="DonorSpark" class="h-16 md:h-24 w-auto mb-8">
+                </a>
+                <a href="https://www.donorspark.app" target="_blank" rel="noopener" class="animate-on-scroll inline-flex items-center gap-2 px-6 py-3 bg-[#C15A36] text-white font-bold rounded-full hover:bg-[#a84d2e] transition-colors">
+                    Get a free story deck
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </a>
+                <p class="text-neutral-400 text-xs mt-8 animate-on-scroll">www.donorspark.app</p>
             </div>
         </section>
     </main>
