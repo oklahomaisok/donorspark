@@ -104,12 +104,12 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
     <meta name="description" content="${escAttr(mission.substring(0, 160))}">
     <meta property="og:title" content="${escAttr(orgName)} | Impact Deck">
     <meta property="og:description" content="${escAttr(mission.substring(0, 160))}">
-    <meta property="og:image" content="${deckUrl}/og">
+    <meta property="og:image" content="${siteUrl}/api/og/${slug}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="${deckUrl}/og">
+    <meta name="twitter:image" content="${siteUrl}/api/og/${slug}">
     ${effectiveLogoUrl ? `<link rel="icon" href="${effectiveLogoUrl}">` : ''}
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
