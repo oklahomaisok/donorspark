@@ -4,5 +4,5 @@ export const config = {
   imageBaseUrl: process.env.IMAGE_BASE_URL || 'https://oklahomaisok.github.io/nonprofit-decks/images',
   videoBaseUrl: 'https://donorspark-videos.vercel.app',
   claudeModel: 'claude-sonnet-4-20250514',
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.donorspark.app',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://donorspark.app',
 };
