@@ -1,22 +1,25 @@
+import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const AUTH_COOKIE = 'donorspark_beta_auth';
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-
-  // Allow password page and API
-  if (pathname === '/password' || pathname.startsWith('/api/password')) {
-    return NextResponse.next();
-  }
-
-  // Allow static assets
-  if (
+// Paths that skip password check
+function isPublicPath(pathname: string): boolean {
+  return (
+    pathname === '/password' ||
+    pathname.startsWith('/api/password') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
-    pathname.includes('.') // files with extensions
-  ) {
+    pathname.includes('.')
+  );
+}
+
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+  const { pathname } = req.nextUrl;
+
+  // Skip password check for public paths
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -29,14 +32,12 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Continue with Clerk auth available
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
-    /*
-     * Match all paths except static files
-     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
