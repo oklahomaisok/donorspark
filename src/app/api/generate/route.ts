@@ -6,8 +6,38 @@ import { slugify } from '@/lib/slugify';
 import { createDeck, getUserByClerkId, incrementUserDecks } from '@/db/queries';
 import type { generateDeckTask } from '@/trigger/tasks/generate-deck';
 
+// Simple in-memory rate limiter
+// In production, use Redis/Upstash for distributed rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+const RATE_LIMIT_ANONYMOUS = 5;  // 5 requests per hour for anonymous
+const RATE_LIMIT_AUTHENTICATED = 20;  // 20 requests per hour for logged in users
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in ms
+
+function checkRateLimit(key: string, limit: number): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const record = rateLimitMap.get(key);
+
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return { allowed: true, remaining: limit - 1 };
+  }
+
+  if (record.count >= limit) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  record.count++;
+  return { allowed: true, remaining: limit - record.count };
+}
+
 export async function POST(req: NextRequest) {
   try {
+    // Get IP for rate limiting
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ||
+               req.headers.get('x-real-ip') ||
+               'unknown';
+
     const body = await req.json();
     const url = body.url || '';
     const orgName = body.orgName || '';
@@ -18,6 +48,18 @@ export async function POST(req: NextRequest) {
 
     // Check auth (optional - anonymous users can generate)
     const { userId: clerkId } = await auth();
+
+    // Apply rate limiting
+    const rateLimitKey = clerkId || `ip:${ip}`;
+    const limit = clerkId ? RATE_LIMIT_AUTHENTICATED : RATE_LIMIT_ANONYMOUS;
+    const { allowed, remaining } = checkRateLimit(rateLimitKey, limit);
+
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: { 'X-RateLimit-Remaining': '0' } }
+      );
+    }
     let dbUserId: number | null = null;
 
     if (clerkId) {
