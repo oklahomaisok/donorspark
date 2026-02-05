@@ -54,6 +54,7 @@ export async function completeDeck(slug: string, data: {
   ogImageUrl: string;
   sector?: string;
   brandData?: BrandData;
+  orgName?: string;
 }) {
   try {
     await db.update(decks)
@@ -63,6 +64,7 @@ export async function completeDeck(slug: string, data: {
         ogImageUrl: data.ogImageUrl,
         sector: data.sector,
         brandData: data.brandData as unknown as Record<string, unknown>,
+        orgName: data.orgName,
         updatedAt: new Date(),
       })
       .where(eq(decks.slug, slug));

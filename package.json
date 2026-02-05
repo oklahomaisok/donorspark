@@ -22,6 +22,7 @@
     "puppeteer": "^24.36.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "sharp": "^0.34.5",
     "svix": "^1.84.1"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Nav } from '@/components/nav';
 import { GenerationProgress } from '@/components/generation-progress';
+import { PricingSection } from '@/components/pricing-section';
 import Link from 'next/link';
 
 type Phase = 'idle' | 'generating' | 'complete' | 'error';
@@ -242,64 +243,7 @@ export default function Home() {
         </section>
 
         {/* Pricing */}
-        <section id="pricing" className="py-24">
-          <div className="text-center mb-16">
-            <h2 className="text-6xl md:text-7xl mb-4">Pick Your Plan</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Free */}
-            <div className="card bg-white border border-ink/10 p-10 flex flex-col">
-              <div className="mb-8">
-                <h3 className="text-3xl serif">Free Forever</h3>
-                <p className="text-sm opacity-50 mt-2">Perfect for getting started</p>
-              </div>
-              <ul className="space-y-4 mb-12 flex-grow">
-                <li className="flex gap-3 text-sm"><span className="opacity-30">&check;</span> Custom 10-slide impact deck</li>
-                <li className="flex gap-3 text-sm"><span className="opacity-30">&check;</span> Built instantly</li>
-                <li className="flex gap-3 text-sm"><span className="opacity-30">&check;</span> Light DonorSpark branding</li>
-              </ul>
-              <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="block w-full py-4 border border-ink/20 rounded-full hover:bg-ink hover:text-white transition-colors text-center">Get Free Deck</a>
-            </div>
-
-            {/* Professional */}
-            <div className="card bg-salmon p-10 flex flex-col md:-translate-y-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-ink text-white text-[10px] uppercase font-bold px-3 py-1 rounded-bl-xl">Most Popular</div>
-              <div className="mb-8">
-                <h3 className="text-3xl serif">Professional</h3>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-xl">$9.99</span>
-                  <span className="opacity-70 text-sm">/mo</span>
-                </div>
-                <p className="text-xs opacity-70 mt-1">For orgs ready to grow</p>
-              </div>
-              <ul className="space-y-4 mb-12 flex-grow">
-                <li className="flex gap-3 text-sm font-medium"><span className="text-ink">&check;</span> Remove all branding</li>
-                <li className="flex gap-3 text-sm font-medium"><span className="text-ink">&check;</span> 1 revision per month</li>
-                <li className="flex gap-3 text-sm font-medium"><span className="text-ink">&check;</span> Make it fully yours</li>
-              </ul>
-              <button className="w-full py-4 bg-ink text-salmon rounded-full hover:scale-105 transition-transform cursor-pointer">Start Trial</button>
-            </div>
-
-            {/* Premium */}
-            <div className="card bg-ink text-cream p-10 flex flex-col">
-              <div className="mb-8">
-                <h3 className="text-3xl serif">Premium</h3>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-xl">$49</span>
-                  <span className="opacity-70 text-sm">/mo</span>
-                </div>
-                <p className="text-xs opacity-50 mt-1">Your storytelling partner</p>
-              </div>
-              <ul className="space-y-4 mb-12 flex-grow opacity-80">
-                <li className="flex gap-3 text-sm"><span className="opacity-50">&check;</span> Everything in Professional</li>
-                <li className="flex gap-3 text-sm"><span className="opacity-50">&check;</span> Unlimited revisions</li>
-                <li className="flex gap-3 text-sm"><span className="opacity-50">&check;</span> Individual impact stories</li>
-              </ul>
-              <button className="w-full py-4 border border-cream/20 rounded-full hover:bg-cream hover:text-ink transition-colors cursor-pointer">Contact Us</button>
-            </div>
-          </div>
-        </section>
+        <PricingSection onGetFreeClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
 
         {/* Final CTA */}
         <section className="card bg-white p-8 md:p-32 text-center relative overflow-hidden">
@@ -346,7 +290,7 @@ export default function Home() {
           <div className="font-bold mb-1">DonorSpark</div>
           <div>Your impact. Finally shareable.</div>
         </div>
-        <div>&copy; 2025 DonorSpark. All rights reserved.</div>
+        <div>&copy; 2026 DonorSpark. All rights reserved.</div>
       </footer>
     </>
   );

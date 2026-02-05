@@ -1,10 +1,18 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser } from 'puppeteer';
 
 export interface LogoResult {
   logoUrl: string | null;
   logoSource: string;
   headerBgColor: string | null;
   detectedFonts: { heading: string | null; body: string | null };
+}
+
+// Wrapper to enforce hard timeout on any async operation
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
 }
 
 export async function discoverLogo(url: string, domain: string): Promise<LogoResult> {
@@ -16,7 +24,7 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
   // Method 1: Try Apistemic API first - require at least 2KB for a real logo
   const apistemicUrl = `https://logos-api.apistemic.com/domain:${domain}`;
   try {
-    const res = await fetch(apistemicUrl);
+    const res = await fetch(apistemicUrl, { signal: AbortSignal.timeout(8000) });
     const buf = await res.arrayBuffer();
     if (buf.byteLength > 2000) {
       logoUrl = apistemicUrl;
@@ -24,18 +32,24 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
     }
   } catch {}
 
-  // Method 2: DOM scrape - always run to get header color and potentially better logo
+  // Method 2: DOM scrape - get header color, fonts, and potentially better logo
+  // Hard timeout of 20s to prevent hanging on slow sites (like Wix)
+  let browser: Browser | null = null;
   try {
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
     try {
       await page.setViewport({ width: 1280, height: 800 });
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
+      // Use domcontentloaded instead of networkidle2 - much faster on JS-heavy sites
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+      // Give a brief moment for initial JS to execute
+      await new Promise(r => setTimeout(r, 1500));
 
-      const result = await page.evaluate(() => {
+      // Wrap evaluate in timeout to prevent hanging
+      const result = await withTimeout(page.evaluate(() => {
         const rgbToHex = (r: number, g: number, b: number) =>
           '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
 
@@ -247,8 +261,8 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
           }
         }
 
-        return { logoUrl: null, headerBg, headingFont, bodyFont };
-      });
+        return { logoUrl: null as string | null, headerBg, headingFont, bodyFont };
+      }), 8000, { logoUrl: null as string | null, headerBg: '#ffffff', headingFont: null as string | null, bodyFont: null as string | null });
 
       headerBgColor = result.headerBg;
       detectedFonts = { heading: result.headingFont, body: result.bodyFont };
@@ -259,10 +273,15 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
         logoSource = 'scraper';
       }
     } finally {
-      await page.close();
-      await browser.close();
+      await page.close().catch(() => {});
     }
-  } catch {}
+  } catch (e) {
+    console.log('[Logo Discovery] DOM scrape error:', e instanceof Error ? e.message : 'unknown');
+  } finally {
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
+  }
 
   // Method 3: Google favicon as last resort (only if no logo found)
   if (!logoUrl) {

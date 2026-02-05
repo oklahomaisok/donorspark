@@ -9,6 +9,27 @@ export const metadata: Metadata = {
     icon: '/favicon.svg',
     apple: '/favicon.png',
   },
+  openGraph: {
+    title: 'DonorSpark | Story Decks That Move Donors to Give',
+    description: 'Turn your nonprofit website into a stunning, shareable impact deck in seconds. Powered by AI.',
+    url: 'https://donorspark.app',
+    siteName: 'DonorSpark',
+    images: [
+      {
+        url: 'https://donorspark.app/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'DonorSpark - Story Decks That Move Donors to Give',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DonorSpark | Story Decks That Move Donors to Give',
+    description: 'Turn your nonprofit website into a stunning, shareable impact deck in seconds. Powered by AI.',
+    images: ['https://donorspark.app/og-image.png'],
+  },
 };
 
 export default function RootLayout({
