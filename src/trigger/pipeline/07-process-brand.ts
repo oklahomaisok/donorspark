@@ -22,7 +22,7 @@ export function processBrandData(
   let bodyFont = mapToGoogleFont(detectedFonts.body);
 
   if (!headingFont) {
-    headingFont = claudeData.fonts?.headingFont || (claudeData.fonts?.headingStyle === 'serif' ? 'Playfair Display' : 'Oswald');
+    headingFont = claudeData.fonts?.headingFont || (claudeData.fonts?.headingStyle === 'serif' ? 'Playfair Display' : 'Montserrat');
   }
   if (!bodyFont) {
     bodyFont = isSerifFont(headingFont) ? 'Source Serif 4' : 'Roboto';
@@ -37,7 +37,7 @@ export function processBrandData(
   let finalDonateUrl = claudeData.donateUrl || '';
   finalDonateUrl = normalizeUrl(finalDonateUrl, originalUrl);
 
-  const resolvedHeaderBg = resolveHeaderBg(claudeData, headerBgColor);
+  const resolvedHeaderBg = resolveHeaderBg(claudeData, headerBgColor, logoColors);
   const headerTextDark = isLightHex(resolvedHeaderBg);
 
   return {
@@ -82,8 +82,19 @@ function resolveColors(
   const claudeSecondary = cleanHex(claudeData.colors?.secondary);
   const claudeAccent = cleanHex(claudeData.colors?.accent);
 
-  // Only use logo colors if they're not too light or too dark
-  const isUsable = (hex: string | null) => hex && !isLightHex(hex) && !isDarkHex(hex);
+  // Only use logo colors if they're not too light, too dark, or too gray (low saturation)
+  const isUsable = (hex: string | null) => {
+    if (!hex) return false;
+    if (isLightHex(hex) || isDarkHex(hex)) return false;
+    // Filter out grays - require minimum saturation
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const saturation = max === 0 ? 0 : (max - min) / max;
+    return saturation > 0.15; // Require at least 15% saturation to avoid grays
+  };
   const usableLogoPrimary = logoColors.dominant?.find(c => isUsable(c.hex))?.hex;
   const logoAccent = logoColors.vibrant || logoColors.dominant?.find(c => c.hex !== usableLogoPrimary && isUsable(c.hex))?.hex;
 
@@ -132,8 +143,8 @@ function isLightHex(hex: string | null): boolean {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  // Threshold 0.75 catches light grays that would look bad as backgrounds
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.75;
+  // Threshold 0.55 - more aggressive to catch grays/light colors that look bad as backgrounds
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55;
 }
 
 function isDarkHex(hex: string | null): boolean {
@@ -199,13 +210,41 @@ function processMetrics(preExtracted: ExtractedMetric[], claudeData: ClaudeAnaly
   return { items: metrics, numericValues };
 }
 
-function resolveHeaderBg(claudeData: ClaudeAnalysis, scrapedBg: string | null): string {
+function resolveHeaderBg(claudeData: ClaudeAnalysis, scrapedBg: string | null, logoColors: LogoColors): string {
+  // First, check if logo has predominantly light/white colors
+  const logoIsLight = logoColors.dominant?.some(c => {
+    if (!c.hex) return false;
+    const r = parseInt(c.hex.slice(1, 3), 16);
+    const g = parseInt(c.hex.slice(3, 5), 16);
+    const b = parseInt(c.hex.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.85 && c.count > 100; // White/very light color that's significant
+  });
+
   const claudeHeaderBg = claudeData.colors?.headerBackground;
+
+  // If we have a scraped background, use it (it's the actual website header color)
+  if (scrapedBg && scrapedBg !== '#ffffff' && scrapedBg !== '#000000') {
+    return scrapedBg;
+  }
+
+  // If logo is light/white and we'd default to white, use a dark background instead
+  if (logoIsLight) {
+    // Use the primary brand color (usually dark) as the header background
+    const primary = claudeData.colors?.primary;
+    if (primary && !isLightHex(primary)) {
+      return primary;
+    }
+    // Fallback to a safe dark color
+    return '#2D3436';
+  }
+
   if (claudeHeaderBg) {
     if (['white', '#fff', '#ffffff'].includes(claudeHeaderBg.toLowerCase())) return '#ffffff';
     if (claudeHeaderBg.toLowerCase() === 'transparent') return '#ffffff';
     if (claudeHeaderBg.startsWith('#')) return claudeHeaderBg;
   }
+
   return scrapedBg || claudeData.colors?.primary || '#2D3436';
 }
 

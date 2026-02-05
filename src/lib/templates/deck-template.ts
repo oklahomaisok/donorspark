@@ -24,7 +24,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
     need = { headline: 'Communities Need Support', description: 'Many face challenges that require dedicated assistance.' },
     solution = 'We provide programs and services that create lasting change.',
     colors = { primary: '#1D2350', secondary: '#FFC303', accent: '#FFC303' },
-    fonts = { headingFont: 'Oswald', bodyFont: 'Roboto' },
+    fonts = { headingFont: 'Montserrat', bodyFont: 'Roboto' },
     images,
     testimonials = [],
   } = brandData;
@@ -32,7 +32,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
   const primary = colors.primary || '#1D2350';
   const secondary = colors.secondary || '#FFC303';
   const accent = colors.accent || secondary;
-  const headingFont = fonts.headingFont || 'Oswald';
+  const headingFont = fonts.headingFont || 'Montserrat';
   const bodyFont = fonts.bodyFont || 'Roboto';
 
   const heroImg = images?.hero || `${config.imageBaseUrl}/community-hero-leader.jpg`;
@@ -143,7 +143,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
 <body class="min-h-screen flex flex-col items-center selection:bg-[var(--accent)]/30">
     <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-4 backdrop-blur-md border-b border-black/10 h-16" style="background-color: var(--header-bg); color: var(--header-text);">
         <div class="flex items-center gap-3 w-auto md:w-1/3">
-            ${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-10 w-auto object-contain">` : `<span class="font-display text-lg font-bold" style="color: var(--header-text);">${escHtml(orgName)}</span>`}
+            ${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-14 md:h-16 max-w-[280px] w-auto object-contain">` : `<span class="font-display text-lg font-bold" style="color: var(--header-text);">${escHtml(orgName)}</span>`}
         </div>
         <div id="pagination-dots" class="hidden sm:flex items-center justify-center gap-2 w-1/3">${paginationDots}</div>
         <div class="hidden md:flex items-center justify-end gap-2 w-1/3">

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You, John | Sara's Project</title>
+    <meta name="description" content="John, your $250 gift just protected a child. See the impact you made.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Thank You, John | Sara's Project">
+    <meta property="og:description" content="Your $250 gift just protected a child in crisis. See the impact.">
+    <meta property="og:image" content="https://oklahomaisok.github.io/nonprofit-decks/saras-project-thanks/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Thank You, John | Sara's Project">
+    <meta name="twitter:description" content="Your $250 gift just protected a child in crisis.">
+    <meta name="twitter:image" content="https://oklahomaisok.github.io/nonprofit-decks/saras-project-thanks/og-image.png">
+    <link rel="icon" href="https://sarasprojectok.org/wp-content/themes/sara/img/saras-project-logo.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500&family=Roboto+Slab:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #E50058; --secondary: #2BBAB4; --accent: #ffffff; --dark: #4a0626; }
+        body { font-family: 'Source Serif 4', serif; background-color: #3a0520; color: white; }
+        h1, h2, h3, .font-display { font-family: 'Montserrat', sans-serif; }
+        .font-slab { font-family: 'Roboto Slab', serif; }
+        @keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }
+        .animate-on-scroll { animation: animationIn 0.8s ease-out both; animation-play-state: paused; }
+        .animate-on-scroll.animate { animation-play-state: running; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .slide-container { width: 90vw; height: 75vh; min-width: 0; }
+        @media (min-width: 768px) { .slide-container { width: 500px; height: auto; aspect-ratio: 3/4; } }
+        .bg-grid-pattern { background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0); background-size: 32px 32px; }
+        @keyframes scrollList { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+        .scroll-list { animation: scrollList 18s linear infinite; }
+        .scroll-mask { mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center selection:bg-[var(--secondary)]/30">
+    <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-4 backdrop-blur-md border-b border-black/10 h-16" style="background-color: var(--primary); color: white;">
+        <div class="flex items-center gap-3 w-auto md:w-1/3">
+            <img src="https://sarasprojectok.org/wp-content/themes/sara/img/saras-project-logo.svg" alt="Sara's Project" class="h-10 w-auto object-contain">
+        </div>
+        <div id="pagination-dots" class="hidden sm:flex items-center justify-center gap-2 w-1/3"></div>
+        <div class="hidden md:flex items-center justify-end gap-2 w-1/3">
+            <button id="prevBtn" class="p-2 rounded-full hover:bg-white/10 transition-colors" style="color: white; opacity: 0.6;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+            <button id="nextBtn" class="p-2 rounded-full hover:bg-white/10 transition-colors" style="color: white; opacity: 0.6;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+        <div class="md:hidden flex items-center justify-end w-auto text-xs gap-1 opacity-80"><span class="font-display font-bold tracking-widest uppercase">SWIPE</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></div>
+    </nav>
+
+    <main id="slider" class="flex flex-row overflow-x-auto snap-x snap-mandatory hide-scrollbar w-full pt-24 md:pt-28 pb-6 md:pb-10 px-4 md:px-10 gap-x-4 md:gap-x-12 scroll-smooth" style="mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);">
+
+        <!-- Slide 1: The Hook -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 z-0">
+                <video autoplay muted loop playsinline class="w-full h-full object-cover"><source src="https://oklahomaisok.github.io/nonprofit-decks/saras-project-thanks/sara-thank-you-vid.mp4" type="video/mp4"></video>
+                <div class="absolute inset-0 bg-black/40"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+            </div>
+            <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-between">
+                <div class="animate-on-scroll"><span class="text-[10px] text-[var(--secondary)] uppercase tracking-widest font-bold border border-[var(--secondary)]/30 px-2 py-1 rounded bg-black/40 backdrop-blur-md font-display">Your Impact</span></div>
+                <div class="mt-auto">
+                    <h1 class="leading-[0.9] animate-on-scroll text-4xl md:text-5xl tracking-wide font-display uppercase text-white mb-4 drop-shadow-lg" style="animation-delay: 0.2s;">John, You Just<br><span class="text-[var(--secondary)]">Protected a Child.</span></h1>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: The Need -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 z-0">
+                <img src="https://oklahomaisok.github.io/nonprofit-decks/images/youth-dev-hero-teen-boy.jpg" class="w-full h-full object-cover grayscale opacity-60" alt="Need">
+                <div class="absolute inset-0 bg-gradient-to-t from-[var(--primary)]/90 via-black/40 to-transparent"></div>
+            </div>
+            <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-end">
+                <div class="animate-on-scroll">
+                    <div class="w-12 h-[3px] bg-[var(--secondary)] mb-6"></div>
+                    <p class="text-xl md:text-2xl text-white font-slab leading-snug">A child needed a safe place to tell their story&mdash;and someone to <em>believe</em> them.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: The Barrier (Cost Breakdown) -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
+            <div class="flex flex-col h-full p-6 md:p-10 z-10">
+                <div class="animate-on-scroll mb-4">
+                    <span class="text-[10px] text-[var(--secondary)] uppercase tracking-widest font-bold font-display">The Barrier</span>
+                </div>
+                <div class="flex-grow flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                    <div class="p-4 border-b border-white/10">
+                        <h2 class="text-lg text-[var(--secondary)] font-slab font-bold">One Child's Advocacy Visit</h2>
+                    </div>
+                    <div class="flex-grow overflow-hidden scroll-mask relative">
+                        <div class="scroll-list">
+                            <div class="space-y-1 px-4 py-3">
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Forensic Interview Room</span><span class="text-white/60 blur-[2px]">$75.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Medical Screening Supplies</span><span class="text-white/60 blur-[2px]">$35.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Comfort Backpack</span><span class="text-white/60 blur-[2px]">$22.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Stuffed Animal &amp; Blanket</span><span class="text-white/60 blur-[2px]">$18.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Snacks &amp; Drinks</span><span class="text-white/60 blur-[2px]">$5.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Children's Books</span><span class="text-white/60 blur-[2px]">$12.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Art Therapy Supplies</span><span class="text-white/60 blur-[2px]">$10.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Victim Advocate (4 hrs)</span><span class="text-white/60 blur-[2px]">$40.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Case Coordination</span><span class="text-white/60 blur-[2px]">$18.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Follow-Up Support</span><span class="text-white/60 blur-[2px]">$10.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Safety Planning Session</span><span class="text-white/60 blur-[2px]">$5.00</span></div>
+                            </div>
+                            <div class="space-y-1 px-4 py-3">
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Forensic Interview Room</span><span class="text-white/60 blur-[2px]">$75.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Medical Screening Supplies</span><span class="text-white/60 blur-[2px]">$35.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Comfort Backpack</span><span class="text-white/60 blur-[2px]">$22.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Stuffed Animal &amp; Blanket</span><span class="text-white/60 blur-[2px]">$18.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Snacks &amp; Drinks</span><span class="text-white/60 blur-[2px]">$5.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Children's Books</span><span class="text-white/60 blur-[2px]">$12.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Art Therapy Supplies</span><span class="text-white/60 blur-[2px]">$10.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Victim Advocate (4 hrs)</span><span class="text-white/60 blur-[2px]">$40.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Case Coordination</span><span class="text-white/60 blur-[2px]">$18.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Follow-Up Support</span><span class="text-white/60 blur-[2px]">$10.00</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-white/80">Safety Planning Session</span><span class="text-white/60 blur-[2px]">$5.00</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 border-t border-white/10 flex justify-between items-center">
+                        <span class="text-white/60 text-sm font-display font-bold uppercase tracking-wider">Total</span>
+                        <span class="text-[var(--secondary)] text-2xl font-display font-black">$250.00</span>
+                    </div>
+                </div>
+                <p class="text-neutral-300 text-xs text-center mt-4 animate-on-scroll" style="animation-delay: 0.3s;">For one child, this cost was the only thing standing between crisis and safety.</p>
+            </div>
+        </section>
+
+        <!-- Slide 4: The Turning Point -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 z-0">
+                <img src="https://oklahomaisok.github.io/nonprofit-decks/images/youth-dev-action-mentor-bench.jpg" class="w-full h-full object-cover opacity-70" alt="Turning Point">
+                <div class="absolute inset-0 bg-black/70 mix-blend-multiply"></div>
+            </div>
+            <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-center items-center text-center">
+                <h2 class="text-4xl md:text-5xl text-white font-display font-black uppercase tracking-wide mb-8 animate-on-scroll">Then You<br>Stepped In.</h2>
+                <div class="bg-[var(--secondary)] text-[var(--dark)] px-6 py-4 rounded-lg shadow-xl transform rotate-1 animate-on-scroll" style="animation-delay: 0.2s;">
+                    <p class="font-display font-black text-lg md:text-xl">Your $250 gift funded a complete<br>advocacy visit for a child in crisis.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Impact -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 z-0">
+                <img src="https://oklahomaisok.github.io/nonprofit-decks/images/youth-dev-group-circle.jpg" class="w-full h-full object-cover opacity-80" alt="Impact">
+                <div class="absolute inset-0 bg-black/40"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 z-10 p-6 md:p-8">
+                <p class="text-white text-base md:text-lg animate-on-scroll"><em>Because of you, she&rsquo;s not alone anymore&mdash;</em></p>
+                <span class="text-[var(--secondary)] font-display uppercase text-xl md:text-2xl font-black tracking-wide animate-on-scroll" style="animation-delay: 0.2s;">she&rsquo;s safe.</span>
+            </div>
+        </section>
+
+        <!-- Slide 6: Human Detail -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 z-0">
+                <img src="https://oklahomaisok.github.io/nonprofit-decks/saras-project-thanks/slide7.png" class="w-full h-full object-cover opacity-80" alt="Detail">
+                <div class="absolute inset-0 bg-gradient-to-t from-[var(--primary)] via-transparent to-transparent"></div>
+            </div>
+            <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-end">
+                <div class="animate-on-scroll max-w-[90%]">
+                    <p class="text-white text-lg md:text-2xl font-slab italic leading-snug mb-4">&ldquo;She held the stuffed animal tight and, for the first time in weeks, exhaled.&rdquo;</p>
+                    <span class="text-[var(--secondary)] text-xs uppercase tracking-widest font-bold font-display">That moment was your gift.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Donor Recognition -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
+            <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-center items-center text-center">
+                <div class="p-4 rounded-full border-2 border-[var(--secondary)] bg-[var(--secondary)]/10 mb-6 animate-on-scroll" style="animation-delay: 0.1s;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </div>
+                <h2 class="text-3xl md:text-4xl text-white font-display font-black uppercase tracking-wide mb-4 animate-on-scroll" style="animation-delay: 0.2s;">You Didn&rsquo;t Just<br>Write a Check.</h2>
+                <p class="text-neutral-300 mb-6 animate-on-scroll" style="animation-delay: 0.3s;">You wrote a new chapter. John, you are a true</p>
+                <div class="animate-on-scroll" style="animation-delay: 0.4s;">
+                    <div class="border-t border-b border-[var(--secondary)] py-3 px-6">
+                        <span class="text-[var(--secondary)] text-2xl md:text-3xl font-display font-black uppercase tracking-wider">Champion for Children</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Organizational Impact -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 z-0">
+                <img src="https://oklahomaisok.github.io/nonprofit-decks/images/youth-dev-group-circle.jpg" class="w-full h-full object-cover opacity-70" alt="Impact">
+                <div class="absolute inset-0 bg-black/70 mix-blend-multiply"></div>
+            </div>
+            <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-center items-center text-center">
+                <h2 class="text-4xl md:text-5xl text-white font-display font-black uppercase tracking-wide mb-6 animate-on-scroll">Across Five<br><span class="text-[var(--secondary)]">Counties</span></h2>
+                <p class="text-neutral-200 max-w-sm text-center animate-on-scroll" style="animation-delay: 0.2s;">You&rsquo;re helping us build a safer Oklahoma for children and families, one advocacy visit at a time.</p>
+            </div>
+        </section>
+
+        <!-- Slide 9: The Vision -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center border-white/10 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 z-0">
+                <img src="https://oklahomaisok.github.io/nonprofit-decks/saras-project-thanks/healing.png" class="w-full h-full object-cover opacity-80" alt="Vision">
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--primary)]"></div>
+            </div>
+            <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-end">
+                <div class="animate-on-scroll bg-black/50 backdrop-blur-sm border border-white/10 rounded-lg p-6 border-l-4 border-l-[var(--secondary)]">
+                    <p class="text-white text-base md:text-lg font-slab">This is just the beginning of her healing journey. Thank you for walking it with her.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: CTA -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center border-[var(--secondary)]/50 border relative shadow-2xl rounded-xl">
+            <div class="absolute inset-0 z-0">
+                <img src="https://oklahomaisok.github.io/nonprofit-decks/images/youth-dev-hero-reading-girl.jpg" class="w-full h-full object-cover opacity-50" alt="Thank You">
+                <div class="absolute inset-0 bg-black/80"></div>
+            </div>
+            <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center items-center text-center">
+                <img src="https://sarasprojectok.org/wp-content/themes/sara/img/saras-project-logo.svg" alt="Sara's Project" class="h-16 w-auto object-contain mb-6 opacity-90 animate-on-scroll" style="animation-delay: 0.1s;">
+                <h2 class="text-5xl md:text-7xl text-white font-display font-black uppercase tracking-wide mb-2 animate-on-scroll" style="animation-delay: 0.3s;">Thank You,<br><span class="text-[var(--secondary)]">John.</span></h2>
+                <p class="text-neutral-300 italic font-slab text-lg mb-10 animate-on-scroll" style="animation-delay: 0.5s;">You are their hero.</p>
+                <div class="flex flex-col sm:flex-row gap-3 items-center animate-on-scroll" style="animation-delay: 0.7s;">
+                    <a href="https://www.zeffy.com/donation-form/2ec5d711-5135-4009-be89-5e0f1044849a" target="_blank" id="ds-donate-btn" class="px-6 py-3 bg-[var(--secondary)] text-[var(--dark)] font-display font-black uppercase tracking-wider text-sm rounded-full hover:brightness-110 transition-all shadow-lg">Make a Recurring Gift</a>
+                    <button onclick="document.getElementById('shareModal').classList.remove('hidden')" class="px-6 py-3 border border-white/20 text-white font-display font-bold uppercase tracking-wider text-sm rounded-full hover:bg-white hover:text-[var(--primary)] transition-all">Share This Story</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onclick="if(event.target===this)this.classList.add('hidden')">
+        <div class="bg-[var(--primary)] border border-white/10 rounded-2xl p-6 max-w-xs w-full mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-white font-display font-bold text-lg">Share This Story</h3>
+                <button onclick="document.getElementById('shareModal').classList.add('hidden')" class="text-white/60 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+            </div>
+            <div class="space-y-2">
+                <a href="sms:?body=Check%20out%20the%20impact%20Sara%27s%20Project%20is%20making%20for%20children%20in%20Oklahoma%3A%20https%3A%2F%2Fwww.donorspark.app%2Fdecks%2Fsaras-project-thanks%2F" class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-green-600 text-white font-display font-bold text-sm hover:brightness-110 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Text / SMS</a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.donorspark.app%2Fdecks%2Fsaras-project-thanks%2F" target="_blank" class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-[#1877F2] text-white font-display font-bold text-sm hover:brightness-110 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>Facebook</a>
+                <a href="mailto:?subject=See%20the%20impact%20of%20Sara%27s%20Project&body=Check%20this%20out%3A%20https%3A%2F%2Fwww.donorspark.app%2Fdecks%2Fsaras-project-thanks%2F" class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-[#EA4335] text-white font-display font-bold text-sm hover:brightness-110 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>Email</a>
+                <button onclick="navigator.clipboard.writeText('https://www.donorspark.app/decks/saras-project-thanks/');this.textContent='Copied!';setTimeout(()=>this.innerHTML='<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;18&quot; height=&quot;18&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;><rect width=&quot;14&quot; height=&quot;14&quot; x=&quot;8&quot; y=&quot;8&quot; rx=&quot;2&quot;/><path d=&quot;M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2&quot;/></svg>Copy Link',1500)" class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-[var(--secondary)] text-[var(--dark)] font-display font-bold text-sm hover:brightness-110 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy Link</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        // Pagination dots
+        var slider = document.getElementById('slider');
+        var slides = document.querySelectorAll('.slide-container');
+        var dotsContainer = document.getElementById('pagination-dots');
+        for (var i = 0; i < slides.length; i++) {
+            var dot = document.createElement('div');
+            dot.className = 'w-2 h-2 rounded-full bg-neutral-400 cursor-pointer hover:bg-[var(--secondary)] transition-all';
+            dotsContainer.appendChild(dot);
+        }
+        var dots = dotsContainer.children;
+
+        // Scroll animations
+        var io = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('animate'); io.unobserve(e.target); } });
+        }, { threshold: 0.2, rootMargin: '0px -10% 0px -10%' });
+        document.querySelectorAll('.animate-on-scroll').forEach(function(el) { io.observe(el); });
+
+        // Dot navigation
+        var updateDots = function(idx) { Array.from(dots).forEach(function(d, i) { d.className = i === idx ? 'w-2.5 h-2.5 rounded-full bg-[var(--secondary)] cursor-pointer scale-125' : 'w-2 h-2 rounded-full bg-neutral-400 hover:bg-[var(--secondary)]/70 cursor-pointer transition-all'; }); };
+        var slideIO = new IntersectionObserver(function(entries) { entries.forEach(function(e) { if (e.isIntersecting) updateDots(Array.from(slides).indexOf(e.target)); }); }, { root: slider, threshold: 0.6 });
+        slides.forEach(function(s) { slideIO.observe(s); });
+        Array.from(dots).forEach(function(d, i) { d.addEventListener('click', function() { slides[i] && slides[i].scrollIntoView({ behavior: 'smooth', inline: 'center' }); }); });
+
+        // Nav buttons
+        var scrollAmt = function() { return window.innerWidth < 768 ? window.innerWidth * 0.85 : 548; };
+        var nextBtn = document.getElementById('nextBtn');
+        var prevBtn = document.getElementById('prevBtn');
+        if (nextBtn) nextBtn.addEventListener('click', function() { slider.scrollBy({ left: scrollAmt(), behavior: 'smooth' }); });
+        if (prevBtn) prevBtn.addEventListener('click', function() { slider.scrollBy({ left: -scrollAmt(), behavior: 'smooth' }); });
+
+        // Escape closes modal
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') document.getElementById('shareModal').classList.add('hidden'); });
+    })();
+    </script>
+    <script>
+    (function(){
+      var T='https://www.donorspark.app/api/track',S='saras-project-thanks';
+      var sid;
+      try{sid=sessionStorage.getItem('ds_sid');if(!sid){sid='ds_'+Math.random().toString(36).substr(2,9)+Date.now().toString(36);sessionStorage.setItem('ds_sid',sid);}}catch(e){sid='ds_'+Math.random().toString(36).substr(2,9)+Date.now().toString(36);}
+      function t(e){var d=JSON.stringify({slug:S,event:e,sessionId:sid});if(navigator.sendBeacon){navigator.sendBeacon(T,new Blob([d],{type:'application/json'}));}else{fetch(T,{method:'POST',headers:{'Content-Type':'application/json'},body:d,keepalive:true});}}
+      t('view');
+      var b=document.getElementById('ds-donate-btn');if(b)b.addEventListener('click',function(){t('click');});
+    })();
+    </script>
+</body>
+</html>
