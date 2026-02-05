@@ -6,13 +6,11 @@ const AUTH_COOKIE = 'donorspark_beta_auth';
 
 // Paths that skip password check
 function isPublicPath(pathname: string): boolean {
-  return (
-    pathname === '/password' ||
-    pathname.startsWith('/api/password') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon') ||
-    pathname.includes('.')
-  );
+  if (pathname === '/password') return true;
+  if (pathname.startsWith('/api/password')) return true;
+  // Allow static files (but not API routes)
+  if (pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff|woff2)$/)) return true;
+  return false;
 }
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
@@ -38,6 +36,9 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Skip Next.js internals and all static files
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };
