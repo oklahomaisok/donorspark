@@ -19,9 +19,9 @@ const testimonialTemplates: Record<string, Testimonial[]> = {
     { quote: 'The skills I learned here\u2014leadership, teamwork, resilience\u2014shaped who I am today.', author: 'Aisha Thompson', role: 'Program Alumni', gender: 'woman' }
   ],
   'agriculture': [
-    { quote: 'Their research on soil health transformed how I manage my land. My yields have never been better.', author: 'Robert Chen', role: 'Partner Rancher', gender: 'man' },
-    { quote: 'The regenerative practices they taught us are healing our pastures and improving our livestock health.', author: 'Sarah Mitchell', role: 'Farmer', gender: 'woman' },
-    { quote: "Thanks to their grazing management training, we're seeing wildlife return to our ranch for the first time in decades.", author: 'David Hernandez', role: 'Landowner', gender: 'man' }
+    { quote: 'Their programs helped our family farm stay sustainable for the next generation. We finally have hope for the future.', author: 'Robert Chen', role: 'Family Farmer', gender: 'man' },
+    { quote: 'They connected us with resources and training that transformed how we grow food for our community.', author: 'Sarah Mitchell', role: 'Farm Manager', gender: 'woman' },
+    { quote: "Supporting farmers isn't just about crops—it's about preserving a way of life. They understand that.", author: 'David Hernandez', role: 'Agricultural Partner', gender: 'man' }
   ],
   'food-bank': [
     { quote: 'When I lost my job, they were there with food for my kids. No judgment, just help when we needed it most.', author: 'Jennifer Adams', role: 'Program Recipient', gender: 'woman' },
