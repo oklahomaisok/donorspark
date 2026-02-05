@@ -5,11 +5,66 @@ import { slugify } from '@/lib/slugify';
 import { createDeck } from '@/db/queries';
 import type { generateDeckTask } from '@/trigger/tasks/generate-deck';
 
-// Rate limiting disabled for beta testing
-// TODO: Re-enable before public launch
+// Simple in-memory rate limiter (10 requests per hour per IP)
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number } {
+  const now = Date.now();
+  const record = requestCounts.get(ip);
+
+  if (!record || now > record.resetAt) {
+    // New window
+    const resetAt = now + RATE_WINDOW_MS;
+    requestCounts.set(ip, { count: 1, resetAt });
+    return { allowed: true, remaining: RATE_LIMIT - 1, resetAt };
+  }
+
+  if (record.count >= RATE_LIMIT) {
+    return { allowed: false, remaining: 0, resetAt: record.resetAt };
+  }
+
+  record.count++;
+  return { allowed: true, remaining: RATE_LIMIT - record.count, resetAt: record.resetAt };
+}
+
+// Clean up old entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of requestCounts.entries()) {
+    if (now > record.resetAt) {
+      requestCounts.delete(ip);
+    }
+  }
+}, 60 * 1000); // Clean every minute
 
 export async function POST(req: NextRequest) {
   try {
+    // Get client IP
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || req.headers.get('x-real-ip')
+      || 'unknown';
+
+    // Check rate limit
+    const { allowed, remaining, resetAt } = checkRateLimit(ip);
+
+    if (!allowed) {
+      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: `Rate limit exceeded. Try again in ${Math.ceil(retryAfter / 60)} minutes.` },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': RATE_LIMIT.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': Math.ceil(resetAt / 1000).toString(),
+            'Retry-After': retryAfter.toString(),
+          }
+        }
+      );
+    }
+
     const body = await req.json();
     const url = body.url || '';
     const orgName = body.orgName || '';
@@ -38,11 +93,20 @@ export async function POST(req: NextRequest) {
       triggerRunId: handle.id,
     });
 
-    return NextResponse.json({
-      slug,
-      runId: handle.id,
-      publicAccessToken: handle.publicAccessToken,
-    });
+    return NextResponse.json(
+      {
+        slug,
+        runId: handle.id,
+        publicAccessToken: handle.publicAccessToken,
+      },
+      {
+        headers: {
+          'X-RateLimit-Limit': RATE_LIMIT.toString(),
+          'X-RateLimit-Remaining': remaining.toString(),
+          'X-RateLimit-Reset': Math.ceil(resetAt / 1000).toString(),
+        }
+      }
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to start generation';
     console.error('Generate error:', message);
