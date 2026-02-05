@@ -199,13 +199,13 @@ function processMetrics(preExtracted: ExtractedMetric[], claudeData: ClaudeAnaly
 
   metrics = metrics.slice(0, 5);
 
+  // Only add year-based metric if we have a valid founding year - skip generic fallbacks entirely
   if (metrics.length === 0) {
     const year = claudeData.yearFounded;
     if (year && year > 1800 && year < 2025) {
       metrics.push({ value: String(new Date().getFullYear() - year), label: 'Years of Service' });
-    } else {
-      metrics.push({ value: 'Dedicated', label: 'To Community Impact' });
     }
+    // Don't add "Dedicated to Community Impact" fallback - better to skip metrics slide
   }
 
   const numericValues = metrics.map(m => {

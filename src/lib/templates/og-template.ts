@@ -57,9 +57,9 @@ export function generateOgHtml(slug: string, brandData: BrandData): string {
             flex-direction: column;
             justify-content: space-between;
         }
-        .logo-area { display: flex; align-items: center; gap: 20px; }
-        .logo-area img { height: 90px; width: auto; max-width: 320px; object-fit: contain; }
-        .logo-text { font-size: 28px; font-weight: 700; color: white; }
+        .logo-area { display: flex; align-items: center; gap: 24px; }
+        .logo-area img { height: 120px; width: auto; max-width: 400px; object-fit: contain; }
+        .logo-text { font-size: 32px; font-weight: 700; color: white; }
         .content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
         h1 { font-size: 56px; font-weight: 800; color: white; line-height: 1.1; margin-bottom: 20px; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
         h1 span { color: ${accent}; }

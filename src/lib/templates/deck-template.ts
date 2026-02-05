@@ -62,8 +62,9 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
   ).join('\n');
 
   const metricsData = (metrics || []).slice(0, 5);
+  const showMetricsSlide = hasValidMetrics && metricsData.length > 0;
   let metricsHtml = '';
-  if (hasValidMetrics && metricsData.length > 0) {
+  if (showMetricsSlide) {
     const cards = metricsData.map((m, i) =>
       `<div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center animate-on-scroll" style="animation-delay: ${i * 0.15}s"><div class="text-3xl md:text-4xl font-black font-display text-[var(--accent)] mb-1"><span class="count-up" data-target="${escAttr(m.value)}">${escHtml(m.value)}</span></div><div class="text-[10px] md:text-xs uppercase tracking-wider text-neutral-300 font-medium">${escHtml(m.label)}</div></div>`
     ).join('\n');
@@ -81,7 +82,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
     `<div class="testimonial-card card-pos-${i} w-full h-full rounded-2xl bg-white p-6 shadow-xl flex flex-col overflow-hidden"><div class="mb-4"><svg class="w-10 h-10 text-[var(--accent)]" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg></div><p class="text-[var(--primary)] text-sm leading-relaxed flex-grow mb-6">${escHtml(t.quote)}</p><div class="flex items-center gap-3 pt-4 border-t border-neutral-100"><div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-[var(--accent)]/30"><img src="${t.portrait || ''}" alt="${escAttr(t.author)}" class="w-full h-full object-cover"></div><div><div class="text-[var(--primary)] font-bold text-sm">${escHtml(t.author)}</div><div class="text-neutral-400 text-xs">${escHtml(t.role)}</div></div></div></div>`
   ).join('\n');
 
-  const totalSlides = 7;
+  const totalSlides = showMetricsSlide ? 7 : 6;
   let paginationDots = '';
   for (let i = 0; i < totalSlides; i++) {
     paginationDots += '<div class="w-2 h-2 rounded-full bg-neutral-400 cursor-pointer hover:bg-[var(--accent)] transition-all"></div>\n';
@@ -143,7 +144,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
 <body class="min-h-screen flex flex-col items-center selection:bg-[var(--accent)]/30">
     <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-4 backdrop-blur-md border-b border-black/10 h-16" style="background-color: var(--header-bg); color: var(--header-text);">
         <div class="flex items-center gap-3 w-auto md:w-1/3">
-            ${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-14 md:h-16 max-w-[280px] w-auto object-contain">` : `<span class="font-display text-lg font-bold" style="color: var(--header-text);">${escHtml(orgName)}</span>`}
+            ${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-10 md:h-11 max-w-[200px] md:max-w-[280px] w-auto object-contain">` : `<span class="font-display text-lg font-bold" style="color: var(--header-text);">${escHtml(orgName)}</span>`}
         </div>
         <div id="pagination-dots" class="hidden sm:flex items-center justify-center gap-2 w-1/3">${paginationDots}</div>
         <div class="hidden md:flex items-center justify-end gap-2 w-1/3">
@@ -186,22 +187,22 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
                 <div class="flex-grow flex flex-col justify-center"><div class="mb-6 animate-on-scroll"><h2 class="text-3xl md:text-4xl text-white font-display font-black tracking-tighter uppercase leading-none drop-shadow-xl">What We<br><span class="text-[var(--accent)]">Offer</span></h2></div><div class="animate-on-scroll bg-[var(--primary)]/70 p-4 rounded-lg backdrop-blur-md border border-white/10"><p class="leading-relaxed text-sm text-neutral-100 mb-4 font-medium">We deliver impactful programs designed to create lasting change in our community.</p>${programsHtml ? `<div class="flex flex-wrap gap-2">${programsHtml}</div>` : ''}</div></div>
             </div>
         </section>
-        <!-- Slide 5: Metrics -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl"><div class="absolute inset-0 bg-grid-pattern opacity-20"></div><div class="p-6 md:p-10 h-full flex flex-col z-10"><header class="flex justify-between items-center mb-6 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[05]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Our Impact</span></header><div class="flex-grow flex flex-col justify-center">${metricsHtml}</div></div></section>
-        <!-- Slide 6: Testimonials -->
+        ${showMetricsSlide ? `<!-- Slide 5: Metrics -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl"><div class="absolute inset-0 bg-grid-pattern opacity-20"></div><div class="p-6 md:p-10 h-full flex flex-col z-10"><header class="flex justify-between items-center mb-6 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[05]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Our Impact</span></header><div class="flex-grow flex flex-col justify-center">${metricsHtml}</div></div></section>` : ''}
+        <!-- Slide ${showMetricsSlide ? '6' : '5'}: Testimonials -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${actionImg}" class="w-full h-full object-cover" alt="Background"><div class="absolute inset-0 bg-black/70"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[06]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Success Stories</span></header>
+                <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${showMetricsSlide ? '06' : '05'}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Success Stories</span></header>
                 <div class="flex-grow flex flex-col animate-on-scroll items-center justify-center relative"><div class="absolute top-0 right-0 p-2 opacity-70 text-[10px] font-mono text-[var(--accent)] z-30 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.6 13a4 4 0 0 1-7.7 2.3l-2.6-7.5a1.7 1.7 0 0 0-3.3 1L9 18.2a5.3 5.3 0 0 0 2.2 4.1l6.3 3.6c2.4 1.4 5.3-.2 5.5-2.9l.6-9.1a4 4 0 0 0-5-4.1z"/></svg>TAP CARDS</div><div id="testimonial-stack" class="relative w-full max-w-[280px] md:max-w-[320px] aspect-square cursor-pointer">${testimonialCardsHtml}</div></div>
             </div>
         </section>
-        <!-- Slide 7: CTA -->
+        <!-- Slide ${showMetricsSlide ? '7' : '6'}: CTA -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-between">
-                <header class="flex justify-between items-center animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[07]</span><div class="w-2.5 h-2.5 bg-[var(--accent)] rounded-full animate-pulse"></div></header>
-                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-12 w-auto object-contain mb-4 opacity-80">` : ''}<h2 class="uppercase leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-8">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 bg-[var(--accent)] text-[var(--primary)] font-black rounded hover:bg-white transition-all hover:scale-105 shadow-lg shadow-[var(--accent)]/20"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>${contactEmail ? `<p class="mt-6 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}</div>
+                <header class="flex justify-between items-center animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${showMetricsSlide ? '07' : '06'}]</span><div class="w-2.5 h-2.5 bg-[var(--accent)] rounded-full animate-pulse"></div></header>
+                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="uppercase leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-8">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 bg-[var(--accent)] text-[var(--primary)] font-black rounded hover:bg-white transition-all hover:scale-105 shadow-lg shadow-[var(--accent)]/20"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>${contactEmail ? `<p class="mt-6 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}</div>
                 <div class="flex items-center justify-center pt-6 border-t border-white/10 animate-on-scroll"><a href="https://www.donorspark.app" target="_blank" rel="noopener"><img src="${config.imageBaseUrl}/donorspark_badge.png" alt="Made with DonorSpark" style="height: 64px; width: auto; opacity: 1;"></a></div>
             </div>
         </section>
