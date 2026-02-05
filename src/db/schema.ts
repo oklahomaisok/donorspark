@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, jsonb, serial } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, jsonb, serial, doublePrecision } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
@@ -26,6 +26,12 @@ export const decks = pgTable('decks', {
   errorMessage: text('error_message'),
   viewCount: integer('view_count').default(0).notNull(),
   clickCount: integer('click_count').default(0).notNull(),
+  // Location data from IP geolocation
+  city: text('city'),
+  region: text('region'),
+  country: text('country'),
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

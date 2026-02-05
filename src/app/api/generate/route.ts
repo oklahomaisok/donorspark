@@ -39,6 +39,37 @@ setInterval(() => {
   }
 }, 60 * 1000); // Clean every minute
 
+// Get geolocation from IP using ip-api.com (free, no key required)
+async function getGeoFromIp(ip: string): Promise<{
+  city?: string;
+  region?: string;
+  country?: string;
+  lat?: number;
+  lng?: number;
+} | null> {
+  if (ip === 'unknown' || ip === '127.0.0.1' || ip === '::1') {
+    return null;
+  }
+  try {
+    const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,regionName,country,lat,lon`, {
+      signal: AbortSignal.timeout(2000), // 2s timeout
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      return {
+        city: data.city,
+        region: data.regionName,
+        country: data.country,
+        lat: data.lat,
+        lng: data.lon,
+      };
+    }
+  } catch {
+    // Silently fail - geolocation is not critical
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Get client IP
@@ -77,6 +108,9 @@ export async function POST(req: NextRequest) {
     const baseSlug = slugify(orgName || url.replace(/^https?:\/\//, '').split('/')[0]);
     const slug = `${baseSlug}-${nanoid(6)}`;
 
+    // Get geolocation (non-blocking, don't wait too long)
+    const geo = await getGeoFromIp(ip);
+
     // Trigger the generation task
     const handle = await tasks.trigger<typeof generateDeckTask>('generate-deck', {
       url,
@@ -84,13 +118,18 @@ export async function POST(req: NextRequest) {
       deckSlug: slug,
     });
 
-    // Create DB record
+    // Create DB record with location data
     await createDeck({
       userId: null,
       slug,
       orgName: orgName || url,
       orgUrl: url,
       triggerRunId: handle.id,
+      city: geo?.city,
+      region: geo?.region,
+      country: geo?.country,
+      lat: geo?.lat,
+      lng: geo?.lng,
     });
 
     return NextResponse.json(

@@ -28,6 +28,11 @@ export async function createDeck(data: {
   orgName: string;
   orgUrl: string;
   triggerRunId?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  lat?: number;
+  lng?: number;
 }) {
   const [deck] = await db.insert(decks).values({
     userId: data.userId ?? null,
@@ -35,6 +40,11 @@ export async function createDeck(data: {
     orgName: data.orgName,
     orgUrl: data.orgUrl,
     triggerRunId: data.triggerRunId,
+    city: data.city,
+    region: data.region,
+    country: data.country,
+    lat: data.lat,
+    lng: data.lng,
   }).returning();
   return deck;
 }
