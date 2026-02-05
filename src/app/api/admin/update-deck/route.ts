@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { decks } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { getDeckBySlug } from '@/db/queries';
 import { generateDeckHtml } from '@/lib/templates/deck-template';
 import { uploadDeckHtml } from '@/lib/services/blob-storage';
 import type { BrandData } from '@/lib/types';

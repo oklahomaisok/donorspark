@@ -135,7 +135,10 @@ function resolveColors(
   }
   if (!secondary) secondary = accent;
 
-  return { primary, secondary, accent };
+  // Ensure accent has enough contrast against primary (background)
+  const adjustedAccent = ensureAccentContrast(accent, primary);
+
+  return { primary, secondary, accent: adjustedAccent };
 }
 
 function colorDistance(hex1: string, hex2: string): number {
@@ -143,6 +146,74 @@ function colorDistance(hex1: string, hex2: string): number {
   const r1 = parseInt(hex1.slice(1, 3), 16), g1 = parseInt(hex1.slice(3, 5), 16), b1 = parseInt(hex1.slice(5, 7), 16);
   const r2 = parseInt(hex2.slice(1, 3), 16), g2 = parseInt(hex2.slice(3, 5), 16), b2 = parseInt(hex2.slice(5, 7), 16);
   return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+}
+
+// Calculate WCAG contrast ratio between two colors
+function getContrastRatio(hex1: string, hex2: string): number {
+  const getLuminance = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const [rs, gs, bs] = [r, g, b].map(c =>
+      c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+    );
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  const l1 = getLuminance(hex1);
+  const l2 = getLuminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+// Adjust accent color to ensure readable contrast against background
+function ensureAccentContrast(accent: string, background: string): string {
+  const minContrast = 3; // WCAG AA for large text
+  const contrast = getContrastRatio(accent, background);
+
+  if (contrast >= minContrast) {
+    return accent; // Already has enough contrast
+  }
+
+  // Parse the accent color
+  let r = parseInt(accent.slice(1, 3), 16);
+  let g = parseInt(accent.slice(3, 5), 16);
+  let b = parseInt(accent.slice(5, 7), 16);
+
+  // Determine if background is dark or light
+  const bgLuminance = (() => {
+    const br = parseInt(background.slice(1, 3), 16) / 255;
+    const bg = parseInt(background.slice(3, 5), 16) / 255;
+    const bb = parseInt(background.slice(5, 7), 16) / 255;
+    return 0.299 * br + 0.587 * bg + 0.114 * bb;
+  })();
+
+  const isDarkBg = bgLuminance < 0.5;
+
+  // Try to adjust the accent by making it lighter (for dark bg) or darker (for light bg)
+  for (let i = 0; i < 20; i++) {
+    const step = 15;
+    if (isDarkBg) {
+      // Lighten the accent
+      r = Math.min(255, r + step);
+      g = Math.min(255, g + step);
+      b = Math.min(255, b + step);
+    } else {
+      // Darken the accent
+      r = Math.max(0, r - step);
+      g = Math.max(0, g - step);
+      b = Math.max(0, b - step);
+    }
+
+    const adjusted = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    if (getContrastRatio(adjusted, background) >= minContrast) {
+      return adjusted;
+    }
+  }
+
+  // Fallback: use white for dark backgrounds, dark gold for light backgrounds
+  return isDarkBg ? '#FFD700' : '#B8860B';
 }
 
 function isLightHex(hex: string | null): boolean {
