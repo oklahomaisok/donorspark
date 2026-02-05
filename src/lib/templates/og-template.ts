@@ -72,8 +72,7 @@ export function generateOgHtml(slug: string, brandData: BrandData): string {
     <div class="bg-overlay"></div>
     <div class="container">
         <div class="logo-area">
-            ${showLogo ? `<img src="${logoUrl}" alt="Logo" onerror="this.style.display='none'">` : ''}
-            <span class="logo-text">${orgName}</span>
+            ${showLogo ? `<img src="${logoUrl}" alt="Logo" onerror="this.style.display='none'">` : `<span class="logo-text">${orgName}</span>`}
         </div>
         <div class="content">
             <h1>${headlineMain} <span>${headlineAccent}</span></h1>

@@ -118,7 +118,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=${headingFont.replace(/ /g, '+')}:wght@400;500;700;900&family=${bodyFont.replace(/ /g, '+')}:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=${headingFont.replace(/ /g, '+')}:wght@400;500;700;900&family=${bodyFont.replace(/ /g, '+')}:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: ${primary}; --secondary: ${secondary}; --accent: ${accent}; --header-bg: ${headerBgColor || primary}; --header-text: ${headerTextDark ? '#1a1a1a' : '#ffffff'}; }
         body { font-family: '${bodyFont}', sans-serif; background-color: color-mix(in srgb, var(--primary) 85%, black); color: white; }
@@ -210,13 +210,14 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
         <!-- Slide ${showMetricsSlide ? '8' : '7'}: DonorSpark -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-white border-neutral-200 border relative shadow-2xl rounded-xl">
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center items-center text-center">
-                <div class="animate-on-scroll flex items-center gap-3 mb-8">
-                    <span class="text-neutral-600 text-2xl md:text-3xl" style="font-family: 'Instrument Serif', serif;">Made with</span>
-                    <a href="https://donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link">
-                        <img src="${siteUrl}/donorsparklogo.png" alt="DonorSpark" class="h-10 md:h-14 w-auto">
+                <div class="animate-on-scroll flex flex-col items-center mb-6">
+                    <span class="text-neutral-500 text-base md:text-lg mb-3" style="font-family: 'Instrument Serif', serif;">Made with</span>
+                    <a href="https://donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link mb-3">
+                        <img src="${siteUrl}/donorsparklogo.png" alt="DonorSpark" class="h-12 md:h-16 w-auto">
                     </a>
+                    <a href="https://www.donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link text-neutral-600 hover:text-[#C15A36] transition-colors text-lg md:text-xl" style="font-family: 'Instrument Serif', serif;">www.donorspark.app</a>
                 </div>
-                <a href="https://donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link animate-on-scroll inline-flex items-center gap-2 px-6 py-3 bg-[#C15A36] text-white font-bold rounded-full hover:bg-[#a84d2e] transition-colors">
+                <a href="https://donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link animate-on-scroll inline-flex items-center gap-2 px-6 py-3 bg-[#C15A36] text-white rounded-full hover:bg-[#a84d2e] transition-colors" style="font-family: 'Outfit', sans-serif; font-weight: 600;">
                     Get a free story deck
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
