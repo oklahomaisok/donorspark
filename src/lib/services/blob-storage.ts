@@ -5,6 +5,8 @@ export async function uploadDeckHtml(slug: string, html: string): Promise<string
     access: 'public',
     contentType: 'text/html; charset=utf-8',
     cacheControlMaxAge: 3600,
+    addRandomSuffix: false,
+    allowOverwrite: true,
   });
   return blob.url;
 }
@@ -14,6 +16,8 @@ export async function uploadOgImage(slug: string, pngBuffer: Buffer): Promise<st
     access: 'public',
     contentType: 'image/png',
     cacheControlMaxAge: 86400,
+    addRandomSuffix: false,
+    allowOverwrite: true,
   });
   return blob.url;
 }
