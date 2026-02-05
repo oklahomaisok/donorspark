@@ -4,13 +4,16 @@ import { decks, deckEvents } from '@/db/schema';
 import { desc, sql, eq } from 'drizzle-orm';
 
 // Simple auth - require a secret key for stats access
-const STATS_SECRET = process.env.STATS_SECRET || 'donorspark-stats-2024';
+const STATS_API_KEY = process.env.STATS_API_KEY;
 
 export async function GET(req: NextRequest) {
+  // Support both header auth and query param for easy browser access
   const authHeader = req.headers.get('authorization');
-  const providedKey = authHeader?.replace('Bearer ', '');
+  const headerKey = authHeader?.replace('Bearer ', '');
+  const queryKey = req.nextUrl.searchParams.get('key');
+  const providedKey = headerKey || queryKey;
 
-  if (providedKey !== STATS_SECRET) {
+  if (!STATS_API_KEY || providedKey !== STATS_API_KEY) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
