@@ -13,8 +13,16 @@ export async function GET(
   const deck = await getDeckBySlug(slug);
 
   if (!deck || !deck.deckUrl) {
-    return NextResponse.json({ error: 'Deck not found' }, { status: 404 });
+    return NextResponse.json({
+      error: 'Deck not found',
+      slug,
+      deckFound: !!deck,
+      hasUrl: deck ? !!deck.deckUrl : false,
+    }, { status: 404 });
   }
+
+  // Debug: Log what URL we're fetching
+  console.log(`Fetching deck ${slug} from ${deck.deckUrl}`);
 
   // Proxy the deck HTML from Vercel Blob
   try {
