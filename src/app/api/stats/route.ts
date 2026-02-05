@@ -14,11 +14,11 @@ export async function GET(req: NextRequest) {
   const providedKey = headerKey || queryKey;
 
   if (!STATS_API_KEY) {
-    return NextResponse.json({ error: 'Unauthorized', hint: 'STATS_API_KEY env var not set' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized', reason: 'env_not_set', v: 2 }, { status: 401 });
   }
 
   if (providedKey !== STATS_API_KEY) {
-    return NextResponse.json({ error: 'Unauthorized', hint: 'Key mismatch' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized', reason: 'key_mismatch', v: 2 }, { status: 401 });
   }
 
   try {
