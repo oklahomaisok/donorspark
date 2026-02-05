@@ -22,12 +22,12 @@ export async function POST(req: NextRequest) {
     const baseSlug = slugify(orgName || url.replace(/^https?:\/\//, '').split('/')[0]);
     const slug = `${baseSlug}-${nanoid(6)}`;
 
-    // Trigger the generation task with public access token for real-time UI
-    const handle = await tasks.trigger<typeof generateDeckTask>(
-      'generate-deck',
-      { url, orgName, deckSlug: slug },
-      { publicAccessToken: { enabled: true } }
-    );
+    // Trigger the generation task
+    const handle = await tasks.trigger<typeof generateDeckTask>('generate-deck', {
+      url,
+      orgName,
+      deckSlug: slug,
+    });
 
     // Create DB record
     await createDeck({
