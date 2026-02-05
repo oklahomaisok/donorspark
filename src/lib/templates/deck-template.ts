@@ -35,6 +35,9 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
   const headingFont = fonts.headingFont || 'Montserrat';
   const bodyFont = fonts.bodyFont || 'Roboto';
 
+  // Compute high-contrast CTA button color
+  const ctaButtonColor = getHighContrastButtonColor(primary, accent);
+
   const heroImg = images?.hero || `${config.imageBaseUrl}/community-hero-leader.jpg`;
   const heroVideoFilename = heroImg.split('/').pop()?.replace(/\.(jpg|jpeg|png|webp)$/i, '.mp4') || '';
   const heroVideo = `${config.videoBaseUrl}/${heroVideoFilename}`;
@@ -200,9 +203,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
         <!-- Slide ${showMetricsSlide ? '7' : '6'}: CTA -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
-            <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-between">
-                <header class="flex justify-between items-center animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${showMetricsSlide ? '07' : '06'}]</span><div class="w-2.5 h-2.5 bg-[var(--accent)] rounded-full animate-pulse"></div></header>
-                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="uppercase leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-8">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 bg-[var(--accent)] text-[var(--primary)] font-black rounded hover:bg-white transition-all hover:scale-105 shadow-lg shadow-[var(--accent)]/20"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>${contactEmail ? `<p class="mt-6 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}</div>
+            <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
+                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="uppercase leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-8">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg" style="background-color: ${ctaButtonColor.bg}; color: ${ctaButtonColor.text};"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>${contactEmail ? `<p class="mt-6 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}</div>
             </div>
         </section>
         <!-- Slide ${showMetricsSlide ? '8' : '7'}: DonorSpark -->
@@ -314,4 +316,52 @@ function escHtml(s: string): string {
 
 function escAttr(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function getHighContrastButtonColor(bgColor: string, accentColor: string): { bg: string; text: string } {
+  // Parse hex colors to RGB
+  const parseHex = (hex: string) => ({
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  });
+
+  // Calculate relative luminance (WCAG formula)
+  const getLuminance = (r: number, g: number, b: number) => {
+    const [rs, gs, bs] = [r, g, b].map(c => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  // Calculate contrast ratio between two colors
+  const getContrastRatio = (l1: number, l2: number) => {
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  const bg = parseHex(bgColor);
+  const accent = parseHex(accentColor);
+  const bgLuminance = getLuminance(bg.r, bg.g, bg.b);
+  const accentLuminance = getLuminance(accent.r, accent.g, accent.b);
+
+  const contrastWithAccent = getContrastRatio(bgLuminance, accentLuminance);
+
+  // If accent has good contrast (>3:1), use it
+  if (contrastWithAccent >= 3) {
+    // Determine text color based on accent luminance
+    const textColor = accentLuminance > 0.5 ? '#1a1a1a' : '#ffffff';
+    return { bg: accentColor, text: textColor };
+  }
+
+  // Accent doesn't have enough contrast - use white or a vibrant fallback
+  if (bgLuminance < 0.5) {
+    // Dark background - use white button with dark text
+    return { bg: '#ffffff', text: '#1a1a1a' };
+  } else {
+    // Light background - use dark button with white text
+    return { bg: '#1a1a1a', text: '#ffffff' };
+  }
 }
