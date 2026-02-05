@@ -13,8 +13,12 @@ export async function GET(req: NextRequest) {
   const queryKey = req.nextUrl.searchParams.get('key');
   const providedKey = headerKey || queryKey;
 
-  if (!STATS_API_KEY || providedKey !== STATS_API_KEY) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!STATS_API_KEY) {
+    return NextResponse.json({ error: 'Unauthorized', hint: 'STATS_API_KEY env var not set' }, { status: 401 });
+  }
+
+  if (providedKey !== STATS_API_KEY) {
+    return NextResponse.json({ error: 'Unauthorized', hint: 'Key mismatch' }, { status: 401 });
   }
 
   try {
