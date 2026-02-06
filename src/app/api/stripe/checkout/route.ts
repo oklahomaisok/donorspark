@@ -8,14 +8,21 @@ export async function POST(req: NextRequest) {
   try {
     // Verify user is authenticated
     const { userId: clerkId } = await auth();
+    console.log('Checkout: clerkId =', clerkId);
     if (!clerkId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user from database
     const user = await getUserByClerkId(clerkId);
+    console.log('Checkout: user =', user ? `id=${user.id}` : 'NOT FOUND');
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      // User authenticated with Clerk but not in our database
+      // This happens if the Clerk webhook hasn't run yet
+      return NextResponse.json({
+        error: 'User not found in database. Please try again in a few seconds, or contact support if this persists.',
+        debug: 'Clerk webhook may not have created user record yet'
+      }, { status: 404 });
     }
 
     // Parse request
@@ -29,8 +36,12 @@ export async function POST(req: NextRequest) {
 
     // Get price ID
     const priceId = getPriceId(plan, cycle);
+    console.log('Checkout: plan =', plan, 'cycle =', cycle, 'priceId =', priceId);
     if (!priceId) {
-      return NextResponse.json({ error: 'Invalid plan or cycle' }, { status: 400 });
+      return NextResponse.json({
+        error: 'Invalid plan or cycle',
+        debug: `plan=${plan}, cycle=${cycle}, priceId=${priceId}`
+      }, { status: 400 });
     }
 
     // Get or create Stripe customer
@@ -82,8 +93,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Checkout error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: 'Failed to create checkout session', debug: message },
       { status: 500 }
     );
   }
