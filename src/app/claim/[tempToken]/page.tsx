@@ -130,15 +130,15 @@ export default async function ClaimPage({
       <main className="flex-1 flex flex-col lg:flex-row">
         {/* Deck Preview */}
         <div className="flex-1 bg-neutral-100 p-6 lg:p-12 flex items-center justify-center">
-          <div className="w-full max-w-sm aspect-[3/4] bg-white rounded-xl shadow-2xl overflow-hidden">
+          <div className="w-full max-w-2xl">
             {deck.ogImageUrl ? (
               <img
                 src={deck.ogImageUrl}
                 alt={deck.orgName}
-                className="w-full h-full object-cover"
+                className="w-full h-auto rounded-xl shadow-2xl"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1D2350] to-[#2d3560]">
+              <div className="w-full aspect-[1200/630] flex items-center justify-center bg-gradient-to-br from-[#1D2350] to-[#2d3560] rounded-xl shadow-2xl">
                 <div className="text-center text-white p-6">
                   <h2 className="text-2xl font-bold mb-2">{deck.orgName}</h2>
                   <p className="text-white/70 text-sm">Impact Deck</p>
