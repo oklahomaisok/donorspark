@@ -77,13 +77,29 @@ async function getGeoFromIp(ip: string): Promise<{
 
 export async function POST(req: NextRequest) {
   try {
-    // Get client IP
+    // Get client IP for geolocation (and fallback rate limiting)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || req.headers.get('x-real-ip')
       || 'unknown';
 
-    // Check rate limit
-    const { allowed, remaining, resetAt } = checkRateLimit(ip);
+    // Check if user is authenticated first (for rate limiting)
+    const { userId: clerkId } = await auth();
+    let dbUserId: number | null = null;
+    let organizationId: number | null = null;
+    let dbUser: Awaited<ReturnType<typeof getUserByClerkId>> | null = null;
+
+    if (clerkId) {
+      dbUser = await getUserByClerkId(clerkId);
+      if (dbUser) {
+        dbUserId = dbUser.id;
+      }
+    }
+
+    // Rate limit by user ID (if authenticated) or IP (if anonymous)
+    // This prevents IP spoofing bypass for authenticated users
+    const rateLimitKey = dbUserId ? `user:${dbUserId}` : `ip:${ip}`;
+
+    const { allowed, remaining, resetAt } = checkRateLimit(rateLimitKey);
 
     if (!allowed) {
       const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
@@ -109,35 +125,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    // Check if user is authenticated
-    const { userId: clerkId } = await auth();
-    let dbUserId: number | null = null;
-    let organizationId: number | null = null;
+    // Continue with user/org setup if authenticated
+    if (dbUser) {
+      // Check if user already has an org for this website
+      const existingOrgs = await getUserOrganizations(dbUser.id);
+      const existingOrg = existingOrgs.find(
+        (org) => org.websiteUrl === url || org.name === orgName
+      );
 
-    if (clerkId) {
-      const user = await getUserByClerkId(clerkId);
-      if (user) {
-        dbUserId = user.id;
-
-        // Check if user already has an org for this website
-        const existingOrgs = await getUserOrganizations(user.id);
-        const existingOrg = existingOrgs.find(
-          (org) => org.websiteUrl === url || org.name === orgName
-        );
-
-        if (existingOrg) {
-          organizationId = existingOrg.id;
-        } else {
-          // Create new organization
-          const orgSlug = await generateOrgSlug(orgName || url);
-          const newOrg = await createOrganization({
-            userId: user.id,
-            name: orgName || new URL(url).hostname.replace('www.', ''),
-            slug: orgSlug,
-            websiteUrl: url,
-          });
-          organizationId = newOrg.id;
-        }
+      if (existingOrg) {
+        organizationId = existingOrg.id;
+      } else {
+        // Create new organization
+        const orgSlug = await generateOrgSlug(orgName || url);
+        const newOrg = await createOrganization({
+          userId: dbUser.id,
+          name: orgName || new URL(url).hostname.replace('www.', ''),
+          slug: orgSlug,
+          websiteUrl: url,
+        });
+        organizationId = newOrg.id;
       }
     }
 

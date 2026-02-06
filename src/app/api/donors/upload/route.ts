@@ -68,17 +68,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'CSV must have a "name" column' }, { status: 400 });
     }
 
+    // CSV injection prevention - sanitize fields that start with formula characters
+    const sanitizeField = (value: string | undefined): string | undefined => {
+      if (!value) return undefined;
+      // Remove leading characters that could trigger Excel formula injection
+      const dangerous = /^[=+\-@\t\r]/;
+      if (dangerous.test(value)) {
+        return value.replace(dangerous, '');
+      }
+      return value;
+    };
+
     // Parse donors
     const donors: Array<{ name: string; email?: string; amount?: string }> = [];
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-      const name = cols[nameIndex];
+      const name = sanitizeField(cols[nameIndex]);
       if (!name) continue;
 
       donors.push({
         name,
-        email: emailIndex !== -1 ? cols[emailIndex] : undefined,
-        amount: amountIndex !== -1 ? cols[amountIndex] : undefined,
+        email: sanitizeField(emailIndex !== -1 ? cols[emailIndex] : undefined),
+        amount: sanitizeField(amountIndex !== -1 ? cols[amountIndex] : undefined),
       });
     }
 
