@@ -10,6 +10,9 @@ const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
+// Anonymous deck TTL: 48 hours
+const ANONYMOUS_TTL_MS = 48 * 60 * 60 * 1000;
+
 function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number } {
   const now = Date.now();
   const record = requestCounts.get(ip);
@@ -108,6 +111,10 @@ export async function POST(req: NextRequest) {
     const baseSlug = slugify(orgName || url.replace(/^https?:\/\//, '').split('/')[0]);
     const slug = `${baseSlug}-${nanoid(6)}`;
 
+    // Generate temp token for anonymous claim flow (32 chars)
+    const tempToken = nanoid(32);
+    const expiresAt = new Date(Date.now() + ANONYMOUS_TTL_MS);
+
     // Get geolocation (non-blocking, don't wait too long)
     const geo = await getGeoFromIp(ip);
 
@@ -118,13 +125,15 @@ export async function POST(req: NextRequest) {
       deckSlug: slug,
     });
 
-    // Create DB record with location data
+    // Create DB record with location data and temp token for anonymous claim
     await createDeck({
       userId: null,
       slug,
       orgName: orgName || url,
       orgUrl: url,
       triggerRunId: handle.id,
+      tempToken,
+      expiresAt,
       city: geo?.city,
       region: geo?.region,
       country: geo?.country,
@@ -132,11 +141,13 @@ export async function POST(req: NextRequest) {
       lng: geo?.lng,
     });
 
-    return NextResponse.json(
+    // Build response with cookie
+    const response = NextResponse.json(
       {
         slug,
         runId: handle.id,
         publicAccessToken: handle.publicAccessToken,
+        tempToken, // Return token for client-side use
       },
       {
         headers: {
@@ -146,6 +157,17 @@ export async function POST(req: NextRequest) {
         }
       }
     );
+
+    // Set httpOnly cookie for temp token (used for auto-claim on signup)
+    response.cookies.set('ds_temp_token', tempToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 48 * 60 * 60, // 48 hours in seconds
+      path: '/',
+    });
+
+    return response;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to start generation';
     console.error('Generate error:', message);

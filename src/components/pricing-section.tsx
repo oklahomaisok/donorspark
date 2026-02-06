@@ -1,61 +1,94 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
+import { PLAN_DETAILS, type PlanType, type BillingCycle } from '@/lib/stripe';
 
 interface PricingSectionProps {
   onGetFreeClick: () => void;
+  currentPlan?: PlanType;
 }
 
-export function PricingSection({ onGetFreeClick }: PricingSectionProps) {
+export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: PricingSectionProps) {
   const [isAnnual, setIsAnnual] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
 
-  const plans = [
+  const handleUpgrade = async (plan: PlanType) => {
+    if (plan === 'free') {
+      onGetFreeClick();
+      return;
+    }
+
+    if (!isSignedIn) {
+      router.push('/sign-up');
+      return;
+    }
+
+    setLoading(plan);
+
+    try {
+      const cycle: BillingCycle = isAnnual ? 'annual' : 'monthly';
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, cycle }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('No checkout URL returned');
+        setLoading(null);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setLoading(null);
+    }
+  };
+
+  const plans: Array<{
+    key: PlanType;
+    name: string;
+    description: string;
+    monthlyPrice: number;
+    annualPrice: number;
+    features: readonly string[];
+    cta: string;
+    featured: boolean;
+  }> = [
     {
-      name: 'Free',
-      monthlyPrice: 0,
-      annualPrice: 0,
-      description: 'Try it out with one deck',
-      features: [
-        '1 story deck',
-        'Shareable link',
-        'Mobile-optimized design',
-        'Linked donate button',
-      ],
-      cta: 'Get Started',
-      ctaAction: onGetFreeClick,
+      key: 'free',
+      name: PLAN_DETAILS.free.name,
+      monthlyPrice: PLAN_DETAILS.free.monthlyPrice,
+      annualPrice: PLAN_DETAILS.free.annualPrice,
+      description: PLAN_DETAILS.free.description,
+      features: PLAN_DETAILS.free.features,
+      cta: currentPlan === 'free' ? 'Current Plan' : 'Get Started',
       featured: false,
     },
     {
-      name: 'Starter',
-      monthlyPrice: 29,
-      annualPrice: 279,
-      description: 'For organizations ready to grow',
-      features: [
-        '5 story decks per month',
-        'Custom branding',
-        'Real testimonial integration',
-        'Analytics dashboard',
-        'Priority support',
-      ],
-      cta: 'Start Free Trial',
-      ctaAction: () => {}, // TODO: Link to signup
+      key: 'starter',
+      name: PLAN_DETAILS.starter.name,
+      monthlyPrice: PLAN_DETAILS.starter.monthlyPrice,
+      annualPrice: PLAN_DETAILS.starter.annualPrice,
+      description: PLAN_DETAILS.starter.description,
+      features: PLAN_DETAILS.starter.features,
+      cta: currentPlan === 'starter' ? 'Current Plan' : 'Start Free Trial',
       featured: false,
     },
     {
-      name: 'Growth',
-      monthlyPrice: 79,
-      annualPrice: 749,
-      description: 'For teams that need more',
-      features: [
-        'Unlimited story decks',
-        'Everything in Starter',
-        'Team collaboration',
-        'API access',
-        'White-label option',
-        'Dedicated account manager',
-      ],
-      cta: 'Start Free Trial',
-      ctaAction: () => {}, // TODO: Link to signup
+      key: 'growth',
+      name: PLAN_DETAILS.growth.name,
+      monthlyPrice: PLAN_DETAILS.growth.monthlyPrice,
+      annualPrice: PLAN_DETAILS.growth.annualPrice,
+      description: PLAN_DETAILS.growth.description,
+      features: PLAN_DETAILS.growth.features,
+      cta: currentPlan === 'growth' ? 'Current Plan' : 'Start Free Trial',
       featured: true,
     },
   ];
@@ -104,10 +137,12 @@ export function PricingSection({ onGetFreeClick }: PricingSectionProps) {
         {plans.map((plan) => {
           const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
           const savings = annualSavingsPercent(plan);
+          const isCurrentPlan = plan.key === currentPlan;
+          const isLoading = loading === plan.key;
 
           return (
             <div
-              key={plan.name}
+              key={plan.key}
               className={`relative rounded-3xl p-8 flex flex-col ${
                 plan.featured
                   ? 'bg-ink text-cream ring-4 ring-salmon/50 shadow-xl'
@@ -180,16 +215,27 @@ export function PricingSection({ onGetFreeClick }: PricingSectionProps) {
 
               {/* CTA Button */}
               <button
-                onClick={plan.ctaAction}
-                className={`w-full py-3 px-6 rounded-full font-medium transition-transform hover:scale-105 cursor-pointer ${
+                onClick={() => handleUpgrade(plan.key)}
+                disabled={isCurrentPlan || isLoading}
+                className={`w-full py-3 px-6 rounded-full font-medium transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${
                   plan.featured
-                    ? 'bg-cream text-ink'
-                    : plan.name === 'Free'
-                    ? 'bg-ink text-cream'
+                    ? 'bg-cream text-ink hover:scale-105'
+                    : plan.key === 'free'
+                    ? 'bg-ink text-cream hover:scale-105'
                     : 'bg-ink/10 text-ink hover:bg-ink/20'
-                }`}
+                } ${isLoading ? 'opacity-75' : ''}`}
               >
-                {plan.cta}
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Loading...
+                  </span>
+                ) : (
+                  plan.cta
+                )}
               </button>
             </div>
           );

@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
-import { upsertUser } from '@/db/queries';
+import {
+  upsertUser,
+  getDeckByTempToken,
+  claimDeck,
+  createOrganization,
+  getOrganizationBySlug,
+  getUserByClerkId,
+} from '@/db/queries';
+import { generateOrgSlug } from '@/lib/utils/slug';
+import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest) {
   const svixId = req.headers.get('svix-id');
@@ -41,8 +50,87 @@ export async function POST(req: NextRequest) {
     const lastName = (data.last_name as string) || '';
     const name = [firstName, lastName].filter(Boolean).join(' ') || undefined;
 
+    // Upsert user in database
     await upsertUser(clerkId, email, name);
+
+    // For new users, try to auto-claim a deck if temp token cookie exists
+    if (event.type === 'user.created') {
+      await tryAutoClaimDeck(clerkId);
+    }
   }
 
   return NextResponse.json({ received: true });
+}
+
+/**
+ * Attempt to auto-claim a deck using the temp token from cookie.
+ * This is called after a new user is created.
+ */
+async function tryAutoClaimDeck(clerkId: string) {
+  try {
+    // Get temp token from cookie
+    const cookieStore = await cookies();
+    const tempToken = cookieStore.get('ds_temp_token')?.value;
+
+    if (!tempToken) {
+      console.log('No temp token cookie found for auto-claim');
+      return;
+    }
+
+    // Get deck by temp token
+    const deck = await getDeckByTempToken(tempToken);
+    if (!deck) {
+      console.log('No deck found for temp token');
+      return;
+    }
+
+    // Check if deck is already claimed
+    if (deck.userId) {
+      console.log('Deck already claimed');
+      return;
+    }
+
+    // Check if deck is expired
+    if (deck.isExpired || (deck.expiresAt && new Date(deck.expiresAt) < new Date())) {
+      console.log('Deck expired, cannot auto-claim');
+      return;
+    }
+
+    // Get user from database
+    const user = await getUserByClerkId(clerkId);
+    if (!user) {
+      console.log('User not found in database');
+      return;
+    }
+
+    // Generate a unique org slug
+    let orgSlug = generateOrgSlug(deck.orgName);
+
+    // Check if slug exists, add suffix if needed
+    let slugAttempt = 0;
+    while (await getOrganizationBySlug(orgSlug)) {
+      slugAttempt++;
+      orgSlug = `${generateOrgSlug(deck.orgName)}-${slugAttempt}`;
+    }
+
+    // Create organization from deck data
+    const org = await createOrganization({
+      userId: user.id,
+      name: deck.orgName,
+      slug: orgSlug,
+      websiteUrl: deck.orgUrl,
+      brandData: deck.brandData as Record<string, unknown> | undefined,
+    });
+
+    // Claim the deck
+    await claimDeck(deck.id, user.id, org.id);
+
+    console.log(`Auto-claimed deck ${deck.id} for user ${user.id}, org slug: ${orgSlug}`);
+
+    // Note: We can't delete the cookie here because webhooks don't have access to the response
+    // The cookie will be cleaned up on the next claim attempt or expire naturally
+  } catch (error) {
+    console.error('Auto-claim error:', error);
+    // Don't throw - auto-claim failure shouldn't break user creation
+  }
 }

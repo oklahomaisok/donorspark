@@ -1,7 +1,15 @@
 import type { BrandData } from '../types';
 import { config } from '../config';
 
-export function generateDeckHtml(slug: string, brandData: BrandData): string {
+export interface DeckOptions {
+  isPreviewMode?: boolean;
+  claimUrl?: string;
+  donorName?: string;
+  donorAmount?: string;
+}
+
+export function generateDeckHtml(slug: string, brandData: BrandData, options: DeckOptions = {}): string {
+  const { isPreviewMode = false, claimUrl = '', donorName = '', donorAmount = '' } = options;
   const {
     orgName = 'Organization',
     tagline = '',
@@ -149,7 +157,23 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
         .count-up.counting { animation: countPulse 0.1s ease-in-out; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center selection:bg-[var(--accent)]/30">
+<body class="min-h-screen flex flex-col items-center selection:bg-[var(--accent)]/30${isPreviewMode ? ' pb-20' : ''}">${isPreviewMode ? `
+    <!-- Preview Mode Banner -->
+    <div id="preview-banner" class="fixed bottom-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white px-4 py-3 flex items-center justify-between shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+                <p class="text-sm font-bold">Love your deck?</p>
+                <p class="text-xs opacity-90">Create a free account to save & share it</p>
+            </div>
+        </div>
+        <a href="${claimUrl}" class="px-4 py-2 bg-white text-[#C15A36] rounded-full text-sm font-bold hover:bg-neutral-100 transition-colors flex items-center gap-2">
+            Claim Deck
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+    </div>` : ''}
     <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-4 backdrop-blur-md border-b border-black/10 h-16" style="background-color: var(--header-bg); color: var(--header-text);">
         <div class="flex items-center gap-3 w-auto md:w-1/3">
             ${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-12 md:h-14 max-w-[240px] md:max-w-[320px] w-auto object-contain">` : `<span class="font-display text-lg font-bold" style="color: var(--header-text);">${escHtml(orgName)}</span>`}
@@ -210,6 +234,20 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
                 <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-6">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${ctaButtonColor.bg}; color: ${ctaButtonColor.text};"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                    ${isPreviewMode ? `
+                    <div class="relative group">
+                        <p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story</p>
+                        <div class="flex items-center gap-3 opacity-50 pointer-events-none">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></div>
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></div>
+                        </div>
+                        <a href="${claimUrl}" class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                            <span class="text-white text-xs font-bold uppercase tracking-wider">Sign up to unlock</span>
+                        </a>
+                    </div>` : `
                     <p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story</p>
                     <div class="flex items-center gap-3">
                         <a href="mailto:?subject=${encodeURIComponent(`Check out ${orgName}'s Impact Story`)}&body=${encodeURIComponent(`I thought you'd be interested in this: https://donorspark.app/decks/${slug}`)}" class="share-btn w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="Share via Email">
@@ -219,7 +257,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         </a>
                         <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://donorspark.app/decks/${slug}`)}" target="_blank" rel="noopener" class="share-btn w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="Share on Facebook">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 18.062 24 12.073z"/></svg>
                         </a>
                         <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://donorspark.app/decks/${slug}`)}" target="_blank" rel="noopener" class="share-btn w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="Share on LinkedIn">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
@@ -227,7 +265,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
                         <button onclick="navigator.clipboard.writeText('https://donorspark.app/decks/${slug}').then(()=>{this.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'18\\' height=\\'18\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'white\\' stroke-width=\\'2\\'><polyline points=\\'20 6 9 17 4 12\\'/></svg>';setTimeout(()=>{this.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'18\\' height=\\'18\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'white\\' stroke-width=\\'2\\'><rect width=\\'14\\' height=\\'14\\' x=\\'8\\' y=\\'8\\' rx=\\'2\\' ry=\\'2\\'/><path d=\\'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\\'/></svg>'},2000)})" class="share-btn w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer" title="Copy Link">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                         </button>
-                    </div>
+                    </div>`}
                     ${contactEmail ? `<p class="mt-4 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}
                 </div>
             </div>
@@ -235,6 +273,25 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
         <!-- Slide ${showMetricsSlide ? '8' : '7'}: DonorSpark -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-white border-neutral-200 border relative shadow-2xl rounded-xl">
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center items-center text-center">
+                ${isPreviewMode ? `
+                <!-- Preview mode: Claim CTA -->
+                <div class="animate-on-scroll flex flex-col items-center">
+                    <div class="w-16 h-16 rounded-full bg-[#C15A36]/10 flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C15A36" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-neutral-800 mb-2" style="font-family: 'Outfit', sans-serif;">Keep This Deck Forever</h3>
+                    <p class="text-neutral-500 text-sm mb-6 max-w-xs">Create a free account to save your deck, unlock sharing, and access your dashboard.</p>
+                    <a href="${claimUrl}" class="inline-flex items-center gap-2 px-8 py-4 bg-[#C15A36] text-white rounded-full hover:bg-[#a84d2e] transition-colors mb-4 shadow-lg" style="font-family: 'Outfit', sans-serif; font-weight: 600;">
+                        Create Free Account
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                    <p class="text-neutral-400 text-xs">No credit card required</p>
+                </div>
+                <div class="mt-8 pt-6 border-t border-neutral-200 w-full">
+                    <span class="text-neutral-400 text-xs" style="font-family: 'Instrument Serif', serif;">Made with</span>
+                    <img src="${siteUrl}/donorsparklogo.png" alt="DonorSpark" class="h-8 w-auto mx-auto mt-1 opacity-60">
+                </div>
+                ` : `
                 <div class="animate-on-scroll flex flex-col items-center">
                     <span class="text-neutral-500 text-base md:text-lg mb-2" style="font-family: 'Instrument Serif', serif;">Made with</span>
                     <a href="https://donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link mb-6">
@@ -246,6 +303,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData): string {
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
                 <a href="https://www.donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link animate-on-scroll text-neutral-500 hover:text-[#C15A36] transition-colors text-base md:text-lg" style="font-family: 'Instrument Serif', serif;">www.donorspark.app</a>
+                `}
             </div>
         </section>
     </main>
