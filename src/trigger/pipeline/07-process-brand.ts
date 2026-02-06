@@ -121,7 +121,11 @@ function resolveColors(
   };
 
   const primary = usableLogoPrimary || validateColor(claudePrimary, extractedPrimary, '#1D2350');
-  const accent = extractedAccent || logoAccent || claudeAccent || '#78A22F';
+
+  // Fallback accent: white for dark backgrounds, dark gray for light backgrounds
+  const primaryIsDark = !isLightHex(primary);
+  const fallbackAccent = primaryIsDark ? '#FFFFFF' : '#1A1A1A';
+  const accent = extractedAccent || logoAccent || claudeAccent || fallbackAccent;
 
   let secondary: string | null = null;
   const logoSecondary = logoColors.dominant?.find(c => c.hex !== usableLogoPrimary && isUsable(c.hex))?.hex;
