@@ -106,6 +106,9 @@ export const generateDeckTask = task({
           sector: analysis.sector,
           hasTagline: !!analysis.tagline,
           programsFound: analysis.programs?.length || 0,
+          claudePrimary: analysis.colors?.primary,
+          claudeAccent: analysis.colors?.accent,
+          claudeSecondary: analysis.colors?.secondary,
         })
       );
 
@@ -128,6 +131,8 @@ export const generateDeckTask = task({
         orgName: brandData.orgName,
         sector: brandData.sector,
         primaryColor: brandData.colors?.primary,
+        accentColor: brandData.colors?.accent,
+        secondaryColor: brandData.colors?.secondary,
         headingFont: brandData.fonts?.headingFont,
       });
 
