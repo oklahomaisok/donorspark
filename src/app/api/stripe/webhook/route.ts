@@ -88,7 +88,12 @@ async function handleCheckoutComplete(session: any) {
 
   // Get the subscription to find the price
   console.log('Retrieving subscription:', subscriptionId);
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
+  // Cast to access the subscription data
+  const subscription = subscriptionResponse as unknown as {
+    items: { data: Array<{ price: { id: string } }> };
+    current_period_end?: number;
+  };
   console.log('Subscription current_period_end:', subscription.current_period_end);
 
   const priceId = subscription.items.data[0]?.price.id;
