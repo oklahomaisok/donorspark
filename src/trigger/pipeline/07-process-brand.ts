@@ -178,45 +178,59 @@ function getContrastRatio(hex1: string, hex2: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Adjust accent color to ensure readable contrast
-// Note: Deck backgrounds are always effectively dark due to image overlays,
-// so we only lighten accents, never darken them
-function ensureAccentContrast(accent: string, background: string): string {
+// Adjust accent color to ensure readable contrast against primary background
+// Some slides show accent text directly on primary (no dark overlay)
+function ensureAccentContrast(accent: string, primary: string): string {
   const minContrast = 3; // WCAG AA for large text
 
-  // Check contrast against actual background
-  const contrast = getContrastRatio(accent, background);
+  // Check contrast against primary (some slides have no dark overlay)
+  const contrast = getContrastRatio(accent, primary);
   if (contrast >= minContrast) {
-    return accent; // Already has enough contrast
+    return accent; // Already has enough contrast with primary
   }
 
-  // Also check against near-black (what the deck actually looks like with overlays)
-  const darkOverlay = '#1a1a1a';
-  const darkContrast = getContrastRatio(accent, darkOverlay);
-  if (darkContrast >= minContrast) {
-    return accent; // Works against dark overlays
-  }
+  console.log(`[Colors] Accent ${accent} has poor contrast (${contrast.toFixed(2)}) with primary ${primary}, adjusting...`);
 
   // Parse the accent color
   let r = parseInt(accent.slice(1, 3), 16);
   let g = parseInt(accent.slice(3, 5), 16);
   let b = parseInt(accent.slice(5, 7), 16);
 
-  // Always lighten (deck backgrounds are dark due to overlays)
-  for (let i = 0; i < 20; i++) {
-    const step = 15;
-    r = Math.min(255, r + step);
-    g = Math.min(255, g + step);
-    b = Math.min(255, b + step);
+  // Determine if primary is dark or light
+  const primaryLuminance = (() => {
+    const pr = parseInt(primary.slice(1, 3), 16) / 255;
+    const pg = parseInt(primary.slice(3, 5), 16) / 255;
+    const pb = parseInt(primary.slice(5, 7), 16) / 255;
+    return 0.299 * pr + 0.587 * pg + 0.114 * pb;
+  })();
+
+  // For dark primaries, lighten the accent; for light primaries, darken it
+  // But bias toward lightening since most deck slides have dark overlays
+  const shouldLighten = primaryLuminance < 0.6;
+
+  for (let i = 0; i < 25; i++) {
+    const step = 12;
+    if (shouldLighten) {
+      r = Math.min(255, r + step);
+      g = Math.min(255, g + step);
+      b = Math.min(255, b + step);
+    } else {
+      r = Math.max(0, r - step);
+      g = Math.max(0, g - step);
+      b = Math.max(0, b - step);
+    }
 
     const adjusted = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    if (getContrastRatio(adjusted, darkOverlay) >= minContrast) {
+    if (getContrastRatio(adjusted, primary) >= minContrast) {
+      console.log(`[Colors] Adjusted accent to ${adjusted}`);
       return adjusted;
     }
   }
 
-  // Fallback: bright gold
-  return '#FFD700';
+  // Fallback: white for dark primaries, dark gray for light primaries
+  const fallback = shouldLighten ? '#FFFFFF' : '#1A1A1A';
+  console.log(`[Colors] Using fallback accent ${fallback}`);
+  return fallback;
 }
 
 function isLightHex(hex: string | null): boolean {
