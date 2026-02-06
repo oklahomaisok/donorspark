@@ -68,26 +68,26 @@ export async function POST(req: NextRequest) {
 }
 
 async function handleCheckoutComplete(session: any) {
+  console.log('handleCheckoutComplete called with session:', JSON.stringify(session.metadata));
+
   const userId = parseInt(session.metadata?.userId, 10);
   if (!userId || isNaN(userId)) {
-    console.error('No userId in checkout session metadata');
-    return;
+    throw new Error(`No userId in checkout session metadata. Got: ${JSON.stringify(session.metadata)}`);
   }
 
   // Verify user exists before updating
   const user = await getUserById(userId);
   if (!user) {
-    console.error('User not found for userId:', userId);
-    return;
+    throw new Error(`User not found for userId: ${userId}`);
   }
 
   const subscriptionId = session.subscription;
   if (!subscriptionId) {
-    console.error('No subscription in checkout session');
-    return;
+    throw new Error('No subscription in checkout session');
   }
 
   // Get the subscription to find the price
+  console.log('Retrieving subscription:', subscriptionId);
   const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
   const subscription = subscriptionResponse as unknown as {
     items: { data: Array<{ price: { id: string } }> };
@@ -96,16 +96,16 @@ async function handleCheckoutComplete(session: any) {
   const priceId = subscription.items.data[0]?.price.id;
 
   if (!priceId) {
-    console.error('No price found in subscription');
-    return;
+    throw new Error('No price found in subscription');
   }
 
+  console.log('Got priceId:', priceId);
   const planInfo = getPlanFromPriceId(priceId);
   if (!planInfo) {
-    console.error('Unknown price ID:', priceId);
-    return;
+    throw new Error(`Unknown price ID: ${priceId}. Check STRIPE_*_PRICE_ID env vars.`);
   }
 
+  console.log('Updating user plan:', userId, planInfo);
   await updateUserPlan(userId, {
     plan: planInfo.plan as Plan,
     planBillingCycle: planInfo.cycle as BillingCycle,
