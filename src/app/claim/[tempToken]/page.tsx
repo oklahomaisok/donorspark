@@ -160,7 +160,7 @@ export default async function ClaimPage({
 
             <div className="space-y-4">
               <Link
-                href={`/sign-up?redirect_url=/api/claim?tempToken=${tempToken}`}
+                href={`/sign-up?redirect_url=${encodeURIComponent(`/api/claim?tempToken=${tempToken}`)}`}
                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#C15A36] text-white rounded-lg font-semibold hover:bg-[#a84d2e] transition-colors"
               >
                 Create Free Account
@@ -180,7 +180,7 @@ export default async function ClaimPage({
               </div>
 
               <Link
-                href={`/sign-in?redirect_url=/api/claim?tempToken=${tempToken}`}
+                href={`/sign-in?redirect_url=${encodeURIComponent(`/api/claim?tempToken=${tempToken}`)}`}
                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 border-2 border-neutral-200 text-neutral-700 rounded-lg font-semibold hover:bg-neutral-50 transition-colors"
               >
                 Sign In to Existing Account
