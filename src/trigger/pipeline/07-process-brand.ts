@@ -196,8 +196,10 @@ function ensureAccentContrast(accent: string, primary: string): string {
     return 0.299 * pr + 0.587 * pg + 0.114 * pb;
   })();
 
-  const fallback = primaryLuminance < 0.5 ? '#FFFFFF' : '#1A1A1A';
-  console.log(`[Colors] Accent ${accent} failed contrast (${contrast.toFixed(2)}) with primary ${primary}, using ${fallback}`);
+  // Use white for most cases since deck slides have dark overlays on images
+  // Only use black for very light primaries (luminance > 0.65)
+  const fallback = primaryLuminance < 0.65 ? '#FFFFFF' : '#1A1A1A';
+  console.log(`[Colors] Accent ${accent} failed contrast (${contrast.toFixed(2)}) with primary ${primary} (lum=${primaryLuminance.toFixed(2)}), using ${fallback}`);
   return fallback;
 }
 

@@ -58,8 +58,7 @@ export function generateOgHtml(slug: string, brandData: BrandData): string {
             justify-content: space-between;
         }
         .logo-area { display: flex; align-items: center; gap: 24px; }
-        .logo-area .logo-wrapper { background: white; padding: 12px 20px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-        .logo-area img { height: 80px; width: auto; max-width: 300px; object-fit: contain; }
+        .logo-area img { height: 70px; width: auto; max-width: 280px; object-fit: contain; }
         .logo-text { font-size: 36px; font-weight: 700; color: white; }
         .content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
         h1 { font-size: 56px; font-weight: 800; color: white; line-height: 1.1; margin-bottom: 20px; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
@@ -73,7 +72,7 @@ export function generateOgHtml(slug: string, brandData: BrandData): string {
     <div class="bg-overlay"></div>
     <div class="container">
         <div class="logo-area">
-            ${showLogo ? `<div class="logo-wrapper"><img src="${logoUrl}" alt="Logo" onerror="this.parentElement.style.display='none'"></div>` : `<span class="logo-text">${orgName}</span>`}
+            ${showLogo ? `<img src="${logoUrl}" alt="Logo" onerror="this.style.display='none'">` : `<span class="logo-text">${orgName}</span>`}
         </div>
         <div class="content">
             <h1>${headlineMain} <span>${headlineAccent}</span></h1>
