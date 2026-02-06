@@ -1,4 +1,4 @@
-import { eq, desc, lt, and, isNull } from 'drizzle-orm';
+import { eq, desc, lt, and, isNull, inArray } from 'drizzle-orm';
 import { db } from './index';
 import { users, decks, organizations, upgradeEvents, donorUploads } from './schema';
 import type { BrandData } from '@/lib/types';
@@ -251,19 +251,34 @@ export async function claimDeck(
     .where(eq(decks.id, deckId));
 }
 
-export async function markExpiredDecks() {
+export async function getExpiredAnonymousDecks() {
   const now = new Date();
-  const result = await db.update(decks)
-    .set({ isExpired: true, updatedAt: new Date() })
+  return db.select({
+    id: decks.id,
+    slug: decks.slug,
+    deckUrl: decks.deckUrl,
+    ogImageUrl: decks.ogImageUrl,
+  })
+    .from(decks)
     .where(
       and(
         isNull(decks.userId),
         lt(decks.expiresAt, now),
         eq(decks.isExpired, false)
       )
-    )
+    );
+}
+
+export async function deleteDecks(deckIds: number[]) {
+  if (deckIds.length === 0) return 0;
+  const result = await db.delete(decks)
+    .where(inArray(decks.id, deckIds))
     .returning({ id: decks.id });
   return result.length;
+}
+
+export async function deleteDeckById(deckId: number) {
+  await db.delete(decks).where(eq(decks.id, deckId));
 }
 
 export async function incrementDeckViews(slug: string) {
