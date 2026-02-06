@@ -95,40 +95,27 @@ export async function GET(
 }
 
 /**
- * Inject preview mode: replace share buttons on CTA slide + full countdown banner on last slide
+ * Inject preview mode: full-width countdown banner on CTA slide (replaces share buttons)
  */
 function injectPreviewMode(html: string, claimUrl: string, expiresAt: string | null): string {
-  // 1. Replace share buttons on CTA slide with smaller claim banner
+  // Replace share buttons on CTA slide with full-width countdown banner
   const shareButtonsPattern = /<p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story<\/p>\s*<div class="flex items-center gap-3">[\s\S]*?<\/div>/;
-  const ctaBanner = `
-                    <!-- Claim banner on CTA slide -->
-                    <div class="mt-2 p-3 rounded-xl bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white text-center">
-                        <p class="text-sm font-bold">Love your deck?</p>
-                        <a href="${claimUrl}" class="inline-flex items-center gap-2 mt-2 px-4 py-2 bg-white text-[#C15A36] rounded-full text-sm font-bold hover:bg-neutral-100 transition-colors">
-                            Create Free Account
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+
+  const countdownBanner = `
+                    <!-- Full-width countdown banner on CTA slide -->
+                    <div class="w-[calc(100%+3rem)] md:w-[calc(100%+5rem)] -mx-6 md:-mx-10 mt-4 px-6 py-5 bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white text-center">
+                        <div class="text-white/80 text-xs uppercase tracking-widest mb-1">This Slide Deck Expires In</div>
+                        <div id="countdown-timer" class="text-white text-2xl md:text-3xl font-mono font-bold mb-2" data-expires="${expiresAt || ''}">--:--:--</div>
+                        <div class="text-white text-sm font-medium mb-3">Want to Save & Share It?</div>
+                        <a href="${claimUrl}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#C15A36] rounded-full text-sm font-bold hover:bg-neutral-100 transition-all shadow-lg hover:scale-105">
+                            Create Your Free Account
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                         </a>
                     </div>`;
-  html = html.replace(shareButtonsPattern, ctaBanner);
 
-  // 2. Replace the entire last slide (DonorSpark slide) content with full-width countdown banner
-  // Match the inner content div of the last slide
-  const lastSlidePattern = /<div class="animate-on-scroll flex flex-col items-center">\s*<span class="text-neutral-500[^"]*"[^>]*>Made with<\/span>[\s\S]*?<\/a>\s*<\/div>/;
+  html = html.replace(shareButtonsPattern, countdownBanner);
 
-  const countdownBanner = `<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#C15A36] to-[#E07A50] -m-6 md:-m-10 p-6 md:p-10 rounded-xl">
-                    <div class="text-white/80 text-sm uppercase tracking-widest mb-2">This Slide Deck Expires In</div>
-                    <div id="countdown-timer" class="text-white text-5xl md:text-6xl font-mono font-bold mb-4" data-expires="${expiresAt || ''}">--:--:--</div>
-                    <div class="text-white text-xl md:text-2xl font-bold mb-6">Want to Save & Share It?</div>
-                    <a href="${claimUrl}" class="inline-flex items-center gap-3 px-8 py-4 bg-white text-[#C15A36] rounded-full text-lg font-bold hover:bg-neutral-100 transition-all shadow-lg hover:scale-105">
-                        Create Your Free Account
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                    </a>
-                    <p class="text-white/70 text-sm mt-4">No credit card required</p>
-                </div>`;
-
-  html = html.replace(lastSlidePattern, countdownBanner);
-
-  // 3. Inject countdown timer script before </body>
+  // Inject countdown timer script before </body>
   const countdownScript = `
     <script>
     (function() {
