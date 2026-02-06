@@ -176,12 +176,12 @@ export default function Home() {
 
             <div className="flex flex-col gap-12">
               <div className="border-l border-cream/20 pl-8">
-                <h3 className="text-3xl serif mb-3">Here&apos;s what happens next: Nothing.</h3>
-                <p className="opacity-60">Because websites don&apos;t get forwarded. 40-page reports don&apos;t get read. And that Canva doc you made at 11pm doesn&apos;t make anyone feel the weight of what you do.</p>
+                <h3 className="text-3xl serif mb-3">Donors need to understand your mission in under 60 seconds.</h3>
+                <p className="opacity-60">They won&apos;t read a website. They won&apos;t open a PDF. If your impact isn&apos;t clear in the time it takes to scroll a phone screen, the moment passes — and so does the gift.</p>
               </div>
               <div className="border-l border-cream/20 pl-8">
-                <h3 className="text-3xl serif mb-3">The gap isn&apos;t your impact.</h3>
-                <p className="opacity-60">It&apos;s how you package it. Donors don&apos;t give to missions they don&apos;t understand. You need something scannable, shareable, and emotionally resonant.</p>
+                <h3 className="text-3xl serif mb-3">A lack of clarity may be costing you tens of thousands in donor and grant dollars.</h3>
+                <p className="opacity-60">It&apos;s not your impact — it&apos;s your packaging. Grant reviewers skim. Board prospects move on. Every day without a clear, shareable story is a day you&apos;re leaving money on the table.</p>
               </div>
             </div>
           </div>
