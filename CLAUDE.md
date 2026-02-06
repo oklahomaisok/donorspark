@@ -19,9 +19,14 @@ AI-powered impact deck generator for nonprofits.
 | Database schema | `src/db/schema.ts` |
 | Database queries | `src/db/queries.ts` |
 | Deck generation task | `src/trigger/tasks/generate-deck.ts` |
+| Pipeline logger | `src/trigger/lib/logger.ts` |
+| Logo discovery | `src/trigger/pipeline/02-discover-logo.ts` |
+| Color extraction | `src/trigger/pipeline/03-extract-colors.ts` |
+| Brand processing | `src/trigger/pipeline/07-process-brand.ts` |
 | Donor batch task | `src/trigger/tasks/generate-donor-decks.ts` |
 | Deck HTML template | `src/lib/templates/deck-template.ts` |
 | OG image template | `src/lib/templates/og-template.ts` |
+| Deck route (preview injection) | `src/app/decks/[slug]/route.ts` |
 | Stripe config | `src/lib/stripe.ts` |
 | Email client | `src/lib/resend.ts` |
 
@@ -58,16 +63,43 @@ Set same `POSTGRES_URL`, `ANTHROPIC_API_KEY`, `BLOB_READ_WRITE_TOKEN` in Trigger
 ## Deck Generation Pipeline
 
 1. Screenshot website (Puppeteer)
-2. Discover logo + detect fonts
+2. Discover logo + detect fonts (Apistemic API → DOM scrape → Google favicon)
 3. Extract colors (Vision API + logo analysis)
 4. Find about page content
 5. Extract metrics (regex scraping)
-6. Analyze with Claude
-7. Process brand data (merge all sources)
+6. Analyze with Claude (colors, content, sector)
+7. Process brand data (merge all sources, contrast checks)
+7b. Trim logo padding
 8. Generate deck HTML
 9. Generate OG HTML
 10. Screenshot OG to PNG
 11. Deploy to Vercel Blob + update DB
+
+### Structured Logging
+Pipeline uses `PipelineLogger` class for structured JSON logs. View in Trigger.dev dashboard under run logs. Each step logs duration, status, and relevant data.
+
+### Color Selection Logic
+Colors are selected in this priority order:
+1. `extractedAccent` - from buttons/links on the page (Vision API)
+2. `logoAccent` - vibrant colors from logo
+3. `claudeAccent` - Claude's suggestion
+4. Fallback - white (dark bg) or black (light bg)
+
+**Contrast check**: If accent doesn't have WCAG AA contrast (ratio ≥ 3) against primary:
+- Use original accent if it passes
+- Fall back to white (if primary luminance < 0.65) or black (otherwise)
+- No hue manipulation - keeps colors clean
+
+### Logo Handling
+- Logos display directly on header background (no forced white wrapper)
+- Logo sources tried in order: Apistemic API → DOM scrape → Google favicon
+- Favicon uses extracted logo when available, falls back to generated initial
+
+### Anonymous Preview Mode
+Anonymous decks get preview mode injected at serve-time (`/decks/[slug]/route.ts`):
+- Full-width countdown banner on CTA slide showing time until expiration
+- Share buttons replaced with "Create Free Account" CTA
+- Countdown timer updates in real-time
 
 ## User Plans
 
@@ -113,6 +145,21 @@ Set same `POSTGRES_URL`, `ANTHROPIC_API_KEY`, `BLOB_READ_WRITE_TOKEN` in Trigger
 ### useSearchParams() build error
 - **Cause**: Next.js requires Suspense boundary for client components using useSearchParams
 - **Fix**: Wrap component in `<Suspense>` or move to separate client component
+
+### Logo not found / using Google favicon
+- **Cause**: Apistemic API returned small image, DOM scrape didn't find logo
+- **Debug**: Check Trigger.dev logs for `[Logo Discovery]` entries
+- **Common issues**: JS-heavy sites, lazy-loaded images, non-standard selectors
+
+### Wrong accent color (too dark/light)
+- **Cause**: Color contrast function adjusted or fell back
+- **Debug**: Check logs for `claudeAccent` vs final `accentColor`
+- **Logic**: If accent fails contrast test with primary, falls back to white/black
+
+### Accent text unreadable (same color as background)
+- **Cause**: Both primary and accent are similar colors
+- **Fix**: Contrast check should catch this and fall back to white/black
+- **Debug**: Check `[Colors]` log entries for contrast ratio and luminance
 
 ## Testing Checklist
 
