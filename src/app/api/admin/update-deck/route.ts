@@ -7,11 +7,14 @@ import { generateDeckHtml } from '@/lib/templates/deck-template';
 import { uploadDeckHtml } from '@/lib/services/blob-storage';
 import type { BrandData } from '@/lib/types';
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'donorspark-admin-2024';
-
 export async function POST(request: NextRequest) {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) {
+    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+  }
+
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${ADMIN_SECRET}`) {
+  if (authHeader !== `Bearer ${adminSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

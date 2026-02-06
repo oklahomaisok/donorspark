@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SITE_PASSWORD = 'donorspark2026';
+const SITE_PASSWORD = process.env.SITE_PASSWORD;
 const AUTH_COOKIE = 'donorspark_beta_auth';
 
 export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json();
+
+    if (!SITE_PASSWORD) {
+      return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+    }
 
     if (password === SITE_PASSWORD) {
       const response = NextResponse.json({ success: true });

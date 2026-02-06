@@ -67,9 +67,16 @@ export async function POST(req: NextRequest) {
 }
 
 async function handleCheckoutComplete(session: any) {
-  const userId = parseInt(session.metadata?.userId);
-  if (!userId) {
+  const userId = parseInt(session.metadata?.userId, 10);
+  if (!userId || isNaN(userId)) {
     console.error('No userId in checkout session metadata');
+    return;
+  }
+
+  // Verify user exists before updating
+  const user = await getUserById(userId);
+  if (!user) {
+    console.error('User not found for userId:', userId);
     return;
   }
 

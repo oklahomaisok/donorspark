@@ -42,6 +42,9 @@ export async function GET(
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
+    if (org.userId !== user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
     // Get all personalized decks for this base deck
     const personalizedDecks = await getPersonalizedDecks(baseDeck.id);

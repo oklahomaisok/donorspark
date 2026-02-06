@@ -42,10 +42,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid base deck' }, { status: 400 });
     }
 
-    // Get organization
+    // Get organization and verify ownership
     const org = baseDeck.organizationId ? await getOrganizationById(baseDeck.organizationId) : null;
     if (!org) {
       return NextResponse.json({ error: 'No organization found for deck' }, { status: 400 });
+    }
+    if (org.userId !== user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     // Parse CSV
