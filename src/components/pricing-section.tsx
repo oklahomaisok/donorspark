@@ -11,7 +11,7 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: PricingSectionProps) {
-  const [isAnnual, setIsAnnual] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(true);
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
   const { isSignedIn } = useAuth();
@@ -185,14 +185,22 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
                     </span>
                   )}
                 </div>
-                {isAnnual && plan.monthlyPrice > 0 && (
+                {plan.monthlyPrice > 0 && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className={`text-sm ${plan.featured ? 'opacity-70' : 'opacity-50'}`}>
-                      Billed ${plan.annualPrice}/year
-                    </span>
-                    {savings > 0 && (
-                      <span className="text-xs font-medium text-sage bg-sage/20 px-2 py-1 rounded-full">
-                        Save {savings}%
+                    {isAnnual ? (
+                      <>
+                        <span className={`text-sm ${plan.featured ? 'opacity-70' : 'opacity-50'}`}>
+                          Billed ${plan.annualPrice}/year
+                        </span>
+                        {savings > 0 && (
+                          <span className="text-xs font-medium text-sage bg-sage/20 px-2 py-1 rounded-full">
+                            Save {savings}%
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className={`text-sm ${plan.featured ? 'opacity-70' : 'opacity-50'}`}>
+                        or ${Math.round(plan.annualPrice / 12)}/mo billed annually
                       </span>
                     )}
                   </div>
