@@ -1,3 +1,99 @@
+# DonorSpark V3
+
+AI-powered impact deck generator for nonprofits.
+
+## Architecture
+
+- **Next.js 15** App Router on Vercel
+- **Trigger.dev v4** for background job processing (separate deployment)
+- **Neon Postgres** via `@neondatabase/serverless`
+- **Clerk** for authentication (Google OAuth)
+- **Stripe** for subscription billing
+- **Resend** for transactional emails
+- **Vercel Blob** for deck HTML + OG images
+
+## Key Files
+
+| Purpose | Location |
+|---------|----------|
+| Database schema | `src/db/schema.ts` |
+| Database queries | `src/db/queries.ts` |
+| Deck generation task | `src/trigger/tasks/generate-deck.ts` |
+| Donor batch task | `src/trigger/tasks/generate-donor-decks.ts` |
+| Deck HTML template | `src/lib/templates/deck-template.ts` |
+| OG image template | `src/lib/templates/og-template.ts` |
+| Stripe config | `src/lib/stripe.ts` |
+| Email client | `src/lib/resend.ts` |
+
+## URL Structure
+
+- `/` - Landing page with deck generator
+- `/s/[orgSlug]` - Organization's public deck
+- `/s/[orgSlug]/thankyou/[donorSlug]` - Personalized donor thank-you
+- `/decks/[slug]` - Legacy URLs (redirect to `/s/`)
+- `/dashboard` - Authenticated user dashboard
+- `/claim/[tempToken]` - Anonymous deck claim flow
+- `/pricing` - Subscription plans
+
+## Deployment
+
+### Vercel (Next.js)
+Push to GitHub auto-deploys. Required env vars:
+- `POSTGRES_URL` - Neon connection string
+- `CLERK_SECRET_KEY` / `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_STARTER_MONTHLY_PRICE_ID` / `STRIPE_STARTER_ANNUAL_PRICE_ID`
+- `STRIPE_GROWTH_MONTHLY_PRICE_ID` / `STRIPE_GROWTH_ANNUAL_PRICE_ID`
+- `RESEND_API_KEY`
+- `CRON_SECRET` - For cron job auth
+- `SITE_PASSWORD` - Optional password protection
+- `BLOB_READ_WRITE_TOKEN`
+- `ANTHROPIC_API_KEY`
+- `TRIGGER_SECRET_KEY`
+
+### Trigger.dev
+Separate deployment: `npx trigger.dev@latest deploy`
+Set same `POSTGRES_URL`, `ANTHROPIC_API_KEY`, `BLOB_READ_WRITE_TOKEN` in Trigger.dev dashboard.
+
+## Deck Generation Pipeline
+
+1. Screenshot website (Puppeteer)
+2. Discover logo + detect fonts
+3. Extract colors (Vision API + logo analysis)
+4. Find about page content
+5. Extract metrics (regex scraping)
+6. Analyze with Claude
+7. Process brand data (merge all sources)
+8. Generate deck HTML
+9. Generate OG HTML
+10. Screenshot OG to PNG
+11. Deploy to Vercel Blob + update DB
+
+## User Plans
+
+| Plan | Features |
+|------|----------|
+| Free | 1 deck, DonorSpark branding, basic analytics |
+| Starter ($29/mo) | 5 decks, no branding, priority support |
+| Growth ($79/mo) | Unlimited decks, donor personalization (CSV upload) |
+
+## Database Tables
+
+- `users` - Clerk-synced users with plan info
+- `organizations` - Nonprofits with brand data
+- `decks` - Generated decks (parent or personalized)
+- `donor_uploads` - CSV upload tracking
+- `upgrade_events` - Behavior tracking for upgrade triggers
+
+## Security Notes
+
+- Rate limiting: 10 req/hour per user ID (or IP for anonymous)
+- CSV injection prevention on donor uploads
+- Cron endpoints require `CRON_SECRET` Bearer token
+- Stripe webhooks verified with signature
+
+---
+
 <!-- TRIGGER.DEV basic START -->
 # Trigger.dev Basic Tasks (v4)
 

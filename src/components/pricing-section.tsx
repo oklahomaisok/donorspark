@@ -23,7 +23,10 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
     }
 
     if (!isSignedIn) {
-      router.push('/sign-up');
+      // Store checkout intent so we can resume after sign-up
+      const cycle: BillingCycle = isAnnual ? 'annual' : 'monthly';
+      const checkoutIntent = encodeURIComponent(JSON.stringify({ plan, cycle }));
+      router.push(`/sign-up?redirect_url=/pricing?checkout=${checkoutIntent}`);
       return;
     }
 
