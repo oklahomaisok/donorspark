@@ -66,6 +66,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Create checkout session
+    const successUrl = `${config.siteUrl}/dashboard?upgraded=true`;
+    const cancelUrl = `${config.siteUrl}/pricing?canceled=true`;
+    console.log('Checkout: siteUrl =', config.siteUrl);
+    console.log('Checkout: successUrl =', successUrl);
+    console.log('Checkout: cancelUrl =', cancelUrl);
+    console.log('Checkout: priceId =', priceId);
+
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       mode: 'subscription',
@@ -76,8 +83,8 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${config.siteUrl}/dashboard?upgraded=true`,
-      cancel_url: `${config.siteUrl}/pricing?canceled=true`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       subscription_data: {
         metadata: {
           userId: user.id.toString(),
@@ -100,7 +107,11 @@ export async function POST(req: NextRequest) {
     console.error('Checkout error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to create checkout session', debug: message },
+      {
+        error: 'Failed to create checkout session',
+        debug: message,
+        siteUrl: config.siteUrl,
+      },
       { status: 500 }
     );
   }
