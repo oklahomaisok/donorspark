@@ -160,7 +160,7 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
               {/* Most Popular Badge */}
               {plan.featured && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-salmon text-ink text-xs font-bold uppercase tracking-wider px-4 py-1 rounded-full">
+                  <span className="bg-salmon text-ink text-xs font-bold uppercase tracking-wider px-4 py-1 rounded-full whitespace-nowrap">
                     Most Popular
                   </span>
                 </div>
