@@ -17,6 +17,8 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
   const { isSignedIn } = useAuth();
 
   const handleUpgrade = async (plan: PlanType) => {
+    console.log('handleUpgrade called with plan:', plan, 'isSignedIn:', isSignedIn);
+
     if (plan === 'free') {
       onGetFreeClick();
       return;
@@ -26,7 +28,10 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
       // Store checkout intent so we can resume after sign-up
       const cycle: BillingCycle = isAnnual ? 'annual' : 'monthly';
       const checkoutIntent = encodeURIComponent(JSON.stringify({ plan, cycle }));
-      router.push(`/sign-up?redirect_url=/pricing?checkout=${checkoutIntent}`);
+      // Need to encode the full redirect_url since it contains query params
+      const redirectUrl = `/sign-up?redirect_url=${encodeURIComponent(`/pricing?checkout=${checkoutIntent}`)}`;
+      console.log('Redirecting to:', redirectUrl);
+      router.push(redirectUrl);
       return;
     }
 
