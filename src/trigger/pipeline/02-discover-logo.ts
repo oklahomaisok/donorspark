@@ -26,11 +26,17 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
   try {
     const res = await fetch(apistemicUrl, { signal: AbortSignal.timeout(8000) });
     const buf = await res.arrayBuffer();
+    console.log('[Logo Discovery] Apistemic response size:', buf.byteLength, 'bytes');
     if (buf.byteLength > 2000) {
       logoUrl = apistemicUrl;
       logoSource = 'apistemic';
+      console.log('[Logo Discovery] Using Apistemic logo');
+    } else {
+      console.log('[Logo Discovery] Apistemic logo too small, skipping');
     }
-  } catch {}
+  } catch (e) {
+    console.log('[Logo Discovery] Apistemic error:', e instanceof Error ? e.message : 'unknown');
+  }
 
   // Method 2: DOM scrape - get header color, fonts, and potentially better logo
   // Hard timeout of 20s to prevent hanging on slow sites (like Wix)
@@ -271,6 +277,9 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
       if (result.logoUrl) {
         logoUrl = result.logoUrl;
         logoSource = 'scraper';
+        console.log('[Logo Discovery] Found via DOM scrape:', logoUrl?.substring(0, 100));
+      } else {
+        console.log('[Logo Discovery] DOM scrape found no logo');
       }
     } finally {
       await page.close().catch(() => {});

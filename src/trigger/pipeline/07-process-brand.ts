@@ -125,7 +125,14 @@ function resolveColors(
   // Fallback accent: white for dark backgrounds, dark gray for light backgrounds
   const primaryIsDark = !isLightHex(primary);
   const fallbackAccent = primaryIsDark ? '#FFFFFF' : '#1A1A1A';
+
+  // Log color sources for debugging
+  console.log('[Colors] extractedAccent:', extractedAccent, '| logoAccent:', logoAccent, '| claudeAccent:', claudeAccent, '| fallback:', fallbackAccent);
+  console.log('[Colors] buttonColors:', extractedColors.filter(c => c.source === 'button').map(c => c.hex));
+  console.log('[Colors] linkColors:', extractedColors.filter(c => c.source === 'link').map(c => c.hex));
+
   const accent = extractedAccent || logoAccent || claudeAccent || fallbackAccent;
+  console.log('[Colors] Final accent chosen:', accent);
 
   let secondary: string | null = null;
   const logoSecondary = logoColors.dominant?.find(c => c.hex !== usableLogoPrimary && isUsable(c.hex))?.hex;
