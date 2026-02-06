@@ -193,7 +193,7 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
                           Billed ${plan.annualPrice}/year
                         </span>
                         {savings > 0 && (
-                          <span className="text-xs font-medium text-sage bg-sage/20 px-2 py-1 rounded-full">
+                          <span className="text-xs font-medium text-white bg-sage px-2 py-1 rounded-full">
                             Save {savings}%
                           </span>
                         )}
