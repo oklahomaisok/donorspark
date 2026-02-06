@@ -92,6 +92,49 @@ Set same `POSTGRES_URL`, `ANTHROPIC_API_KEY`, `BLOB_READ_WRITE_TOKEN` in Trigger
 - Cron endpoints require `CRON_SECRET` Bearer token
 - Stripe webhooks verified with signature
 
+## Common Issues & Fixes
+
+### Clerk auth() returns null
+- **Cause**: `clerkMiddleware()` not configured in `middleware.ts`
+- **Fix**: Ensure middleware.ts exports `clerkMiddleware()` with proper matcher
+
+### User not found after sign-up
+- **Cause**: Clerk webhook hasn't fired yet
+- **Fix**: Checkout endpoint auto-creates user from Clerk data as fallback
+
+### Stripe webhook 500 errors
+- **Cause**: `STRIPE_WEBHOOK_SECRET` missing or has line breaks
+- **Fix**: Re-paste the secret in Vercel, ensure no trailing whitespace
+
+### "Not a valid URL" in Stripe checkout
+- **Cause**: Environment variable has trailing `\n` (line break)
+- **Fix**: Re-enter the value in Vercel without copy-paste artifacts
+
+### useSearchParams() build error
+- **Cause**: Next.js requires Suspense boundary for client components using useSearchParams
+- **Fix**: Wrap component in `<Suspense>` or move to separate client component
+
+## Testing Checklist
+
+### Anonymous Flow
+1. Visit `/` → Generate deck with nonprofit URL
+2. View generated deck at `/decks/[slug]`
+3. Verify preview banner shows for anonymous users
+
+### Sign-up + Checkout Flow
+1. Visit `/pricing` → Click "Start Free Trial"
+2. Redirects to `/sign-up` with checkout intent preserved
+3. Complete Google OAuth sign-up
+4. Auto-redirects to Stripe checkout
+5. Complete payment (test card: `4242 4242 4242 4242`)
+6. Redirects to `/dashboard?upgraded=true`
+7. Dashboard shows correct plan (not "Free Plan")
+
+### Deck Claim Flow
+1. Generate deck while anonymous
+2. Sign up for account
+3. Deck should auto-claim to new account
+
 ---
 
 <!-- TRIGGER.DEV basic START -->
