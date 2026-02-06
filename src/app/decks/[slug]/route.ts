@@ -94,36 +94,24 @@ export async function GET(
 }
 
 /**
- * Inject preview mode banner and disabled share buttons into existing deck HTML
+ * Inject preview mode banner into the CTA slide, replacing share buttons
  */
 function injectPreviewMode(html: string, claimUrl: string): string {
-  // Add padding to body for the bottom banner
-  html = html.replace(
-    /<body([^>]*)>/,
-    '<body$1 style="padding-bottom: 80px;">'
-  );
+  // Replace the "Share This Story" section on the CTA slide with the claim banner
+  const shareButtonsPattern = /<p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story<\/p>\s*<div class="flex items-center gap-3">[\s\S]*?<\/div>/;
 
-  // Inject preview banner before closing body tag
-  const previewBanner = `
-    <!-- Preview Mode Banner -->
-    <div id="preview-banner" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; background: linear-gradient(to right, #C15A36, #E07A50); color: white; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1);">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </div>
-            <div>
-                <p style="font-size: 14px; font-weight: bold; margin: 0;">Love your deck?</p>
-                <p style="font-size: 12px; opacity: 0.9; margin: 0;">Create a free account to save & share it</p>
-            </div>
-        </div>
-        <a href="${claimUrl}" style="padding: 8px 16px; background: white; color: #C15A36; border-radius: 9999px; font-size: 14px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-            Claim Deck
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>
-    </div>
-  `;
+  const claimBanner = `
+                    <!-- Love your deck banner - injected for preview mode -->
+                    <div class="mt-2 p-4 rounded-xl bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white">
+                        <p class="text-sm font-bold mb-1">Love your deck?</p>
+                        <p class="text-xs opacity-90 mb-3">Create a free account to save & share it</p>
+                        <a href="${claimUrl}" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#C15A36] rounded-full text-sm font-bold hover:bg-neutral-100 transition-colors">
+                            Claim Deck
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </a>
+                    </div>`;
 
-  html = html.replace('</body>', `${previewBanner}</body>`);
+  html = html.replace(shareButtonsPattern, claimBanner);
 
   return html;
 }
