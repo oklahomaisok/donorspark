@@ -88,11 +88,9 @@ async function handleCheckoutComplete(session: any) {
 
   // Get the subscription to find the price
   console.log('Retrieving subscription:', subscriptionId);
-  const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
-  const subscription = subscriptionResponse as unknown as {
-    items: { data: Array<{ price: { id: string } }> };
-    current_period_end: number;
-  };
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  console.log('Subscription current_period_end:', subscription.current_period_end);
+
   const priceId = subscription.items.data[0]?.price.id;
 
   if (!priceId) {
@@ -105,13 +103,17 @@ async function handleCheckoutComplete(session: any) {
     throw new Error(`Unknown price ID: ${priceId}. Check STRIPE_*_PRICE_ID env vars.`);
   }
 
+  // Handle the period end - it could be a number (unix timestamp) or undefined
+  const periodEnd = subscription.current_period_end;
+  const periodEndDate = periodEnd ? new Date(periodEnd * 1000) : undefined;
+
   console.log('Updating user plan:', userId, planInfo);
   await updateUserPlan(userId, {
     plan: planInfo.plan as Plan,
     planBillingCycle: planInfo.cycle as BillingCycle,
     stripeSubscriptionId: subscriptionId,
     stripePriceId: priceId,
-    stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    stripeCurrentPeriodEnd: periodEndDate,
   });
 
   console.log(`User ${userId} upgraded to ${planInfo.plan} (${planInfo.cycle})`);
