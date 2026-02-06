@@ -178,13 +178,23 @@ function getContrastRatio(hex1: string, hex2: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Adjust accent color to ensure readable contrast against background
+// Adjust accent color to ensure readable contrast
+// Note: Deck backgrounds are always effectively dark due to image overlays,
+// so we only lighten accents, never darken them
 function ensureAccentContrast(accent: string, background: string): string {
   const minContrast = 3; // WCAG AA for large text
-  const contrast = getContrastRatio(accent, background);
 
+  // Check contrast against actual background
+  const contrast = getContrastRatio(accent, background);
   if (contrast >= minContrast) {
     return accent; // Already has enough contrast
+  }
+
+  // Also check against near-black (what the deck actually looks like with overlays)
+  const darkOverlay = '#1a1a1a';
+  const darkContrast = getContrastRatio(accent, darkOverlay);
+  if (darkContrast >= minContrast) {
+    return accent; // Works against dark overlays
   }
 
   // Parse the accent color
@@ -192,39 +202,21 @@ function ensureAccentContrast(accent: string, background: string): string {
   let g = parseInt(accent.slice(3, 5), 16);
   let b = parseInt(accent.slice(5, 7), 16);
 
-  // Determine if background is dark or light
-  const bgLuminance = (() => {
-    const br = parseInt(background.slice(1, 3), 16) / 255;
-    const bg = parseInt(background.slice(3, 5), 16) / 255;
-    const bb = parseInt(background.slice(5, 7), 16) / 255;
-    return 0.299 * br + 0.587 * bg + 0.114 * bb;
-  })();
-
-  const isDarkBg = bgLuminance < 0.5;
-
-  // Try to adjust the accent by making it lighter (for dark bg) or darker (for light bg)
+  // Always lighten (deck backgrounds are dark due to overlays)
   for (let i = 0; i < 20; i++) {
     const step = 15;
-    if (isDarkBg) {
-      // Lighten the accent
-      r = Math.min(255, r + step);
-      g = Math.min(255, g + step);
-      b = Math.min(255, b + step);
-    } else {
-      // Darken the accent
-      r = Math.max(0, r - step);
-      g = Math.max(0, g - step);
-      b = Math.max(0, b - step);
-    }
+    r = Math.min(255, r + step);
+    g = Math.min(255, g + step);
+    b = Math.min(255, b + step);
 
     const adjusted = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    if (getContrastRatio(adjusted, background) >= minContrast) {
+    if (getContrastRatio(adjusted, darkOverlay) >= minContrast) {
       return adjusted;
     }
   }
 
-  // Fallback: use white for dark backgrounds, dark gold for light backgrounds
-  return isDarkBg ? '#FFD700' : '#B8860B';
+  // Fallback: bright gold
+  return '#FFD700';
 }
 
 function isLightHex(hex: string | null): boolean {
