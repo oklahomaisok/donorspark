@@ -63,10 +63,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
   const actionImg = images?.action || `${config.imageBaseUrl}/community-action-neighbors.jpg`;
   const groupImg = images?.group || `${config.imageBaseUrl}/community-group-gathering.jpg`;
 
-  const isBGCAOrg = /boys.*girls.*club/i.test(orgName);
-  const isGenericLogoAPI = ['google-favicon', 'favicon'].includes(logoSource);
-  // For BGCA orgs, only block generic favicon logos - allow scraper, apistemic, and svg sources
-  const useTextLogo = !logoUrl || logoSource === 'none' || (isBGCAOrg && isGenericLogoAPI);
+  // Show logo if we have one, fall back to text if not
+  const useTextLogo = !logoUrl || logoSource === 'none';
   const effectiveLogoUrl = useTextLogo ? '' : logoUrl;
 
   const valuesHtml = coreValues.slice(0, 4).map(v =>

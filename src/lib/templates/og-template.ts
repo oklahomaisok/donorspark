@@ -21,7 +21,7 @@ export function generateOgHtml(slug: string, brandData: BrandData): string {
   const headlineMain = headlineWords.slice(0, -1).join(' ');
   const headlineAccent = headlineWords.slice(-1)[0] || '';
 
-  const showLogo = logoUrl && !logoUrl.includes('favicon') && logoSource !== 'google-favicon';
+  const showLogo = !!logoUrl;
 
   return `<!DOCTYPE html>
 <html>
