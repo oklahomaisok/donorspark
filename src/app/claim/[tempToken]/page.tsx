@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getDeckByTempToken } from '@/db/queries';
 import { auth } from '@clerk/nextjs/server';
 import Link from 'next/link';
+import { CountdownTimer } from './countdown-timer';
 
 export default async function ClaimPage({
   params,
@@ -111,18 +112,12 @@ export default async function ClaimPage({
     <div className="min-h-screen bg-neutral-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-neutral-200 py-4 px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/">
             <img src="/donorsparklogo.png" alt="DonorSpark" className="h-8" />
           </Link>
-          {hoursRemaining !== null && (
-            <div className="flex items-center gap-2 text-amber-600 text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-              {hoursRemaining}h remaining
-            </div>
+          {expiresAt && (
+            <CountdownTimer expiresAt={expiresAt.toISOString()} />
           )}
         </div>
       </header>
@@ -160,7 +155,7 @@ export default async function ClaimPage({
 
             <div className="space-y-4">
               <Link
-                href={`/sign-up?redirect_url=${encodeURIComponent(`/api/claim?tempToken=${tempToken}`)}`}
+                href={`/sign-up?redirect_url=${encodeURIComponent(`/claim/${tempToken}`)}`}
                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#C15A36] text-white rounded-lg font-semibold hover:bg-[#a84d2e] transition-colors"
               >
                 Create Free Account
@@ -180,7 +175,7 @@ export default async function ClaimPage({
               </div>
 
               <Link
-                href={`/sign-in?redirect_url=${encodeURIComponent(`/api/claim?tempToken=${tempToken}`)}`}
+                href={`/sign-in?redirect_url=${encodeURIComponent(`/claim/${tempToken}`)}`}
                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 border-2 border-neutral-200 text-neutral-700 rounded-lg font-semibold hover:bg-neutral-50 transition-colors"
               >
                 Sign In to Existing Account
@@ -199,12 +194,6 @@ export default async function ClaimPage({
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
                 Share via email, text, and social
-              </div>
-              <div className="flex items-center gap-3 text-sm text-neutral-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                View analytics and engagement
               </div>
               <div className="flex items-center gap-3 text-sm text-neutral-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
