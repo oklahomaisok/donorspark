@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { tasks } from '@trigger.dev/sdk/v3';
 import { nanoid } from 'nanoid';
+import { auth } from '@clerk/nextjs/server';
 import { slugify } from '@/lib/slugify';
-import { createDeck } from '@/db/queries';
+import { createDeck, getUserByClerkId, createOrganization, getUserOrganizations } from '@/db/queries';
+import { generateOrgSlug } from '@/lib/utils/slug';
 import type { generateDeckTask } from '@/trigger/tasks/generate-deck';
 
 // Simple in-memory rate limiter (10 requests per hour per IP)
@@ -107,13 +109,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
+    // Check if user is authenticated
+    const { userId: clerkId } = await auth();
+    let dbUserId: number | null = null;
+    let organizationId: number | null = null;
+
+    if (clerkId) {
+      const user = await getUserByClerkId(clerkId);
+      if (user) {
+        dbUserId = user.id;
+
+        // Check if user already has an org for this website
+        const existingOrgs = await getUserOrganizations(user.id);
+        const existingOrg = existingOrgs.find(
+          (org) => org.websiteUrl === url || org.name === orgName
+        );
+
+        if (existingOrg) {
+          organizationId = existingOrg.id;
+        } else {
+          // Create new organization
+          const orgSlug = await generateOrgSlug(orgName || url);
+          const newOrg = await createOrganization({
+            userId: user.id,
+            name: orgName || new URL(url).hostname.replace('www.', ''),
+            slug: orgSlug,
+            websiteUrl: url,
+          });
+          organizationId = newOrg.id;
+        }
+      }
+    }
+
     // Generate unique slug
     const baseSlug = slugify(orgName || url.replace(/^https?:\/\//, '').split('/')[0]);
     const slug = `${baseSlug}-${nanoid(6)}`;
 
-    // Generate temp token for anonymous claim flow (32 chars)
-    const tempToken = nanoid(32);
-    const expiresAt = new Date(Date.now() + ANONYMOUS_TTL_MS);
+    // Generate temp token for anonymous claim flow (only if not logged in)
+    const tempToken = dbUserId ? undefined : nanoid(32);
+    const expiresAt = dbUserId ? undefined : new Date(Date.now() + ANONYMOUS_TTL_MS);
 
     // Get geolocation (non-blocking, don't wait too long)
     const geo = await getGeoFromIp(ip);
@@ -125,9 +159,10 @@ export async function POST(req: NextRequest) {
       deckSlug: slug,
     });
 
-    // Create DB record with location data and temp token for anonymous claim
+    // Create DB record with location data
     await createDeck({
-      userId: null,
+      userId: dbUserId,
+      organizationId,
       slug,
       orgName: orgName || url,
       orgUrl: url,
@@ -158,14 +193,16 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Set httpOnly cookie for temp token (used for auto-claim on signup)
-    response.cookies.set('ds_temp_token', tempToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 48 * 60 * 60, // 48 hours in seconds
-      path: '/',
-    });
+    // Set httpOnly cookie for temp token (only for anonymous users)
+    if (tempToken) {
+      response.cookies.set('ds_temp_token', tempToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 48 * 60 * 60, // 48 hours in seconds
+        path: '/',
+      });
+    }
 
     return response;
   } catch (error: unknown) {

@@ -1,12 +1,10 @@
 import { nanoid } from 'nanoid';
+import { getOrganizationBySlug } from '@/db/queries';
 
 /**
- * Generate a human-readable URL slug from an organization name.
- * Examples:
- * - "Boys & Girls Club of Permian Basin" -> "boys-girls-club-permian-basin"
- * - "The Nature Conservancy" -> "nature-conservancy"
+ * Create a base slug from an organization name.
  */
-export function generateOrgSlug(orgName: string): string {
+function createBaseSlug(orgName: string): string {
   return orgName
     .toLowerCase()
     .replace(/^the\s+/i, '') // Remove leading "The"
@@ -16,6 +14,27 @@ export function generateOrgSlug(orgName: string): string {
     .replace(/-+/g, '-') // Replace multiple hyphens with single
     .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
     .substring(0, 60); // Limit length
+}
+
+/**
+ * Generate a unique human-readable URL slug from an organization name.
+ * Checks database for collisions and adds suffix if needed.
+ * Examples:
+ * - "Boys & Girls Club of Permian Basin" -> "boys-girls-club-permian-basin"
+ * - "The Nature Conservancy" -> "nature-conservancy"
+ */
+export async function generateOrgSlug(orgName: string): Promise<string> {
+  const baseSlug = createBaseSlug(orgName);
+
+  // Check if base slug is available
+  const existing = await getOrganizationBySlug(baseSlug);
+  if (!existing) {
+    return baseSlug;
+  }
+
+  // Add random suffix for uniqueness
+  const suffix = nanoid(6).toLowerCase();
+  return `${baseSlug}-${suffix}`;
 }
 
 /**

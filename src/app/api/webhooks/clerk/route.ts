@@ -103,15 +103,8 @@ async function tryAutoClaimDeck(clerkId: string) {
       return;
     }
 
-    // Generate a unique org slug
-    let orgSlug = generateOrgSlug(deck.orgName);
-
-    // Check if slug exists, add suffix if needed
-    let slugAttempt = 0;
-    while (await getOrganizationBySlug(orgSlug)) {
-      slugAttempt++;
-      orgSlug = `${generateOrgSlug(deck.orgName)}-${slugAttempt}`;
-    }
+    // Generate a unique org slug (handles collision checking)
+    const orgSlug = await generateOrgSlug(deck.orgName);
 
     // Create organization from deck data
     const org = await createOrganization({
