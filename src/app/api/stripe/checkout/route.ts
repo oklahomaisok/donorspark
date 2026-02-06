@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { stripe, getPriceId, type PlanType, type BillingCycle } from '@/lib/stripe';
-import { getUserByClerkId, updateUserStripeCustomerId } from '@/db/queries';
+import { getUserByClerkId, updateUserStripeCustomerId, upsertUser } from '@/db/queries';
 import { config } from '@/lib/config';
 
 export async function POST(req: NextRequest) {
@@ -14,15 +14,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user from database
-    const user = await getUserByClerkId(clerkId);
+    let user = await getUserByClerkId(clerkId);
     console.log('Checkout: user =', user ? `id=${user.id}` : 'NOT FOUND');
+
+    // If user doesn't exist, create them now (fallback for when webhook hasn't fired)
     if (!user) {
-      // User authenticated with Clerk but not in our database
-      // This happens if the Clerk webhook hasn't run yet
-      return NextResponse.json({
-        error: 'User not found in database. Please try again in a few seconds, or contact support if this persists.',
-        debug: 'Clerk webhook may not have created user record yet'
-      }, { status: 404 });
+      console.log('Checkout: Creating user from Clerk data');
+      const clerkUser = await currentUser();
+      if (!clerkUser) {
+        return NextResponse.json({ error: 'Could not fetch user data' }, { status: 500 });
+      }
+      const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+      const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
+      user = await upsertUser(clerkId, email, name);
+      console.log('Checkout: Created user id =', user.id);
     }
 
     // Parse request
