@@ -7,8 +7,9 @@ import { ColorPicker } from '@/components/editor/color-picker';
 import { FontSelector } from '@/components/editor/font-selector';
 import { LogoUploader } from '@/components/editor/logo-uploader';
 import { PreviewFrame } from '@/components/editor/preview-frame';
+import { SlideImageUploader } from '@/components/editor/slide-image-uploader';
 import { generateDeckHtml } from '@/lib/templates/deck-template';
-import type { BrandData, Testimonial, SocialLink } from '@/lib/types';
+import type { BrandData, Testimonial, SocialLink, CustomImages } from '@/lib/types';
 
 // Slide configuration
 const SLIDE_CONFIG: Record<number, { title: string; subtitle: string }> = {
@@ -161,6 +162,23 @@ export default function EditDeckPage() {
     setBrandData((prev) => {
       if (!prev) return prev;
       return { ...prev, logoUrl: url, logoSource: 'custom' };
+    });
+    setHasUnsavedChanges(true);
+  }, [brandData]);
+
+  // Handle custom image changes
+  const handleCustomImageChange = useCallback((slideType: keyof CustomImages, url: string) => {
+    if (!brandData) return;
+
+    setBrandData((prev) => {
+      if (!prev) return prev;
+      const customImages = { ...(prev.customImages || {}) };
+      if (url) {
+        customImages[slideType] = url;
+      } else {
+        delete customImages[slideType];
+      }
+      return { ...prev, customImages };
     });
     setHasUnsavedChanges(true);
   }, [brandData]);
@@ -725,6 +743,13 @@ export default function EditDeckPage() {
               {/* Hero Slide */}
               {slideType === 'hero' && (
                 <div className="space-y-3">
+                  <SlideImageUploader
+                    label="Background Image"
+                    currentUrl={brandData.customImages?.hero}
+                    defaultUrl={brandData.images?.hero || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-hero-leader.jpg'}
+                    slideType="hero"
+                    onChange={(url) => handleCustomImageChange('hero', url)}
+                  />
                   <FieldInput
                     label="Badge Text"
                     value={brandData.badgeText ?? 'Impact Deck'}
@@ -761,6 +786,13 @@ export default function EditDeckPage() {
                       {brandData.showMissionSlide !== false ? 'Visible' : 'Hidden'}
                     </span>
                   </button>
+                  <SlideImageUploader
+                    label="Background Image"
+                    currentUrl={brandData.customImages?.mission}
+                    defaultUrl={brandData.images?.action || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-action-neighbors.jpg'}
+                    slideType="mission"
+                    onChange={(url) => handleCustomImageChange('mission', url)}
+                  />
                   <FieldInput
                     label="Slide Title"
                     value={brandData.missionSlideTitle ?? 'Our Mission'}
@@ -853,6 +885,13 @@ export default function EditDeckPage() {
                       {brandData.showProgramsSlide !== false ? 'Visible' : 'Hidden'}
                     </span>
                   </button>
+                  <SlideImageUploader
+                    label="Background Image"
+                    currentUrl={brandData.customImages?.programs}
+                    defaultUrl={brandData.images?.group || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-group-gathering.jpg'}
+                    slideType="programs"
+                    onChange={(url) => handleCustomImageChange('programs', url)}
+                  />
                   <FieldInput
                     label="Section Headline"
                     value={brandData.programsHeadline ?? 'What We Offer'}
@@ -880,7 +919,69 @@ export default function EditDeckPage() {
 
               {/* Metrics Slide */}
               {slideType === 'metrics' && (
-                <p className="text-xs text-neutral-500 italic">Metrics editing coming soon.</p>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-neutral-400">Impact Metrics (up to 5)</label>
+                      {(brandData.metrics?.length || 0) < 5 && (
+                        <button
+                          onClick={() => {
+                            const metrics = [...(brandData.metrics || [])];
+                            metrics.push({ value: '', label: '' });
+                            updateBrandData({ metrics, hasValidMetrics: true });
+                          }}
+                          className="text-[10px] text-[#C15A36] hover:text-[#a84d2e] flex items-center gap-0.5"
+                        >
+                          <Plus className="w-3 h-3" /> Add
+                        </button>
+                      )}
+                    </div>
+                    {(brandData.metrics || []).map((metric, index) => (
+                      <div key={index} className="p-2 bg-neutral-800/50 rounded border border-neutral-700 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-medium text-neutral-500">#{index + 1}</span>
+                          <button
+                            onClick={() => {
+                              const metrics = (brandData.metrics || []).filter((_, i) => i !== index);
+                              updateBrandData({
+                                metrics,
+                                hasValidMetrics: metrics.length > 0,
+                              });
+                            }}
+                            className="text-neutral-500 hover:text-red-400"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={metric.value}
+                          onChange={(e) => {
+                            const metrics = [...(brandData.metrics || [])];
+                            metrics[index] = { ...metrics[index], value: e.target.value };
+                            updateBrandData({ metrics });
+                          }}
+                          placeholder="10,000+ or 95%"
+                          className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-sm text-white"
+                        />
+                        <input
+                          type="text"
+                          value={metric.label}
+                          onChange={(e) => {
+                            const metrics = [...(brandData.metrics || [])];
+                            metrics[index] = { ...metrics[index], label: e.target.value };
+                            updateBrandData({ metrics });
+                          }}
+                          placeholder="People Served"
+                          className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
+                        />
+                      </div>
+                    ))}
+                    {(brandData.metrics?.length || 0) === 0 && (
+                      <p className="text-[11px] text-neutral-500 italic py-2">No metrics added. Add metrics to show this slide.</p>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* Testimonials Slide */}
@@ -896,6 +997,13 @@ export default function EditDeckPage() {
                       {brandData.showTestimonialsSlide !== false ? 'Visible' : 'Hidden'}
                     </span>
                   </button>
+                  <SlideImageUploader
+                    label="Background Image"
+                    currentUrl={brandData.customImages?.testimonials}
+                    defaultUrl={brandData.images?.action || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-action-neighbors.jpg'}
+                    slideType="testimonials"
+                    onChange={(url) => handleCustomImageChange('testimonials', url)}
+                  />
                   <FieldInput
                     label="Slide Title"
                     value={brandData.testimonialsSlideTitle ?? 'Success Stories'}

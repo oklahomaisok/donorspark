@@ -64,6 +64,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     showCtaSlide = true,
     // Custom slide order
     slideOrder = ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'],
+    // Custom images (user-uploaded overrides)
+    customImages = {},
   } = brandData;
 
   const primary = colors.primary || '#1D2350';
@@ -82,17 +84,24 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
   // Calculate text color based on button background luminance
   const ctaButtonColor = getButtonTextColor(secondary);
 
-  const heroImg = images?.hero || `${config.imageBaseUrl}/community-hero-leader.jpg`;
+  // Use custom images if uploaded, otherwise fall back to sector defaults
+  const heroImg = customImages?.hero || images?.hero || `${config.imageBaseUrl}/community-hero-leader.jpg`;
   const heroVideoFilename = heroImg.split('/').pop()?.replace(/\.(jpg|jpeg|png|webp)$/i, '.mp4') || '';
   const heroVideo = `${config.videoBaseUrl}/${heroVideoFilename}`;
-  const hasVideoHero = heroImg.includes('oklahomaisok.github.io/nonprofit-decks') && /\.(jpg|jpeg|png|webp)$/i.test(heroImg);
+  // Only use video if it's a sector image (not custom upload)
+  const hasVideoHero = !customImages?.hero && heroImg.includes('oklahomaisok.github.io/nonprofit-decks') && /\.(jpg|jpeg|png|webp)$/i.test(heroImg);
 
   const heroMediaHtml = hasVideoHero
     ? `<video autoplay muted loop playsinline poster="${heroImg}" class="w-full h-full object-cover"><source src="${heroVideo}" type="video/mp4"></video>`
     : `<img src="${heroImg}" class="w-full h-full object-cover" alt="Hero">`;
 
-  const actionImg = images?.action || `${config.imageBaseUrl}/community-action-neighbors.jpg`;
-  const groupImg = images?.group || `${config.imageBaseUrl}/community-group-gathering.jpg`;
+  const missionImg = customImages?.mission || images?.action || `${config.imageBaseUrl}/community-action-neighbors.jpg`;
+  const programsImg = customImages?.programs || images?.group || `${config.imageBaseUrl}/community-group-gathering.jpg`;
+  const testimonialsImg = customImages?.testimonials || images?.action || `${config.imageBaseUrl}/community-action-neighbors.jpg`;
+
+  // Keep legacy names for compatibility
+  const actionImg = missionImg;
+  const groupImg = programsImg;
 
   // Show logo if we have one, fall back to text if not
   const useTextLogo = !logoUrl || logoSource === 'none';
@@ -284,7 +293,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl"><div class="absolute inset-0 bg-grid-pattern opacity-20"></div><div class="p-6 md:p-10 h-full flex flex-col z-10"><header class="flex justify-between items-center mb-6 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${metricsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Our Impact</span></header><div class="flex-grow flex flex-col justify-center">${metricsHtml}</div></div></section>` : ''}
         ${showTestimonialsSlide ? `<!-- Slide: Testimonials -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
-            <div class="absolute inset-0 z-0"><img src="${actionImg}" class="w-full h-full object-cover" alt="Background"><div class="absolute inset-0 bg-black/70"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div></div>
+            <div class="absolute inset-0 z-0"><img src="${testimonialsImg}" class="w-full h-full object-cover" alt="Background"><div class="absolute inset-0 bg-black/70"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${testimonialsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">${escHtml(testimonialsSlideTitle)}</span></header>
                 <div class="flex-grow flex flex-col animate-on-scroll items-center justify-center relative"><div class="absolute top-0 right-0 p-2 opacity-70 text-[10px] font-mono text-[var(--accent)] z-30 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.6 13a4 4 0 0 1-7.7 2.3l-2.6-7.5a1.7 1.7 0 0 0-3.3 1L9 18.2a5.3 5.3 0 0 0 2.2 4.1l6.3 3.6c2.4 1.4 5.3-.2 5.5-2.9l.6-9.1a4 4 0 0 0-5-4.1z"/></svg>TAP CARDS</div><div id="testimonial-stack" class="relative w-full max-w-[280px] md:max-w-[320px] aspect-square cursor-pointer">${testimonialCardsHtml}</div></div>

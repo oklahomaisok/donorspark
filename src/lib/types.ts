@@ -83,6 +83,7 @@ export interface BrandData {
   colors: { primary: string; secondary: string; accent: string; text?: string };
   fonts: { headingFont: string; bodyFont: string };
   images: SectorImages;
+  customImages?: CustomImages;
   testimonials: Testimonial[];
   coreValues: string[];
   metrics: { value: string; label: string }[];
@@ -145,6 +146,14 @@ export interface SectorImages {
   group: string;
   og: string;
   sector: string;
+}
+
+// Custom images uploaded by user (override sector defaults)
+export interface CustomImages {
+  hero?: string;
+  mission?: string;  // action image on mission slide
+  programs?: string; // group image on programs slide
+  testimonials?: string; // action image on testimonials slide
 }
 
 export interface Testimonial {
