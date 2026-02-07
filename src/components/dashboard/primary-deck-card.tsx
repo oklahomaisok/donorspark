@@ -1,16 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
-import type { Deck, Organization } from '@/db/schema';
+import type { Deck, Organization, Plan } from '@/db/schema';
 
 interface PrimaryDeckCardProps {
   deck: Deck;
   organization: Organization;
   siteUrl: string;
+  userPlan: Plan;
 }
 
-export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCardProps) {
+export function PrimaryDeckCard({ deck, organization, siteUrl, userPlan }: PrimaryDeckCardProps) {
+  const router = useRouter();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
@@ -244,8 +248,37 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
             </div>
           </div>
 
-          {/* View Deck Button */}
-          <div className="mt-auto">
+          {/* Action Buttons */}
+          <div className="mt-auto space-y-2">
+            {/* Edit Deck Button */}
+            <button
+              onClick={() => {
+                if (userPlan === 'free') {
+                  setShowUpgradeModal(true);
+                } else {
+                  router.push(`/dashboard/decks/${deck.id}/edit`);
+                }
+              }}
+              className={`w-full py-3 text-center rounded-lg font-medium transition-colors flex items-center justify-center gap-2
+                ${userPlan === 'free'
+                  ? 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                  : 'bg-neutral-800 text-white hover:bg-neutral-700'
+                }`}
+            >
+              {userPlan === 'free' && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              )}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                <path d="m15 5 4 4"/>
+              </svg>
+              Edit Deck
+            </button>
+
+            {/* View Deck Button */}
             <a
               href={deckUrl}
               target="_blank"
@@ -262,6 +295,54 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
           </div>
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6 6 18"/>
+                <path d="m6 6 12 12"/>
+              </svg>
+            </button>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-[#C15A36]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                  <path d="m15 5 4 4"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-neutral-800 mb-2">Unlock Deck Editing</h3>
+              <p className="text-neutral-500 mb-6">
+                Customize your deck&apos;s colors, fonts, logo, and content with a Starter or Growth plan.
+              </p>
+              <div className="space-y-3">
+                <a
+                  href="/pricing"
+                  className="w-full py-3 text-center bg-[#C15A36] text-white rounded-lg font-medium hover:bg-[#a84d2e] transition-colors flex items-center justify-center gap-2"
+                >
+                  View Plans
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14"/>
+                    <path d="m12 5 7 7-7 7"/>
+                  </svg>
+                </a>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="w-full py-3 text-center text-neutral-500 hover:text-neutral-700 transition-colors"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

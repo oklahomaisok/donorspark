@@ -313,6 +313,34 @@ export async function getPersonalizedDecks(parentDeckId: number) {
   return db.select().from(decks).where(eq(decks.parentDeckId, parentDeckId)).orderBy(desc(decks.createdAt));
 }
 
+// Get deck for editing (with ownership check)
+export async function getDeckForEdit(deckId: number, userId: number) {
+  const [deck] = await db.select()
+    .from(decks)
+    .where(and(eq(decks.id, deckId), eq(decks.userId, userId)))
+    .limit(1);
+  return deck ?? null;
+}
+
+// Update deck brandData and mark as customized
+export async function updateDeckBrandData(
+  deckId: number,
+  brandData: BrandData,
+  deckUrl: string,
+  ogImageUrl?: string
+) {
+  await db.update(decks)
+    .set({
+      brandData: brandData as unknown as Record<string, unknown>,
+      deckUrl,
+      ogImageUrl: ogImageUrl ?? undefined,
+      isCustomized: true,
+      customizedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(decks.id, deckId));
+}
+
 // ============================================================================
 // Upgrade events queries
 // ============================================================================

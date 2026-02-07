@@ -85,6 +85,9 @@ export const decks = pgTable('decks', {
   donorEmail: text('donor_email'),
   donorAmount: text('donor_amount'),
   parentDeckId: integer('parent_deck_id'), // Self-reference for personalized decks
+  // Customization tracking
+  isCustomized: boolean('is_customized').default(false).notNull(),
+  customizedAt: timestamp('customized_at'),
   // Geo + timestamps
   city: text('city'),
   region: text('region'),
