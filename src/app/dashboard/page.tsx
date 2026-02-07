@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -6,6 +6,7 @@ import {
   getUserDecks,
   getUserOrganizations,
   incrementDashboardVisits,
+  upsertUser,
 } from '@/db/queries';
 import { config } from '@/lib/config';
 import { PrimaryDeckCard } from '@/components/dashboard/primary-deck-card';
@@ -26,8 +27,17 @@ export default async function DashboardPage({
   const { userId: clerkId } = await auth();
   if (!clerkId) redirect('/sign-in');
 
-  const user = await getUserByClerkId(clerkId);
-  if (!user) redirect('/sign-in');
+  let user = await getUserByClerkId(clerkId);
+
+  // If user doesn't exist in DB, create them (fallback for when Clerk webhook hasn't fired)
+  if (!user) {
+    const clerkUser = await currentUser();
+    if (!clerkUser) redirect('/sign-in');
+
+    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+    const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
+    user = await upsertUser(clerkId, email, name);
+  }
 
   // Track dashboard visit
   await incrementDashboardVisits(user.id);
