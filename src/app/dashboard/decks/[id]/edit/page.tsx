@@ -9,7 +9,7 @@ import { LogoUploader } from '@/components/editor/logo-uploader';
 import { PreviewFrame } from '@/components/editor/preview-frame';
 import { SlideImageUploader } from '@/components/editor/slide-image-uploader';
 import { generateDeckHtml } from '@/lib/templates/deck-template';
-import type { BrandData, Testimonial, SocialLink, CustomImages } from '@/lib/types';
+import type { BrandData, Testimonial, SocialLink, CustomImages, FocalPoint } from '@/lib/types';
 
 // Slide configuration
 const SLIDE_CONFIG: Record<number, { title: string; subtitle: string }> = {
@@ -167,17 +167,31 @@ export default function EditDeckPage() {
   }, [brandData]);
 
   // Handle custom image changes
-  const handleCustomImageChange = useCallback((slideType: keyof CustomImages, url: string) => {
+  const handleCustomImageChange = useCallback((slideType: 'hero' | 'mission' | 'programs' | 'testimonials', url: string) => {
     if (!brandData) return;
 
     setBrandData((prev) => {
       if (!prev) return prev;
-      const customImages = { ...(prev.customImages || {}) };
+      const customImages = { ...(prev.customImages || {}) } as CustomImages;
       if (url) {
         customImages[slideType] = url;
       } else {
         delete customImages[slideType];
       }
+      return { ...prev, customImages };
+    });
+    setHasUnsavedChanges(true);
+  }, [brandData]);
+
+  // Handle focal point changes
+  const handleFocalPointChange = useCallback((slideType: 'hero' | 'mission' | 'programs' | 'testimonials', focal: FocalPoint) => {
+    if (!brandData) return;
+
+    const focalKey = `${slideType}Focal` as keyof CustomImages;
+    setBrandData((prev) => {
+      if (!prev) return prev;
+      const customImages = { ...(prev.customImages || {}) };
+      (customImages as Record<string, FocalPoint>)[focalKey] = focal;
       return { ...prev, customImages };
     });
     setHasUnsavedChanges(true);
@@ -748,7 +762,9 @@ export default function EditDeckPage() {
                     currentUrl={brandData.customImages?.hero}
                     defaultUrl={brandData.images?.hero || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-hero-leader.jpg'}
                     slideType="hero"
+                    focalPoint={brandData.customImages?.heroFocal}
                     onChange={(url) => handleCustomImageChange('hero', url)}
+                    onFocalPointChange={(focal) => handleFocalPointChange('hero', focal)}
                   />
                   <FieldInput
                     label="Badge Text"
@@ -791,7 +807,9 @@ export default function EditDeckPage() {
                     currentUrl={brandData.customImages?.mission}
                     defaultUrl={brandData.images?.action || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-action-neighbors.jpg'}
                     slideType="mission"
+                    focalPoint={brandData.customImages?.missionFocal}
                     onChange={(url) => handleCustomImageChange('mission', url)}
+                    onFocalPointChange={(focal) => handleFocalPointChange('mission', focal)}
                   />
                   <FieldInput
                     label="Slide Title"
@@ -890,7 +908,9 @@ export default function EditDeckPage() {
                     currentUrl={brandData.customImages?.programs}
                     defaultUrl={brandData.images?.group || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-group-gathering.jpg'}
                     slideType="programs"
+                    focalPoint={brandData.customImages?.programsFocal}
                     onChange={(url) => handleCustomImageChange('programs', url)}
+                    onFocalPointChange={(focal) => handleFocalPointChange('programs', focal)}
                   />
                   <FieldInput
                     label="Section Headline"
@@ -1002,7 +1022,9 @@ export default function EditDeckPage() {
                     currentUrl={brandData.customImages?.testimonials}
                     defaultUrl={brandData.images?.action || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-action-neighbors.jpg'}
                     slideType="testimonials"
+                    focalPoint={brandData.customImages?.testimonialsFocal}
                     onChange={(url) => handleCustomImageChange('testimonials', url)}
+                    onFocalPointChange={(focal) => handleFocalPointChange('testimonials', focal)}
                   />
                   <FieldInput
                     label="Slide Title"

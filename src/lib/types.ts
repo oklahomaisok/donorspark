@@ -148,12 +148,22 @@ export interface SectorImages {
   sector: string;
 }
 
+// Focal point for image positioning (0-100 for x and y)
+export interface FocalPoint {
+  x: number; // 0 = left, 50 = center, 100 = right
+  y: number; // 0 = top, 50 = center, 100 = bottom
+}
+
 // Custom images uploaded by user (override sector defaults)
 export interface CustomImages {
   hero?: string;
+  heroFocal?: FocalPoint;
   mission?: string;  // action image on mission slide
+  missionFocal?: FocalPoint;
   programs?: string; // group image on programs slide
+  programsFocal?: FocalPoint;
   testimonials?: string; // action image on testimonials slide
+  testimonialsFocal?: FocalPoint;
 }
 
 export interface Testimonial {
