@@ -17,15 +17,22 @@ export interface RegenerationResult {
   ogImageUrl: string;
 }
 
+export interface RegenerationOptions {
+  hideDonorSparkSlide?: boolean;
+}
+
 /**
  * Regenerate deck HTML and upload to Vercel Blob
  * Used after deck customization
  */
 export async function regenerateDeckHtml(
   slug: string,
-  brandData: BrandData
+  brandData: BrandData,
+  options: RegenerationOptions = {}
 ): Promise<string> {
-  const html = generateDeckHtml(slug, brandData);
+  const html = generateDeckHtml(slug, brandData, {
+    hideDonorSparkSlide: options.hideDonorSparkSlide,
+  });
 
   const blob = await put(`decks/${slug}/index.html`, html, {
     access: 'public',

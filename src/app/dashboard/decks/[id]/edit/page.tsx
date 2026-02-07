@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Loader2, ChevronLeft, ChevronRight, Plus, X, Settings, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, ChevronLeft, ChevronRight, Plus, X, Settings, Eye, EyeOff, GripVertical, Upload } from 'lucide-react';
 import { ColorPicker } from '@/components/editor/color-picker';
 import { FontSelector } from '@/components/editor/font-selector';
 import { LogoUploader } from '@/components/editor/logo-uploader';
@@ -49,6 +49,9 @@ export default function EditDeckPage() {
   const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [originalBrandData, setOriginalBrandData] = useState<BrandData | null>(null);
   const [hasMetricsSlide, setHasMetricsSlide] = useState(false);
+  const [userPlan, setUserPlan] = useState<string>('free');
+  const [canSave, setCanSave] = useState(false);
+  const [draggedSlide, setDraggedSlide] = useState<string | null>(null);
 
   // Listen for slide changes from iframe
   useEffect(() => {
@@ -67,9 +70,7 @@ export default function EditDeckPage() {
       try {
         const response = await fetch(`/api/decks/${deckId}`);
         if (!response.ok) {
-          if (response.status === 403) {
-            setError('Deck editing requires a Starter or Growth plan. Please upgrade to edit your deck.');
-          } else if (response.status === 404) {
+          if (response.status === 404) {
             setError('Deck not found');
           } else {
             const data = await response.json();
@@ -89,6 +90,8 @@ export default function EditDeckPage() {
         setBrandData(data.brandData);
         setOriginalBrandData(JSON.parse(JSON.stringify(data.brandData)));
         setHasMetricsSlide(data.brandData.hasValidMetrics && data.brandData.metrics?.length > 0);
+        setUserPlan(data.userPlan || 'free');
+        setCanSave(data.canSave !== false);
       } catch (err) {
         setError('Failed to load deck');
       } finally {
@@ -230,6 +233,29 @@ export default function EditDeckPage() {
     updateBrandData({ testimonials });
   };
 
+  const handleTestimonialPhotoUpload = async (index: number, file: File) => {
+    if (!brandData) return;
+
+    // Upload the file
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/upload/logo', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      handleTestimonialChange(index, 'portrait', data.url);
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+      setError('Failed to upload photo');
+    }
+  };
+
   // Social link helpers
   const handleSocialLinkChange = (index: number, field: keyof SocialLink, value: string) => {
     if (!brandData) return;
@@ -256,8 +282,10 @@ export default function EditDeckPage() {
   // Generate preview HTML
   const previewHtml = useMemo(() => {
     if (!brandData || !deckSlug) return '';
-    return generateDeckHtml(deckSlug, brandData);
-  }, [brandData, deckSlug]);
+    return generateDeckHtml(deckSlug, brandData, {
+      hideDonorSparkSlide: userPlan !== 'free',
+    });
+  }, [brandData, deckSlug, userPlan]);
 
   // Save changes
   const handleSave = async () => {
@@ -301,17 +329,34 @@ export default function EditDeckPage() {
     }
   };
 
-  // Build array of visible slide types
+  // Build array of visible slide types respecting custom order
   const getVisibleSlideTypes = () => {
     const types: ('hero' | 'mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta' | 'donorspark')[] = ['hero'];
-    if (brandData?.showMissionSlide !== false) types.push('mission');
-    if (brandData?.showChallengeSlide !== false) types.push('challenge');
-    if (brandData?.showProgramsSlide !== false) types.push('programs');
-    if (hasMetricsSlide) types.push('metrics');
-    if (brandData?.showTestimonialsSlide !== false) types.push('testimonials');
-    types.push('cta', 'donorspark');
+
+    // Get custom order or default
+    const order = brandData?.slideOrder || defaultSlideOrder;
+
+    // Add slides in order, checking visibility for each
+    for (const slideId of order) {
+      if (slideId === 'mission' && brandData?.showMissionSlide !== false) types.push('mission');
+      else if (slideId === 'challenge' && brandData?.showChallengeSlide !== false) types.push('challenge');
+      else if (slideId === 'programs' && brandData?.showProgramsSlide !== false) types.push('programs');
+      else if (slideId === 'metrics' && hasMetricsSlide) types.push('metrics');
+      else if (slideId === 'testimonials' && brandData?.showTestimonialsSlide !== false) types.push('testimonials');
+      else if (slideId === 'cta' && brandData?.showCtaSlide !== false) types.push('cta');
+    }
+
+    // DonorSpark slide only shows for free users
+    if (userPlan === 'free') {
+      types.push('donorspark');
+    }
+
     return types;
   };
+
+  // Memoize the default slide order
+  const defaultSlideOrder: ('mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta')[] =
+    ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'];
 
   const visibleSlideTypes = getVisibleSlideTypes();
 
@@ -341,10 +386,61 @@ export default function EditDeckPage() {
   const slideType = getSlideType();
 
   // Toggle slide visibility
-  const toggleSlideVisibility = (slideKey: 'showMissionSlide' | 'showChallengeSlide' | 'showProgramsSlide' | 'showTestimonialsSlide') => {
+  const toggleSlideVisibility = (slideKey: 'showMissionSlide' | 'showChallengeSlide' | 'showProgramsSlide' | 'showTestimonialsSlide' | 'showCtaSlide') => {
     if (!brandData) return;
     const currentValue = brandData[slideKey] !== false; // default true
     updateBrandData({ [slideKey]: !currentValue });
+  };
+
+  const getSlideOrder = () => brandData?.slideOrder || defaultSlideOrder;
+
+  // Drag and drop handlers
+  const handleDragStart = (slideId: string) => {
+    setDraggedSlide(slideId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetSlideId: string) => {
+    e.preventDefault();
+    if (!draggedSlide || draggedSlide === targetSlideId) return;
+  };
+
+  const handleDrop = (e: React.DragEvent, targetSlideId: string) => {
+    e.preventDefault();
+    if (!draggedSlide || draggedSlide === targetSlideId || !brandData) return;
+
+    const currentOrder = getSlideOrder();
+    const draggedIndex = currentOrder.indexOf(draggedSlide as typeof currentOrder[number]);
+    const targetIndex = currentOrder.indexOf(targetSlideId as typeof currentOrder[number]);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newOrder = [...currentOrder];
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedSlide as typeof currentOrder[number]);
+
+    updateBrandData({ slideOrder: newOrder });
+    setDraggedSlide(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedSlide(null);
+  };
+
+  // Slide configuration for the reorder list
+  const slideConfig: Record<string, { label: string; visibilityKey?: 'showMissionSlide' | 'showChallengeSlide' | 'showProgramsSlide' | 'showTestimonialsSlide' | 'showCtaSlide' }> = {
+    mission: { label: 'Mission', visibilityKey: 'showMissionSlide' },
+    challenge: { label: 'Challenge', visibilityKey: 'showChallengeSlide' },
+    programs: { label: 'Programs', visibilityKey: 'showProgramsSlide' },
+    metrics: { label: 'Metrics' }, // Metrics visibility is controlled by hasValidMetrics
+    testimonials: { label: 'Testimonials', visibilityKey: 'showTestimonialsSlide' },
+    cta: { label: 'CTA', visibilityKey: 'showCtaSlide' },
+  };
+
+  const isSlideVisible = (slideId: string) => {
+    if (slideId === 'metrics') return hasMetricsSlide;
+    const key = slideConfig[slideId]?.visibilityKey;
+    if (!key || !brandData) return true;
+    return brandData[key] !== false;
   };
 
   if (loading) {
@@ -417,14 +513,14 @@ export default function EditDeckPage() {
                       onChange={(v) => handleColorChange('primary', v)}
                     />
                     <ColorPicker
-                      label="Highlight"
-                      value={brandData.colors.accent}
-                      onChange={(v) => handleColorChange('accent', v)}
-                    />
-                    <ColorPicker
                       label="Primary Text"
                       value={brandData.colors.text || '#ffffff'}
                       onChange={(v) => handleColorChange('text', v)}
+                    />
+                    <ColorPicker
+                      label="Highlight"
+                      value={brandData.colors.accent}
+                      onChange={(v) => handleColorChange('accent', v)}
                     />
                     <ColorPicker
                       label="Header BG"
@@ -460,48 +556,63 @@ export default function EditDeckPage() {
                     />
                   </div>
 
-                  {/* Slide Visibility */}
+                  {/* Slides - Visibility & Order */}
                   <div className="pt-3 border-t border-neutral-700">
-                    <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider mb-2">Slide Visibility</p>
-                    <div className="space-y-1.5">
-                      <button
-                        onClick={() => toggleSlideVisibility('showMissionSlide')}
-                        className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
-                      >
-                        <span className="text-white">Mission</span>
-                        <span className={`flex items-center gap-1 ${brandData.showMissionSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
-                          {brandData.showMissionSlide !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => toggleSlideVisibility('showChallengeSlide')}
-                        className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
-                      >
-                        <span className="text-white">Challenge</span>
-                        <span className={`flex items-center gap-1 ${brandData.showChallengeSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
-                          {brandData.showChallengeSlide !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => toggleSlideVisibility('showProgramsSlide')}
-                        className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
-                      >
-                        <span className="text-white">Programs</span>
-                        <span className={`flex items-center gap-1 ${brandData.showProgramsSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
-                          {brandData.showProgramsSlide !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => toggleSlideVisibility('showTestimonialsSlide')}
-                        className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
-                      >
-                        <span className="text-white">Testimonials</span>
-                        <span className={`flex items-center gap-1 ${brandData.showTestimonialsSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
-                          {brandData.showTestimonialsSlide !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                        </span>
-                      </button>
+                    <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider mb-2">Slides (Drag to Reorder)</p>
+                    <div className="space-y-1">
+                      {/* Hero is always first and not draggable */}
+                      <div className="flex items-center justify-between p-2 bg-neutral-800/30 rounded border border-neutral-700/50 text-xs opacity-60">
+                        <div className="flex items-center gap-2">
+                          <span className="text-neutral-600 w-4" />
+                          <span className="text-neutral-400">Hero</span>
+                        </div>
+                        <span className="text-green-400/60"><Eye className="w-3 h-3" /></span>
+                      </div>
+
+                      {/* Draggable slides */}
+                      {getSlideOrder().map((slideId) => {
+                        const config = slideConfig[slideId];
+                        if (!config) return null;
+                        // Skip metrics if no valid metrics
+                        if (slideId === 'metrics' && !hasMetricsSlide) return null;
+
+                        const visible = isSlideVisible(slideId);
+                        const isDragging = draggedSlide === slideId;
+
+                        return (
+                          <div
+                            key={slideId}
+                            draggable
+                            onDragStart={() => handleDragStart(slideId)}
+                            onDragOver={(e) => handleDragOver(e, slideId)}
+                            onDrop={(e) => handleDrop(e, slideId)}
+                            onDragEnd={handleDragEnd}
+                            className={`flex items-center justify-between p-2 bg-neutral-800/50 rounded border transition-all text-xs cursor-grab active:cursor-grabbing ${
+                              isDragging ? 'border-[#C15A36] opacity-50' : 'border-neutral-700 hover:bg-neutral-800'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <GripVertical className="w-3 h-3 text-neutral-500" />
+                              <span className="text-white">{config.label}</span>
+                            </div>
+                            {config.visibilityKey ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleSlideVisibility(config.visibilityKey!);
+                                }}
+                                className={`flex items-center gap-1 ${visible ? 'text-green-400 hover:text-green-300' : 'text-neutral-500 hover:text-neutral-400'}`}
+                              >
+                                {visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                              </button>
+                            ) : (
+                              <span className="text-green-400/60"><Eye className="w-3 h-3" /></span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                    <p className="text-[10px] text-neutral-500 mt-2">Hero and CTA slides are always visible.</p>
+                    <p className="text-[10px] text-neutral-500 mt-2">Hero slide is always first.</p>
                   </div>
                 </>
               )}
@@ -554,22 +665,35 @@ export default function EditDeckPage() {
                   Reset
                 </button>
               )}
-              <button
-                onClick={handleSave}
-                disabled={saving || !hasUnsavedChanges}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all
-                  ${hasUnsavedChanges
-                    ? 'bg-[#C15A36] hover:bg-[#a84d2e] text-white'
-                    : 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
-                  }`}
-              >
-                {saving ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Save className="w-3 h-3" />
+              <div className="relative group">
+                <button
+                  onClick={canSave ? handleSave : undefined}
+                  disabled={saving || !hasUnsavedChanges || !canSave}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all
+                    ${!canSave
+                      ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                      : hasUnsavedChanges
+                        ? 'bg-[#C15A36] hover:bg-[#a84d2e] text-white'
+                        : 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                    }`}
+                >
+                  {saving ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Save className="w-3 h-3" />
+                  )}
+                  Save
+                </button>
+                {/* Upgrade tooltip for free users */}
+                {!canSave && (
+                  <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-50">
+                    <div className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white shadow-xl whitespace-nowrap">
+                      <a href="/pricing" className="text-[#C15A36] hover:underline font-medium">Upgrade</a> to save edited slides
+                      <div className="absolute top-full right-4 border-4 border-transparent border-t-neutral-800" />
+                    </div>
+                  </div>
                 )}
-                Save
-              </button>
+              </div>
             </div>
           </div>
 
@@ -821,13 +945,44 @@ export default function EditDeckPage() {
                             className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
                           />
                         </div>
-                        <input
-                          type="text"
-                          value={testimonial.portrait || ''}
-                          onChange={(e) => handleTestimonialChange(index, 'portrait', e.target.value)}
-                          placeholder="Photo URL"
-                          className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
-                        />
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={testimonial.portrait || ''}
+                              onChange={(e) => handleTestimonialChange(index, 'portrait', e.target.value)}
+                              placeholder="Photo URL"
+                              className="flex-1 bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
+                            />
+                            <label className="p-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded cursor-pointer transition-colors">
+                              <Upload className="w-3 h-3 text-neutral-400" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleTestimonialPhotoUpload(index, file);
+                                }}
+                              />
+                            </label>
+                          </div>
+                          {testimonial.portrait && (
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={testimonial.portrait}
+                                alt={testimonial.author || 'Portrait'}
+                                className="w-8 h-8 rounded-full object-cover border border-neutral-700"
+                              />
+                              <button
+                                onClick={() => handleTestimonialChange(index, 'portrait', '')}
+                                className="text-[10px] text-neutral-500 hover:text-red-400"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                     {(brandData.testimonials?.length || 0) === 0 && (

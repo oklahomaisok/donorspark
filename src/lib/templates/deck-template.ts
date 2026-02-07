@@ -6,10 +6,11 @@ export interface DeckOptions {
   claimUrl?: string;
   donorName?: string;
   donorAmount?: string;
+  hideDonorSparkSlide?: boolean; // Hide the branded slide for paid users
 }
 
 export function generateDeckHtml(slug: string, brandData: BrandData, options: DeckOptions = {}): string {
-  const { isPreviewMode = false, claimUrl = '', donorName = '', donorAmount = '' } = options;
+  const { isPreviewMode = false, claimUrl = '', donorName = '', donorAmount = '', hideDonorSparkSlide = false } = options;
   const {
     orgName = 'Organization',
     tagline = '',
@@ -60,6 +61,9 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     showChallengeSlide = true,
     showProgramsSlide = true,
     showTestimonialsSlide = true,
+    showCtaSlide = true,
+    // Custom slide order
+    slideOrder = ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'],
   } = brandData;
 
   const primary = colors.primary || '#1D2350';
@@ -137,27 +141,45 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     `<a href="${escAttr(link.url)}" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="${link.platform}">${socialIcons[link.platform] || ''}</a>`
   ).join('\n');
 
-  // Calculate total slides based on visibility
-  let totalSlides = 3; // Hero + CTA + DonorSpark always visible
-  if (showMissionSlide) totalSlides++;
-  if (showChallengeSlide) totalSlides++;
-  if (showProgramsSlide) totalSlides++;
-  if (showMetricsSlide) totalSlides++;
-  if (showTestimonialsSlide) totalSlides++;
+  // Calculate total slides based on visibility and order
+  let totalSlides = 1; // Hero always visible
+  const slideVisibility: Record<string, boolean> = {
+    mission: showMissionSlide,
+    challenge: showChallengeSlide,
+    programs: showProgramsSlide,
+    metrics: showMetricsSlide,
+    testimonials: showTestimonialsSlide,
+    cta: showCtaSlide,
+  };
+
+  // Count visible slides in order
+  for (const slideId of slideOrder) {
+    if (slideVisibility[slideId]) totalSlides++;
+  }
+
+  // Add DonorSpark slide for non-paid users
+  const showDonorSparkSlide = !hideDonorSparkSlide && !isPreviewMode;
+  if (showDonorSparkSlide || isPreviewMode) totalSlides++;
 
   let paginationDots = '';
   for (let i = 0; i < totalSlides; i++) {
     paginationDots += '<div class="w-2 h-2 rounded-full bg-neutral-400 cursor-pointer hover:bg-[var(--accent)] transition-all"></div>\n';
   }
 
-  // Calculate dynamic slide numbers
+  // Calculate dynamic slide numbers based on order
   let slideNum = 1; // Hero is always 01
-  const missionSlideNum = showMissionSlide ? String(++slideNum).padStart(2, '0') : '';
-  const challengeSlideNum = showChallengeSlide ? String(++slideNum).padStart(2, '0') : '';
-  const programsSlideNum = showProgramsSlide ? String(++slideNum).padStart(2, '0') : '';
-  const metricsSlideNum = showMetricsSlide ? String(++slideNum).padStart(2, '0') : '';
-  const testimonialsSlideNum = showTestimonialsSlide ? String(++slideNum).padStart(2, '0') : '';
-  const ctaSlideNum = String(++slideNum).padStart(2, '0');
+  const slideNumbers: Record<string, string> = {};
+  for (const slideId of slideOrder) {
+    if (slideVisibility[slideId]) {
+      slideNumbers[slideId] = String(++slideNum).padStart(2, '0');
+    }
+  }
+  const missionSlideNum = slideNumbers.mission || '';
+  const challengeSlideNum = slideNumbers.challenge || '';
+  const programsSlideNum = slideNumbers.programs || '';
+  const metricsSlideNum = slideNumbers.metrics || '';
+  const testimonialsSlideNum = slideNumbers.testimonials || '';
+  const ctaSlideNum = slideNumbers.cta || '';
 
   const headlineWords = donorHeadline.split(' ');
   const headlineTop = headlineWords.slice(0, Math.ceil(headlineWords.length / 2)).join(' ');
@@ -268,7 +290,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
                 <div class="flex-grow flex flex-col animate-on-scroll items-center justify-center relative"><div class="absolute top-0 right-0 p-2 opacity-70 text-[10px] font-mono text-[var(--accent)] z-30 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.6 13a4 4 0 0 1-7.7 2.3l-2.6-7.5a1.7 1.7 0 0 0-3.3 1L9 18.2a5.3 5.3 0 0 0 2.2 4.1l6.3 3.6c2.4 1.4 5.3-.2 5.5-2.9l.6-9.1a4 4 0 0 0-5-4.1z"/></svg>TAP CARDS</div><div id="testimonial-stack" class="relative w-full max-w-[280px] md:max-w-[320px] aspect-square cursor-pointer">${testimonialCardsHtml}</div></div>
             </div>
         </section>` : ''}
-        <!-- Slide: CTA -->
+        ${showCtaSlide ? `<!-- Slide: CTA -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
@@ -306,8 +328,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
                     ${contactEmail ? `<p class="mt-4 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}
                 </div>
             </div>
-        </section>
-        <!-- Slide ${showMetricsSlide ? '8' : '7'}: DonorSpark -->
+        </section>` : ''}
+        ${(isPreviewMode || showDonorSparkSlide) ? `<!-- Slide: DonorSpark -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-white border-neutral-200 border relative shadow-2xl rounded-xl">
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center items-center text-center">
                 ${isPreviewMode ? `
@@ -342,7 +364,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
                 <a href="https://www.donorspark.app?ref=${slug}" target="_blank" rel="noopener" class="ds-link animate-on-scroll text-neutral-500 hover:text-[#C15A36] transition-colors text-base md:text-lg" style="font-family: 'Instrument Serif', serif;">www.donorspark.app</a>
                 `}
             </div>
-        </section>
+        </section>` : ''}
     </main>
     <script>lucide.createIcons();</script>
     <script>

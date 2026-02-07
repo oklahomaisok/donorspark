@@ -32,20 +32,13 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check plan - must be starter or growth
-    if (user.plan === 'free') {
-      return NextResponse.json(
-        { error: 'Deck editing requires a Starter or Growth plan' },
-        { status: 403 }
-      );
-    }
-
     // Get deck (with ownership check)
     const deck = await getDeckForEdit(deckId, user.id);
     if (!deck) {
       return NextResponse.json({ error: 'Deck not found' }, { status: 404 });
     }
 
+    // Return deck data with plan info (free users can view but not save)
     return NextResponse.json({
       id: deck.id,
       slug: deck.slug,
@@ -56,6 +49,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       brandData: deck.brandData as BrandData | null,
       isCustomized: deck.isCustomized,
       customizedAt: deck.customizedAt,
+      userPlan: user.plan, // Include plan so UI can show upgrade prompts
+      canSave: user.plan !== 'free',
     });
   } catch (error) {
     console.error('GET /api/decks/[id] error:', error);
@@ -165,10 +160,12 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       },
     };
 
-    // Regenerate deck HTML
+    // Regenerate deck HTML (hide DonorSpark slide for paid users - we know user is paid since we checked above)
     let deckUrl: string;
     try {
-      deckUrl = await regenerateDeckHtml(deck.slug, updatedBrandData);
+      deckUrl = await regenerateDeckHtml(deck.slug, updatedBrandData, {
+        hideDonorSparkSlide: true, // Paid users don't see DonorSpark branding
+      });
     } catch (blobError) {
       console.error('Failed to regenerate deck HTML:', blobError);
       return NextResponse.json({ error: 'Failed to save deck HTML' }, { status: 500 });

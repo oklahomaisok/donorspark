@@ -129,6 +129,9 @@ export interface BrandData {
   showChallengeSlide?: boolean; // Default true
   showProgramsSlide?: boolean; // Default true
   showTestimonialsSlide?: boolean; // Default true
+  showCtaSlide?: boolean; // Default true
+  // Slide ordering (array of slide type IDs)
+  slideOrder?: ('mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta')[];
 }
 
 export interface SocialLink {
