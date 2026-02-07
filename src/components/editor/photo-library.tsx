@@ -83,16 +83,20 @@ export function PhotoLibrary({ isOpen, onClose, onSelect, currentUrl, slideType 
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Upload failed');
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
+
       const newPhotos = [data.url, ...uploadedPhotos];
       setUploadedPhotos(newPhotos);
       localStorage.setItem('ds_user_photos', JSON.stringify(newPhotos));
       onSelect(data.url);
     } catch (err) {
       console.error('Failed to upload photo:', err);
-      alert('Failed to upload photo. Please try again.');
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      alert(message);
     } finally {
       setUploading(false);
     }
