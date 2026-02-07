@@ -58,7 +58,7 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="flex flex-col lg:flex-row">
         {/* OG Image Preview */}
-        <div className="lg:w-1/2 aspect-[1200/630] relative bg-neutral-100">
+        <div className="lg:w-2/3 aspect-[1200/630] relative bg-neutral-100">
           {deck.ogImageUrl ? (
             <img
               src={deck.ogImageUrl}
@@ -92,7 +92,7 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
         </div>
 
         {/* Deck Info */}
-        <div className="lg:w-1/2 p-6 lg:p-8 flex flex-col">
+        <div className="lg:w-1/3 p-6 lg:p-8 flex flex-col">
           <div className="flex items-start justify-between mb-4">
             <div>
               <span className="text-xs font-medium text-[#C15A36] uppercase tracking-wider mb-1 block">
