@@ -63,3 +63,28 @@ export async function regenerateOgHtml(
 
   return blob.url;
 }
+
+/**
+ * Regenerate all decks for a user (e.g., when plan changes)
+ * Used to show/hide DonorSpark branding based on plan
+ */
+export async function regenerateUserDecks(
+  userDecks: Array<{ slug: string; brandData: BrandData | unknown }>,
+  options: RegenerationOptions = {}
+): Promise<void> {
+  // Process decks in parallel with a limit
+  const batchSize = 5;
+  for (let i = 0; i < userDecks.length; i += batchSize) {
+    const batch = userDecks.slice(i, i + batchSize);
+    await Promise.all(
+      batch.map(async (deck) => {
+        if (!deck.brandData) return;
+        try {
+          await regenerateDeckHtml(deck.slug, deck.brandData as BrandData, options);
+        } catch (err) {
+          console.error(`Failed to regenerate deck ${deck.slug}:`, err);
+        }
+      })
+    );
+  }
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, getPlanFromPriceId } from '@/lib/stripe';
-import { getUserById, updateUserPlan } from '@/db/queries';
+import { getUserById, updateUserPlan, getUserDecks } from '@/db/queries';
+import { regenerateUserDecks } from '@/lib/deck-regeneration';
 import type { Plan, BillingCycle } from '@/db/schema';
 
 export async function POST(req: NextRequest) {
@@ -121,6 +122,17 @@ async function handleCheckoutComplete(session: any) {
     stripeCurrentPeriodEnd: periodEndDate,
   });
 
+  // Regenerate user decks to hide DonorSpark branding
+  try {
+    const userDecks = await getUserDecks(userId);
+    if (userDecks.length > 0) {
+      await regenerateUserDecks(userDecks, { hideDonorSparkSlide: true });
+      console.log(`Regenerated ${userDecks.length} decks for user ${userId} without DonorSpark branding`);
+    }
+  } catch (err) {
+    console.error(`Failed to regenerate decks for user ${userId}:`, err);
+  }
+
   console.log(`User ${userId} upgraded to ${planInfo.plan} (${planInfo.cycle})`);
 }
 
@@ -159,6 +171,17 @@ async function handleSubscriptionCanceled(subscription: any) {
     stripePriceId: undefined,
     stripeCurrentPeriodEnd: undefined,
   });
+
+  // Regenerate user decks to show DonorSpark branding again
+  try {
+    const userDecks = await getUserDecks(userId);
+    if (userDecks.length > 0) {
+      await regenerateUserDecks(userDecks, { hideDonorSparkSlide: false });
+      console.log(`Regenerated ${userDecks.length} decks for user ${userId} with DonorSpark branding`);
+    }
+  } catch (err) {
+    console.error(`Failed to regenerate decks for user ${userId}:`, err);
+  }
 
   console.log(`User ${userId} subscription canceled, reverted to free`);
 }
