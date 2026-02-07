@@ -371,6 +371,13 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { slider.scrollBy({ left: scrollAmt(), behavior: 'smooth' }); }
             if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { slider.scrollBy({ left: -scrollAmt(), behavior: 'smooth' }); }
         });
+        // Listen for navigation messages from parent (editor)
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'navigate') {
+                if (e.data.direction === 'next') { slider.scrollBy({ left: scrollAmt(), behavior: 'smooth' }); }
+                if (e.data.direction === 'prev') { slider.scrollBy({ left: -scrollAmt(), behavior: 'smooth' }); }
+            }
+        });
         var countUpElements = document.querySelectorAll('.count-up');
         var countUpObserver = new IntersectionObserver(function(entries) {
             entries.forEach(function(entry) {

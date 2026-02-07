@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Monitor, Smartphone, ExternalLink } from 'lucide-react';
 
 interface PreviewFrameProps {
@@ -10,6 +10,33 @@ interface PreviewFrameProps {
 
 export function PreviewFrame({ html, deckUrl }: PreviewFrameProps) {
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('mobile');
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Listen for arrow keys and send navigation messages to iframe
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't navigate if user is typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        iframeRef.current?.contentWindow?.postMessage({ type: 'navigate', direction: 'next' }, '*');
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        iframeRef.current?.contentWindow?.postMessage({ type: 'navigate', direction: 'prev' }, '*');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="h-full flex flex-col bg-neutral-950 rounded-xl border border-neutral-800 overflow-hidden">
@@ -80,6 +107,7 @@ export function PreviewFrame({ html, deckUrl }: PreviewFrameProps) {
           }}
         >
           <iframe
+            ref={iframeRef}
             srcDoc={html}
             className="w-full h-full bg-white"
             style={{
