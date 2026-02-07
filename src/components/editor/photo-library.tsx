@@ -66,9 +66,9 @@ export function PhotoLibrary({ isOpen, onClose, onSelect, currentUrl, slideType 
   const handleUpload = async (file: File) => {
     if (!file) return;
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
+    // Validate file size (max 4MB - Vercel limit is 4.5MB)
+    if (file.size > 4 * 1024 * 1024) {
+      alert('File size must be less than 4MB');
       return;
     }
 
@@ -82,6 +82,15 @@ export function PhotoLibrary({ isOpen, onClose, onSelect, currentUrl, slideType 
         method: 'POST',
         body: formData,
       });
+
+      // Handle non-JSON error responses (e.g., Vercel's "Request Entity Too Large")
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        if (response.status === 413) {
+          throw new Error('File too large. Please use a smaller image (under 4.5MB).');
+        }
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
 
       const data = await response.json();
 
@@ -231,7 +240,7 @@ export function PhotoLibrary({ isOpen, onClose, onSelect, currentUrl, slideType 
                     <>
                       <Upload className="w-8 h-8 text-neutral-500 mx-auto mb-2" />
                       <p className="text-sm text-neutral-300 mb-1">Click to upload a photo</p>
-                      <p className="text-xs text-neutral-500">JPEG, PNG, WebP up to 5MB</p>
+                      <p className="text-xs text-neutral-500">JPEG, PNG, WebP up to 4MB</p>
                     </>
                   )}
                 </div>

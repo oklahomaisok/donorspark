@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { put } from '@vercel/blob';
 import { getUserByClerkId } from '@/db/queries';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB (Vercel limit is 4.5MB)
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
 
 /**
