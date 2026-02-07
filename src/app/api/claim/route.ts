@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { cookies } from 'next/headers';
+import QRCode from 'qrcode';
 import {
   getDeckByTempToken,
   getUserByClerkId,
@@ -9,6 +10,7 @@ import {
 } from '@/db/queries';
 import { generateOrgSlug } from '@/lib/utils/slug';
 import { config } from '@/lib/config';
+import { sendWelcomeEmail } from '@/lib/resend';
 
 export async function GET(req: NextRequest) {
   const tempToken = req.nextUrl.searchParams.get('tempToken');
@@ -64,6 +66,18 @@ export async function GET(req: NextRequest) {
     // Clear the temp token cookie
     const cookieStore = await cookies();
     cookieStore.delete('ds_temp_token');
+
+    // Send welcome email (async, don't block redirect)
+    const deckUrl = `${config.siteUrl}/s/${orgSlug}`;
+    QRCode.toDataURL(deckUrl, { width: 512, margin: 2 })
+      .then((qrCodeDataUrl) => {
+        sendWelcomeEmail(user.email, user.name || undefined, {
+          orgName: deck.orgName,
+          deckUrl,
+          qrCodeDataUrl,
+        }).catch((err) => console.error('Welcome email failed:', err));
+      })
+      .catch((err) => console.error('QR code generation failed:', err));
 
     // Redirect to new deck URL
     return NextResponse.redirect(`${config.siteUrl}/s/${orgSlug}?claimed=true`);
@@ -124,6 +138,18 @@ export async function POST(req: NextRequest) {
 
     // Claim the deck
     await claimDeck(deck.id, user.id, org.id);
+
+    // Send welcome email (async, don't block response)
+    const deckUrl = `${config.siteUrl}/s/${orgSlug}`;
+    QRCode.toDataURL(deckUrl, { width: 512, margin: 2 })
+      .then((qrCodeDataUrl) => {
+        sendWelcomeEmail(user.email, user.name || undefined, {
+          orgName: deck.orgName,
+          deckUrl,
+          qrCodeDataUrl,
+        }).catch((err) => console.error('Welcome email failed:', err));
+      })
+      .catch((err) => console.error('QR code generation failed:', err));
 
     return NextResponse.json({
       success: true,

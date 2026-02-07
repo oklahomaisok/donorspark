@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
+import QRCode from 'qrcode';
 import {
   upsertUser,
   getDeckByTempToken,
@@ -10,6 +11,8 @@ import {
 } from '@/db/queries';
 import { generateOrgSlug } from '@/lib/utils/slug';
 import { cookies } from 'next/headers';
+import { config } from '@/lib/config';
+import { sendWelcomeEmail } from '@/lib/resend';
 
 export async function POST(req: NextRequest) {
   const svixId = req.headers.get('svix-id');
@@ -119,6 +122,21 @@ async function tryAutoClaimDeck(clerkId: string) {
     await claimDeck(deck.id, user.id, org.id);
 
     console.log(`Auto-claimed deck ${deck.id} for user ${user.id}, org slug: ${orgSlug}`);
+
+    // Send welcome email with QR code
+    const deckUrl = `${config.siteUrl}/s/${orgSlug}`;
+    try {
+      const qrCodeDataUrl = await QRCode.toDataURL(deckUrl, { width: 512, margin: 2 });
+      await sendWelcomeEmail(user.email, user.name || undefined, {
+        orgName: deck.orgName,
+        deckUrl,
+        qrCodeDataUrl,
+      });
+      console.log(`Sent welcome email to ${user.email}`);
+    } catch (emailError) {
+      console.error('Welcome email failed:', emailError);
+      // Don't throw - email failure shouldn't break the claim
+    }
 
     // Note: We can't delete the cookie here because webhooks don't have access to the response
     // The cookie will be cleaned up on the next claim attempt or expire naturally
