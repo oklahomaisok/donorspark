@@ -63,7 +63,7 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
             <img
               src={deck.ogImageUrl}
               alt={deck.orgName}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1D2350] to-[#2d3560]">
