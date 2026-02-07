@@ -75,7 +75,7 @@ export function FocalPointEditor({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-4xl overflow-hidden shadow-2xl">
+      <div className="bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-700">
           <div>
@@ -93,17 +93,17 @@ export function FocalPointEditor({
         </div>
 
         {/* Image container */}
-        <div className="p-6">
+        <div className="p-4 flex-1 min-h-0">
           <div
             ref={containerRef}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
-            className={`relative w-full aspect-[4/3] rounded-lg overflow-hidden ${
+            className={`relative w-full h-full max-h-[50vh] rounded-lg overflow-hidden ${
               isDragging ? 'cursor-grabbing' : 'cursor-grab'
             }`}
-            style={{ userSelect: 'none' }}
+            style={{ userSelect: 'none', aspectRatio: '4/3' }}
           >
             {/* Full image */}
             <img
@@ -152,28 +152,27 @@ export function FocalPointEditor({
             )}
           </div>
 
-          {/* Position indicator */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-xs text-neutral-500">
-              Position: {localFocal.x}% horizontal, {localFocal.y}% vertical
-            </div>
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white bg-neutral-800 hover:bg-neutral-700 rounded transition-colors"
-            >
-              <RotateCcw className="w-3 h-3" />
-              Reset to Center
-            </button>
-          </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-neutral-700 bg-neutral-900/80">
+        {/* Footer - always visible */}
+        <div className="flex items-center justify-between p-4 border-t border-neutral-700 bg-neutral-800 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-neutral-400">
+              Position: {localFocal.x}%, {localFocal.y}%
+            </span>
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-white bg-neutral-700 hover:bg-neutral-600 rounded transition-colors"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Reset
+            </button>
+          </div>
           <button
             onClick={onClose}
-            className="px-6 py-2 text-sm font-medium bg-[#C15A36] hover:bg-[#a84d2e] text-white rounded-lg transition-colors"
+            className="px-8 py-2.5 text-sm font-bold bg-[#C15A36] hover:bg-[#a84d2e] text-white rounded-lg transition-colors shadow-lg"
           >
-            Done
+            Apply
           </button>
         </div>
       </div>
