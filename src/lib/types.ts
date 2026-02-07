@@ -80,7 +80,7 @@ export interface BrandData {
   orgName: string;
   logoUrl: string | null;
   logoSource: string;
-  colors: { primary: string; secondary: string; accent: string };
+  colors: { primary: string; secondary: string; accent: string; text?: string };
   fonts: { headingFont: string; bodyFont: string };
   images: SectorImages;
   testimonials: Testimonial[];
@@ -103,9 +103,32 @@ export interface BrandData {
   headerBgColor: string | null;
   headerTextDark: boolean;
   sector: string;
+  // Slide 1: Hero
   badgeText?: string; // "Impact Deck" badge - empty string hides it
-  missionHeadline?: string; // "Building A Better Future" - customizable
-  ctaButtonText?: string; // "Donate Today" - customizable
+  // Slide 2: Mission
+  missionSlideTitle?: string; // "Our Mission" - slide label
+  missionHeadline?: string; // "Building A Better Future" - main headline
+  // Slide 3: Challenge
+  challengeSlideTitle?: string; // "The Challenge" - slide label
+  solutionHeadline?: string; // "Our Solution" - second section headline
+  // Slide 4: Programs
+  programsSlideTitle?: string; // Slide label (icon area)
+  programsHeadline?: string; // "What We Offer"
+  programsBody?: string; // Body copy
+  // Slide 5: Testimonials
+  testimonialsSlideTitle?: string; // "Success Stories"
+  // Slide 6: CTA
+  ctaHeadline?: string; // "Join Our Mission"
+  ctaSubhead?: string; // Subheadline text
+  ctaButtonText?: string; // "Donate Today" - button text
+  showShareButtons?: boolean; // Show "Share This Story" section
+  showSocialLinks?: boolean; // Show "Follow Us Online" section
+  socialLinks?: SocialLink[];
+}
+
+export interface SocialLink {
+  platform: 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube' | 'tiktok';
+  url: string;
 }
 
 export interface SectorImages {

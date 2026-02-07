@@ -35,14 +35,32 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     fonts = { headingFont: 'Montserrat', bodyFont: 'Roboto' },
     images,
     testimonials = [],
+    // Slide 1
     badgeText = 'Impact Deck',
+    // Slide 2
+    missionSlideTitle = 'Our Mission',
     missionHeadline = 'Building A Better Future',
+    // Slide 3
+    challengeSlideTitle = 'The Challenge',
+    solutionHeadline = 'Our Solution',
+    // Slide 4
+    programsHeadline = 'What We Offer',
+    programsBody = 'We deliver impactful programs designed to create lasting change in our community.',
+    // Slide 5
+    testimonialsSlideTitle = 'Success Stories',
+    // Slide 6: CTA
+    ctaHeadline = 'Join Our Mission',
+    ctaSubhead = 'Your support helps us continue making a difference.',
     ctaButtonText = 'Donate Today',
+    showShareButtons = true,
+    showSocialLinks = false,
+    socialLinks = [],
   } = brandData;
 
   const primary = colors.primary || '#1D2350';
   const secondary = colors.secondary || '#FFC303';
   const accent = colors.accent || secondary;
+  const textColor = colors.text || '#ffffff';
   const headingFont = fonts.headingFont || 'Montserrat';
   const bodyFont = fonts.bodyFont || 'Roboto';
 
@@ -96,8 +114,22 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     { quote: "I've seen the impact firsthand.", author: 'Michelle K.', role: 'Board Member', portrait: 'https://i.pravatar.cc/200?img=9' },
   ];
 
-  const testimonialCardsHtml = testimonialsData.slice(0, 3).map((t, i) =>
-    `<div class="testimonial-card card-pos-${i} w-full h-full rounded-2xl bg-white p-6 shadow-xl flex flex-col overflow-hidden"><div class="mb-4"><svg class="w-10 h-10 text-[var(--accent)]" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg></div><p class="text-[var(--primary)] text-sm leading-relaxed flex-grow mb-6">${escHtml(t.quote)}</p><div class="flex items-center gap-3 pt-4 border-t border-neutral-100"><div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-[var(--accent)]/30"><img src="${t.portrait || ''}" alt="${escAttr(t.author)}" class="w-full h-full object-cover"></div><div><div class="text-[var(--primary)] font-bold text-sm">${escHtml(t.author)}</div><div class="text-neutral-400 text-xs">${escHtml(t.role)}</div></div></div></div>`
+  const testimonialCardsHtml = testimonialsData.slice(0, 5).map((t, i) =>
+    `<div class="testimonial-card card-pos-${Math.min(i, 2)} w-full h-full rounded-2xl bg-white p-6 shadow-xl flex flex-col overflow-hidden"><div class="mb-4"><svg class="w-10 h-10 text-[var(--accent)]" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg></div><p class="text-[var(--primary)] text-sm leading-relaxed flex-grow mb-6">${escHtml(t.quote)}</p><div class="flex items-center gap-3 pt-4 border-t border-neutral-100"><div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-[var(--accent)]/30"><img src="${t.portrait || ''}" alt="${escAttr(t.author)}" class="w-full h-full object-cover"></div><div><div class="text-[var(--primary)] font-bold text-sm">${escHtml(t.author)}</div><div class="text-neutral-400 text-xs">${escHtml(t.role)}</div></div></div></div>`
+  ).join('\n');
+
+  // Social links icons by platform
+  const socialIcons: Record<string, string> = {
+    facebook: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+    instagram: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>',
+    twitter: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+    linkedin: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>',
+    youtube: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+    tiktok: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>',
+  };
+
+  const socialLinksHtml = (socialLinks || []).map(link =>
+    `<a href="${escAttr(link.url)}" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="${link.platform}">${socialIcons[link.platform] || ''}</a>`
   ).join('\n');
 
   const totalSlides = showMetricsSlide ? 8 : 7;
@@ -135,8 +167,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=${headingFont.replace(/ /g, '+')}:wght@400;500;700;900&family=${bodyFont.replace(/ /g, '+')}:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: ${primary}; --secondary: ${secondary}; --accent: ${accent}; --header-bg: ${headerBgColor || primary}; --header-text: ${headerTextDark ? '#1a1a1a' : '#ffffff'}; }
-        body { font-family: '${bodyFont}', sans-serif; background-color: color-mix(in srgb, var(--primary) 85%, black); color: white; }
+        :root { --primary: ${primary}; --secondary: ${secondary}; --accent: ${accent}; --text: ${textColor}; --header-bg: ${headerBgColor || primary}; --header-text: ${headerTextDark ? '#1a1a1a' : '#ffffff'}; }
+        body { font-family: '${bodyFont}', sans-serif; background-color: color-mix(in srgb, var(--primary) 85%, black); color: var(--text); }
         h1, h2, h3, .font-display { font-family: '${headingFont}', sans-serif; }
         @keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }
         @keyframes grow-up { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
@@ -185,7 +217,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${actionImg}" class="w-full h-full object-cover" alt="Action"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[02]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">Our Mission</span></header>
+                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[02]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(missionSlideTitle)}</span></header>
                 <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-white font-display font-black ${headlineCase} tracking-tight leading-none mb-3">${formatHeadline(missionHeadline, headlineCase)}</h2><div class="w-12 h-1 bg-[var(--accent)] mb-4"></div><p class="text-sm text-neutral-100 leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
             </div>
         </section>
@@ -193,8 +225,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
             <div class="flex flex-col h-full p-4 md:p-10 z-10 overflow-y-auto hide-scrollbar">
-                <header class="flex animate-on-scroll items-center justify-between mb-3 md:mb-6 flex-shrink-0"><span class="font-mono text-xs text-[var(--accent)] font-bold">[03]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">The Challenge</span></header>
-                <div class="flex-grow flex flex-col justify-center"><div class="animate-on-scroll bg-white/5 border border-white/10 rounded-lg p-4 md:p-6"><div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"><div class="p-1.5 md:p-2 bg-[var(--accent)]/20 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h2 class="text-lg md:text-2xl text-white font-display font-black ${headlineCase}">${escHtml(need.headline)}</h2></div><p class="text-xs md:text-sm text-neutral-200 leading-relaxed">${escHtml(need.description)}</p></div><div class="flex justify-center my-2 md:my-4 animate-on-scroll text-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v15"/><path d="m19 12-7 7-7-7"/></svg></div><div class="animate-on-scroll bg-gradient-to-br from-[var(--accent)]/10 to-transparent border border-[var(--accent)]/30 rounded-lg p-4 md:p-6"><div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"><div class="p-1.5 md:p-2 bg-[var(--accent)] rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3 class="text-lg md:text-xl text-[var(--accent)] font-display font-black ${headlineCase}">Our Solution</h3></div><p class="text-xs md:text-sm text-neutral-200 leading-relaxed">${escHtml(solution)}</p></div></div>
+                <header class="flex animate-on-scroll items-center justify-between mb-3 md:mb-6 flex-shrink-0"><span class="font-mono text-xs text-[var(--accent)] font-bold">[03]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(challengeSlideTitle)}</span></header>
+                <div class="flex-grow flex flex-col justify-center"><div class="animate-on-scroll bg-white/5 border border-white/10 rounded-lg p-4 md:p-6"><div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"><div class="p-1.5 md:p-2 bg-[var(--accent)]/20 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h2 class="text-lg md:text-2xl text-white font-display font-black ${headlineCase}">${escHtml(need.headline)}</h2></div><p class="text-xs md:text-sm text-neutral-200 leading-relaxed">${escHtml(need.description)}</p></div><div class="flex justify-center my-2 md:my-4 animate-on-scroll text-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v15"/><path d="m19 12-7 7-7-7"/></svg></div><div class="animate-on-scroll bg-gradient-to-br from-[var(--accent)]/10 to-transparent border border-[var(--accent)]/30 rounded-lg p-4 md:p-6"><div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"><div class="p-1.5 md:p-2 bg-[var(--accent)] rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3 class="text-lg md:text-xl text-[var(--accent)] font-display font-black ${headlineCase}">${escHtml(solutionHeadline)}</h3></div><p class="text-xs md:text-sm text-neutral-200 leading-relaxed">${escHtml(solution)}</p></div></div>
             </div>
         </section>
         <!-- Slide 4: Programs -->
@@ -202,7 +234,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             <div class="absolute inset-0 z-0"><img src="${groupImg}" class="w-full h-full object-cover" alt="Programs"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[04]</span><div class="p-2 bg-white/10 rounded-full backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></div></header>
-                <div class="flex-grow flex flex-col justify-center"><div class="mb-6 animate-on-scroll"><h2 class="text-3xl md:text-4xl text-white font-display font-black tracking-tighter ${headlineCase} leading-none drop-shadow-xl">What We<br><span class="text-[var(--accent)]">Offer</span></h2></div><div class="animate-on-scroll bg-[var(--primary)]/70 p-4 rounded-lg backdrop-blur-md border border-white/10"><p class="leading-relaxed text-sm text-neutral-100 mb-4 font-medium">We deliver impactful programs designed to create lasting change in our community.</p>${programsHtml ? `<div class="flex flex-wrap gap-2">${programsHtml}</div>` : ''}</div></div>
+                <div class="flex-grow flex flex-col justify-center"><div class="mb-6 animate-on-scroll"><h2 class="text-3xl md:text-4xl text-white font-display font-black tracking-tighter ${headlineCase} leading-none drop-shadow-xl">${formatHeadline(programsHeadline, headlineCase)}</h2></div><div class="animate-on-scroll bg-[var(--primary)]/70 p-4 rounded-lg backdrop-blur-md border border-white/10"><p class="leading-relaxed text-sm text-neutral-100 mb-4 font-medium">${escHtml(programsBody)}</p>${programsHtml ? `<div class="flex flex-wrap gap-2">${programsHtml}</div>` : ''}</div></div>
             </div>
         </section>
         ${showMetricsSlide ? `<!-- Slide 5: Metrics -->
@@ -211,7 +243,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${actionImg}" class="w-full h-full object-cover" alt="Background"><div class="absolute inset-0 bg-black/70"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${showMetricsSlide ? '06' : '05'}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Success Stories</span></header>
+                <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${showMetricsSlide ? '06' : '05'}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">${escHtml(testimonialsSlideTitle)}</span></header>
                 <div class="flex-grow flex flex-col animate-on-scroll items-center justify-center relative"><div class="absolute top-0 right-0 p-2 opacity-70 text-[10px] font-mono text-[var(--accent)] z-30 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.6 13a4 4 0 0 1-7.7 2.3l-2.6-7.5a1.7 1.7 0 0 0-3.3 1L9 18.2a5.3 5.3 0 0 0 2.2 4.1l6.3 3.6c2.4 1.4 5.3-.2 5.5-2.9l.6-9.1a4 4 0 0 0-5-4.1z"/></svg>TAP CARDS</div><div id="testimonial-stack" class="relative w-full max-w-[280px] md:max-w-[320px] aspect-square cursor-pointer">${testimonialCardsHtml}</div></div>
             </div>
         </section>
@@ -219,7 +251,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
-                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-6">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">${escHtml(ctaButtonText)}</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">${formatHeadline(ctaHeadline, headlineCase)}</h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-6">${escHtml(ctaSubhead)}</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">${escHtml(ctaButtonText)}</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
                     ${isPreviewMode ? `
                     <!-- Love your deck banner - only on CTA slide -->
                     <div class="mt-6 p-4 rounded-xl bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white">
@@ -230,8 +262,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                         </a>
                     </div>` : `
-                    <p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story</p>
-                    <div class="flex items-center gap-3">
+                    ${showShareButtons ? `<div class="mb-4"><p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story</p>
+                    <div class="flex items-center justify-center gap-3">
                         <a href="mailto:?subject=${encodeURIComponent(`Check out ${orgName}'s Impact Story`)}&body=${encodeURIComponent(`I thought you'd be interested in this: https://donorspark.app/decks/${slug}`)}" class="share-btn w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="Share via Email">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                         </a>
@@ -247,7 +279,9 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
                         <button onclick="navigator.clipboard.writeText('https://donorspark.app/decks/${slug}').then(()=>{this.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'18\\' height=\\'18\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'white\\' stroke-width=\\'2\\'><polyline points=\\'20 6 9 17 4 12\\'/></svg>';setTimeout(()=>{this.innerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'18\\' height=\\'18\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'white\\' stroke-width=\\'2\\'><rect width=\\'14\\' height=\\'14\\' x=\\'8\\' y=\\'8\\' rx=\\'2\\' ry=\\'2\\'/><path d=\\'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\\'/></svg>'},2000)})" class="share-btn w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer" title="Copy Link">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                         </button>
-                    </div>`}
+                    </div></div>` : ''}
+                    ${showSocialLinks && socialLinks.length > 0 ? `<div><p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Follow Us Online</p>
+                    <div class="flex items-center justify-center gap-3">${socialLinksHtml}</div></div>` : ''}`}
                     ${contactEmail ? `<p class="mt-4 text-sm text-neutral-400">Contact: ${escHtml(contactEmail)}</p>` : ''}
                 </div>
             </div>
@@ -332,6 +366,11 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         var prevBtn = document.getElementById('prevBtn');
         if (nextBtn) nextBtn.addEventListener('click', function() { slider.scrollBy({ left: scrollAmt(), behavior: 'smooth' }); });
         if (prevBtn) prevBtn.addEventListener('click', function() { slider.scrollBy({ left: -scrollAmt(), behavior: 'smooth' }); });
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { slider.scrollBy({ left: scrollAmt(), behavior: 'smooth' }); }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { slider.scrollBy({ left: -scrollAmt(), behavior: 'smooth' }); }
+        });
         var countUpElements = document.querySelectorAll('.count-up');
         var countUpObserver = new IntersectionObserver(function(entries) {
             entries.forEach(function(entry) {
