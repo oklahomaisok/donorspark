@@ -31,6 +31,7 @@ export async function regenerateDeckHtml(
     access: 'public',
     contentType: 'text/html',
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 
   return blob.url;
@@ -50,6 +51,7 @@ export async function regenerateOgHtml(
     access: 'public',
     contentType: 'text/html',
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 
   return blob.url;
