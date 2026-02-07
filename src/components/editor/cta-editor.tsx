@@ -5,19 +5,19 @@ import { useState, useEffect } from 'react';
 
 interface CtaEditorProps {
   donateUrl: string;
-  accentColor: string;
+  buttonColor: string;
   onDonateUrlChange: (url: string) => void;
-  onAccentColorChange: (color: string) => void;
+  onButtonColorChange: (color: string) => void;
 }
 
 export function CtaEditor({
   donateUrl,
-  accentColor,
+  buttonColor,
   onDonateUrlChange,
-  onAccentColorChange,
+  onButtonColorChange,
 }: CtaEditorProps) {
   const [urlValue, setUrlValue] = useState(donateUrl);
-  const [colorValue, setColorValue] = useState(accentColor);
+  const [colorValue, setColorValue] = useState(buttonColor);
   const [isValidUrl, setIsValidUrl] = useState(true);
   const [isValidColor, setIsValidColor] = useState(true);
 
@@ -26,8 +26,8 @@ export function CtaEditor({
   }, [donateUrl]);
 
   useEffect(() => {
-    setColorValue(accentColor);
-  }, [accentColor]);
+    setColorValue(buttonColor);
+  }, [buttonColor]);
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -60,7 +60,7 @@ export function CtaEditor({
     setIsValidColor(valid);
 
     if (valid) {
-      onAccentColorChange(value);
+      onButtonColorChange(value);
     }
   };
 
@@ -68,7 +68,7 @@ export function CtaEditor({
     const value = e.target.value.toUpperCase();
     setColorValue(value);
     setIsValidColor(true);
-    onAccentColorChange(value);
+    onButtonColorChange(value);
   };
 
   return (
@@ -97,12 +97,12 @@ export function CtaEditor({
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-            Button Color (Accent)
+            Button Color
           </label>
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={accentColor}
+              value={buttonColor}
               onChange={handleColorPickerChange}
               className="w-10 h-10 rounded-lg cursor-pointer border border-neutral-700 bg-transparent"
               style={{ padding: 0 }}
@@ -128,7 +128,7 @@ export function CtaEditor({
           <p className="text-xs text-neutral-500 mb-2">Button Preview:</p>
           <button
             className="inline-flex items-center justify-center px-6 py-3 font-bold rounded text-sm"
-            style={{ backgroundColor: accentColor, color: getBestTextColor(accentColor) }}
+            style={{ backgroundColor: buttonColor, color: getBestTextColor(buttonColor) }}
           >
             Donate Today
             <svg className="ml-2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

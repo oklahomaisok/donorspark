@@ -35,6 +35,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     fonts = { headingFont: 'Montserrat', bodyFont: 'Roboto' },
     images,
     testimonials = [],
+    badgeText = 'Impact Deck',
   } = brandData;
 
   const primary = colors.primary || '#1D2350';
@@ -48,8 +49,9 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
   // Use uppercase for sans-serif, mixed case for serif
   const headlineCase = isSerifFont ? '' : 'uppercase';
 
-  // Compute high-contrast CTA button color
-  const ctaButtonColor = getHighContrastButtonColor(primary, accent);
+  // CTA button uses secondary color directly (user-controlled)
+  // Calculate text color based on button background luminance
+  const ctaButtonColor = getButtonTextColor(secondary);
 
   const heroImg = images?.hero || `${config.imageBaseUrl}/community-hero-leader.jpg`;
   const heroVideoFilename = heroImg.split('/').pop()?.replace(/\.(jpg|jpeg|png|webp)$/i, '.mp4') || '';
@@ -172,7 +174,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0">${heroMediaHtml}<div class="absolute inset-0 bg-black/40"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div></div>
             <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-between">
-                <div class="flex animate-on-scroll items-start justify-between"><span class="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold border border-[var(--accent)]/30 px-2 py-1 rounded bg-[var(--primary)]/80 backdrop-blur-md">Impact Deck</span></div>
+                <div class="flex animate-on-scroll items-start justify-between">${badgeText ? `<span class="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold border border-[var(--accent)]/30 px-2 py-1 rounded bg-[var(--primary)]/80 backdrop-blur-md">${escHtml(badgeText)}</span>` : '<span></span>'}</div>
                 <div class="mt-auto"><h1 class="leading-[0.9] animate-on-scroll text-4xl md:text-5xl tracking-wide font-display ${headlineCase} text-white mb-4 drop-shadow-lg">${escHtml(headlineTop)}<br><span class="text-[var(--accent)]">${escHtml(headlineBottom)}</span></h1><div class="animate-on-scroll"><p class="text-sm text-neutral-100 max-w-[90%] border-l-4 border-[var(--accent)] pl-4 font-medium">${escHtml(heroHook)}</p></div></div>
                 <div class="pt-4 border-t border-white/10 flex justify-between items-end animate-on-scroll">${yearFounded ? `<div class="flex flex-col"><span class="text-[10px] text-neutral-300 uppercase mb-1 tracking-wider">Established</span><span class="font-display text-sm text-white">Since ${yearFounded}</span></div>` : '<div></div>'}<div class="text-[var(--accent)] flex items-center gap-2 text-xs uppercase tracking-widest font-bold">Scroll <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div></div>
             </div>
@@ -215,7 +217,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
-                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-6">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${ctaButtonColor.bg}; color: ${ctaButtonColor.text};"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-6">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
                     ${isPreviewMode ? `
                     <!-- Love your deck banner - only on CTA slide -->
                     <div class="mt-6 p-4 rounded-xl bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white">
@@ -316,7 +318,10 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         var slider = document.getElementById('slider');
         var slides = document.querySelectorAll('.slide-container');
         var dots = document.getElementById('pagination-dots').children;
-        var updateDots = function(idx) { Array.from(dots).forEach(function(d, i) { d.className = i === idx ? 'w-2.5 h-2.5 rounded-full bg-[var(--accent)] cursor-pointer' : 'w-2 h-2 rounded-full bg-neutral-400 hover:bg-[var(--accent)]/70 cursor-pointer'; }); };
+        var currentSlide = 0;
+        var updateDots = function(idx) { currentSlide = idx; try { sessionStorage.setItem('ds_slide', idx); } catch(e) {} Array.from(dots).forEach(function(d, i) { d.className = i === idx ? 'w-2.5 h-2.5 rounded-full bg-[var(--accent)] cursor-pointer' : 'w-2 h-2 rounded-full bg-neutral-400 hover:bg-[var(--accent)]/70 cursor-pointer'; }); };
+        // Restore scroll position from sessionStorage (for editor preview)
+        try { var saved = sessionStorage.getItem('ds_slide'); if (saved && slides[+saved]) { setTimeout(function() { slides[+saved].scrollIntoView({ behavior: 'instant', inline: 'center' }); }, 50); } } catch(e) {}
         var slideIO = new IntersectionObserver(function(entries) { entries.forEach(function(e) { if (e.isIntersecting) updateDots(Array.from(slides).indexOf(e.target)); }); }, { root: slider, threshold: 0.6 });
         slides.forEach(function(s) { slideIO.observe(s); });
         Array.from(dots).forEach(function(d, i) { d.addEventListener('click', function() { slides[i] && slides[i].scrollIntoView({ behavior: 'smooth', inline: 'center' }); }); });
@@ -397,50 +402,16 @@ function isSerif(fontName: string): boolean {
   return SERIF_FONTS.some(serif => lower.includes(serif)) || lower.includes('serif');
 }
 
-function getHighContrastButtonColor(bgColor: string, accentColor: string): { bg: string; text: string } {
-  // Parse hex colors to RGB
-  const parseHex = (hex: string) => ({
-    r: parseInt(hex.slice(1, 3), 16),
-    g: parseInt(hex.slice(3, 5), 16),
-    b: parseInt(hex.slice(5, 7), 16),
-  });
-
-  // Calculate relative luminance (WCAG formula)
-  const getLuminance = (r: number, g: number, b: number) => {
-    const [rs, gs, bs] = [r, g, b].map(c => {
-      c = c / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-  };
-
-  // Calculate contrast ratio between two colors
-  const getContrastRatio = (l1: number, l2: number) => {
-    const lighter = Math.max(l1, l2);
-    const darker = Math.min(l1, l2);
-    return (lighter + 0.05) / (darker + 0.05);
-  };
-
-  const bg = parseHex(bgColor);
-  const accent = parseHex(accentColor);
-  const bgLuminance = getLuminance(bg.r, bg.g, bg.b);
-  const accentLuminance = getLuminance(accent.r, accent.g, accent.b);
-
-  const contrastWithAccent = getContrastRatio(bgLuminance, accentLuminance);
-
-  // If accent has good contrast (>3:1), use it
-  if (contrastWithAccent >= 3) {
-    // Determine text color based on accent luminance
-    const textColor = accentLuminance > 0.5 ? '#1a1a1a' : '#ffffff';
-    return { bg: accentColor, text: textColor };
-  }
-
-  // Accent doesn't have enough contrast - use white or a vibrant fallback
-  if (bgLuminance < 0.5) {
-    // Dark background - use white button with dark text
-    return { bg: '#ffffff', text: '#1a1a1a' };
-  } else {
-    // Light background - use dark button with white text
-    return { bg: '#1a1a1a', text: '#ffffff' };
+// Get best text color (black or white) for a given background color
+function getButtonTextColor(bgColor: string): string {
+  try {
+    const r = parseInt(bgColor.slice(1, 3), 16);
+    const g = parseInt(bgColor.slice(3, 5), 16);
+    const b = parseInt(bgColor.slice(5, 7), 16);
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
+  } catch {
+    return '#ffffff';
   }
 }

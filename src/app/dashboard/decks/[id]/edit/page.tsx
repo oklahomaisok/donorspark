@@ -343,20 +343,41 @@ export default function EditDeckPage() {
               {activeSection === 'colors' && (
                 <div className="space-y-4">
                   <ColorPicker
-                    label="Primary Color"
+                    label="Background Color"
                     value={brandData.colors.primary}
                     onChange={(v) => handleColorChange('primary', v)}
                   />
                   <ColorPicker
-                    label="Secondary Color"
+                    label="Button Color"
                     value={brandData.colors.secondary}
                     onChange={(v) => handleColorChange('secondary', v)}
                   />
                   <ColorPicker
-                    label="Accent Color"
+                    label="Highlight Color"
                     value={brandData.colors.accent}
                     onChange={(v) => handleColorChange('accent', v)}
                   />
+                  <ColorPicker
+                    label="Header Background"
+                    value={brandData.headerBgColor || brandData.colors.primary}
+                    onChange={(v) => updateBrandData({ headerBgColor: v })}
+                  />
+
+                  {/* Badge Text */}
+                  <div className="space-y-1.5 pt-2 border-t border-neutral-700">
+                    <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                      Badge Text
+                    </label>
+                    <input
+                      type="text"
+                      value={brandData.badgeText ?? 'Impact Deck'}
+                      onChange={(e) => updateBrandData({ badgeText: e.target.value })}
+                      placeholder="Impact Deck"
+                      className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white
+                        focus:outline-none focus:border-[#C15A36] transition-colors"
+                    />
+                    <p className="text-xs text-neutral-500">Leave empty to hide the badge</p>
+                  </div>
                 </div>
               )}
 
@@ -400,9 +421,9 @@ export default function EditDeckPage() {
               {activeSection === 'cta' && (
                 <CtaEditor
                   donateUrl={brandData.finalDonateUrl}
-                  accentColor={brandData.colors.accent}
+                  buttonColor={brandData.colors.secondary}
                   onDonateUrlChange={(url) => updateBrandData({ finalDonateUrl: url })}
-                  onAccentColorChange={(color) => handleColorChange('accent', color)}
+                  onButtonColorChange={(color) => handleColorChange('secondary', color)}
                 />
               )}
             </>

@@ -103,6 +103,7 @@ export interface BrandData {
   headerBgColor: string | null;
   headerTextDark: boolean;
   sector: string;
+  badgeText?: string; // "Impact Deck" badge - empty string hides it
 }
 
 export interface SectorImages {
