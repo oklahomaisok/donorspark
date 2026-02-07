@@ -112,6 +112,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid brandData' }, { status: 400 });
     }
 
+    // Cast existing brandData for validation and merging
+    const existingBrandData = deck.brandData as BrandData;
+
     // Validate colors if provided
     if (updates.colors) {
       const { primary, secondary, accent } = updates.colors;
@@ -126,19 +129,25 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       }
     }
 
-    // Validate fonts if provided
+    // Validate fonts if provided - only reject if changing to an unknown font
+    // (existing fonts from AI generation are allowed even if not in curated list)
     if (updates.fonts) {
       const { headingFont, bodyFont } = updates.fonts;
-      if (headingFont && !HEADING_FONTS.includes(headingFont as typeof HEADING_FONTS[number])) {
+      const existingHeading = existingBrandData.fonts?.headingFont;
+      const existingBody = existingBrandData.fonts?.bodyFont;
+
+      // Only validate if the font is different from existing AND not in our list
+      if (headingFont && headingFont !== existingHeading &&
+          !HEADING_FONTS.includes(headingFont as typeof HEADING_FONTS[number])) {
         return NextResponse.json({ error: 'Invalid heading font' }, { status: 400 });
       }
-      if (bodyFont && !BODY_FONTS.includes(bodyFont as typeof BODY_FONTS[number])) {
+      if (bodyFont && bodyFont !== existingBody &&
+          !BODY_FONTS.includes(bodyFont as typeof BODY_FONTS[number])) {
         return NextResponse.json({ error: 'Invalid body font' }, { status: 400 });
       }
     }
 
     // Merge updates with existing brandData
-    const existingBrandData = deck.brandData as BrandData;
     const updatedBrandData: BrandData = {
       ...existingBrandData,
       ...updates,
@@ -157,13 +166,29 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     };
 
     // Regenerate deck HTML
-    const deckUrl = await regenerateDeckHtml(deck.slug, updatedBrandData);
+    let deckUrl: string;
+    try {
+      deckUrl = await regenerateDeckHtml(deck.slug, updatedBrandData);
+    } catch (blobError) {
+      console.error('Failed to regenerate deck HTML:', blobError);
+      return NextResponse.json({ error: 'Failed to save deck HTML' }, { status: 500 });
+    }
 
     // Regenerate OG HTML (will be screenshotted by background job)
-    await regenerateOgHtml(deck.slug, updatedBrandData);
+    try {
+      await regenerateOgHtml(deck.slug, updatedBrandData);
+    } catch (ogError) {
+      console.error('Failed to regenerate OG HTML:', ogError);
+      // Non-fatal - continue without OG update
+    }
 
     // Update database
-    await updateDeckBrandData(deckId, updatedBrandData, deckUrl, deck.ogImageUrl || undefined);
+    try {
+      await updateDeckBrandData(deckId, updatedBrandData, deckUrl, deck.ogImageUrl || undefined);
+    } catch (dbError) {
+      console.error('Failed to update database:', dbError);
+      return NextResponse.json({ error: 'Failed to save changes to database' }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
