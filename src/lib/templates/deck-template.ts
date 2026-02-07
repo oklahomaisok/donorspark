@@ -321,7 +321,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         var slides = document.querySelectorAll('.slide-container');
         var dots = document.getElementById('pagination-dots').children;
         var currentSlide = 0;
-        var updateDots = function(idx) { currentSlide = idx; try { sessionStorage.setItem('ds_slide', idx); } catch(e) {} Array.from(dots).forEach(function(d, i) { d.className = i === idx ? 'w-2.5 h-2.5 rounded-full bg-[var(--accent)] cursor-pointer' : 'w-2 h-2 rounded-full bg-neutral-400 hover:bg-[var(--accent)]/70 cursor-pointer'; }); };
+        var updateDots = function(idx) { currentSlide = idx; try { sessionStorage.setItem('ds_slide', idx); } catch(e) {} Array.from(dots).forEach(function(d, i) { d.className = i === idx ? 'w-2.5 h-2.5 rounded-full bg-[var(--accent)] cursor-pointer' : 'w-2 h-2 rounded-full bg-neutral-400 hover:bg-[var(--accent)]/70 cursor-pointer'; }); try { window.parent.postMessage({ type: 'slideChange', slideIndex: idx }, '*'); } catch(e) {} };
         // Restore scroll position from sessionStorage (for editor preview)
         try { var saved = sessionStorage.getItem('ds_slide'); if (saved && slides[+saved]) { setTimeout(function() { slides[+saved].scrollIntoView({ behavior: 'instant', inline: 'center' }); }, 50); } } catch(e) {}
         var slideIO = new IntersectionObserver(function(entries) { entries.forEach(function(e) { if (e.isIntersecting) updateDots(Array.from(slides).indexOf(e.target)); }); }, { root: slider, threshold: 0.6 });

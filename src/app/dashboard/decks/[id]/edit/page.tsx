@@ -2,17 +2,25 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Loader2, Palette, Type, Image, FileText, MousePointer } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 import { ColorPicker } from '@/components/editor/color-picker';
 import { FontSelector } from '@/components/editor/font-selector';
 import { LogoUploader } from '@/components/editor/logo-uploader';
-import { SlideCopyEditor } from '@/components/editor/slide-copy-editor';
-import { CtaEditor } from '@/components/editor/cta-editor';
 import { PreviewFrame } from '@/components/editor/preview-frame';
 import { generateDeckHtml } from '@/lib/templates/deck-template';
 import type { BrandData } from '@/lib/types';
 
-type EditorSection = 'colors' | 'fonts' | 'logo' | 'copy' | 'cta';
+// Slide configuration - maps slide index to editable fields
+const SLIDE_CONFIG: Record<number, { title: string; fields: string[] }> = {
+  0: { title: 'Hero Slide', fields: ['donorHeadline', 'heroHook', 'badgeText'] },
+  1: { title: 'Mission Slide', fields: ['missionHeadline', 'mission', 'coreValues'] },
+  2: { title: 'Challenge Slide', fields: ['needHeadline', 'needDescription', 'solution'] },
+  3: { title: 'Programs Slide', fields: ['programs'] },
+  4: { title: 'Metrics Slide', fields: [] }, // Phase 2
+  5: { title: 'Testimonials Slide', fields: [] }, // Phase 2
+  6: { title: 'CTA Slide', fields: ['ctaButtonText', 'finalDonateUrl'] },
+  7: { title: 'DonorSpark Slide', fields: [] },
+};
 
 export default function EditDeckPage() {
   const params = useParams();
@@ -24,12 +32,25 @@ export default function EditDeckPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [activeSection, setActiveSection] = useState<EditorSection>('colors');
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [globalSettingsExpanded, setGlobalSettingsExpanded] = useState(true);
 
   const [deckSlug, setDeckSlug] = useState<string>('');
   const [deckUrl, setDeckUrl] = useState<string>('');
   const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [originalBrandData, setOriginalBrandData] = useState<BrandData | null>(null);
+  const [hasMetricsSlide, setHasMetricsSlide] = useState(false);
+
+  // Listen for slide changes from iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'slideChange') {
+        setCurrentSlide(event.data.slideIndex);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   // Fetch deck data on mount
   useEffect(() => {
@@ -58,6 +79,8 @@ export default function EditDeckPage() {
         setDeckUrl(data.deckUrl);
         setBrandData(data.brandData);
         setOriginalBrandData(JSON.parse(JSON.stringify(data.brandData)));
+        // Check if deck has metrics slide
+        setHasMetricsSlide(data.brandData.hasValidMetrics && data.brandData.metrics?.length > 0);
       } catch (err) {
         setError('Failed to load deck');
       } finally {
@@ -141,8 +164,8 @@ export default function EditDeckPage() {
     setHasUnsavedChanges(true);
   }, [brandData]);
 
-  // Handle copy changes (supports both string and string[] values)
-  const handleCopyChange = useCallback((field: string, value: string | string[]) => {
+  // Handle field changes (supports string and string[])
+  const handleFieldChange = useCallback((field: string, value: string | string[]) => {
     if (!brandData) return;
 
     setBrandData((prev) => {
@@ -159,6 +182,22 @@ export default function EditDeckPage() {
     });
     setHasUnsavedChanges(true);
   }, [brandData]);
+
+  // Array field helpers
+  const handleArrayItemChange = (field: string, index: number, value: string, arr: string[]) => {
+    const newArr = [...arr];
+    newArr[index] = value;
+    handleFieldChange(field, newArr);
+  };
+
+  const handleAddArrayItem = (field: string, arr: string[]) => {
+    handleFieldChange(field, [...arr, '']);
+  };
+
+  const handleRemoveArrayItem = (field: string, index: number, arr: string[]) => {
+    const newArr = arr.filter((_, i) => i !== index);
+    handleFieldChange(field, newArr);
+  };
 
   // Generate preview HTML
   const previewHtml = useMemo(() => {
@@ -209,6 +248,19 @@ export default function EditDeckPage() {
     }
   };
 
+  // Get current slide config (adjust for metrics slide presence)
+  const getSlideConfig = () => {
+    // Without metrics: slides 4+ shift down by 1
+    // With metrics: use normal config
+    let adjustedIndex = currentSlide;
+    if (!hasMetricsSlide && currentSlide >= 4) {
+      adjustedIndex = currentSlide + 1;
+    }
+    return SLIDE_CONFIG[adjustedIndex] || { title: 'Unknown Slide', fields: [] };
+  };
+
+  const slideConfig = getSlideConfig();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
@@ -241,21 +293,13 @@ export default function EditDeckPage() {
     );
   }
 
-  const sections: { id: EditorSection; label: string; icon: React.ReactNode }[] = [
-    { id: 'colors', label: 'Colors', icon: <Palette className="w-4 h-4" /> },
-    { id: 'fonts', label: 'Fonts', icon: <Type className="w-4 h-4" /> },
-    { id: 'logo', label: 'Logo', icon: <Image className="w-4 h-4" /> },
-    { id: 'copy', label: 'Copy', icon: <FileText className="w-4 h-4" /> },
-    { id: 'cta', label: 'CTA', icon: <MousePointer className="w-4 h-4" /> },
-  ];
-
   return (
     <div className="min-h-screen bg-neutral-950 flex">
       {/* Editor Panel */}
       <div className="w-[400px] flex-shrink-0 border-r border-neutral-800 flex flex-col h-screen">
         {/* Header */}
         <div className="p-4 border-b border-neutral-800 bg-neutral-900">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <button
               onClick={() => {
                 if (hasUnsavedChanges) {
@@ -304,24 +348,6 @@ export default function EditDeckPage() {
               </button>
             </div>
           </div>
-
-          {/* Section Tabs */}
-          <div className="flex gap-1 overflow-x-auto pb-1 -mb-1">
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap
-                  ${activeSection === section.id
-                    ? 'bg-neutral-800 text-white'
-                    : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/50'
-                  }`}
-              >
-                {section.icon}
-                {section.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Messages */}
@@ -337,99 +363,217 @@ export default function EditDeckPage() {
         )}
 
         {/* Editor Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto">
           {brandData && (
             <>
-              {activeSection === 'colors' && (
-                <div className="space-y-4">
-                  <ColorPicker
-                    label="Background Color"
-                    value={brandData.colors.primary}
-                    onChange={(v) => handleColorChange('primary', v)}
-                  />
-                  <ColorPicker
-                    label="Button Color"
-                    value={brandData.colors.secondary}
-                    onChange={(v) => handleColorChange('secondary', v)}
-                  />
-                  <ColorPicker
-                    label="Highlight Color"
-                    value={brandData.colors.accent}
-                    onChange={(v) => handleColorChange('accent', v)}
-                  />
-                  <ColorPicker
-                    label="Header Background"
-                    value={brandData.headerBgColor || brandData.colors.primary}
-                    onChange={(v) => updateBrandData({ headerBgColor: v })}
-                  />
+              {/* Global Settings Section */}
+              <div className="border-b border-neutral-800">
+                <button
+                  onClick={() => setGlobalSettingsExpanded(!globalSettingsExpanded)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-neutral-800/50 transition-colors"
+                >
+                  <span className="text-sm font-semibold text-white">Global Settings</span>
+                  {globalSettingsExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-neutral-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-neutral-400" />
+                  )}
+                </button>
 
-                  {/* Badge Text */}
-                  <div className="space-y-1.5 pt-2 border-t border-neutral-700">
-                    <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                      Badge Text
-                    </label>
-                    <input
-                      type="text"
-                      value={brandData.badgeText ?? 'Impact Deck'}
-                      onChange={(e) => updateBrandData({ badgeText: e.target.value })}
-                      placeholder="Impact Deck"
-                      className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white
-                        focus:outline-none focus:border-[#C15A36] transition-colors"
-                    />
-                    <p className="text-xs text-neutral-500">Leave empty to hide the badge</p>
+                {globalSettingsExpanded && (
+                  <div className="px-4 pb-4 space-y-4">
+                    {/* Colors */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Colors</p>
+                      <ColorPicker
+                        label="Background Color"
+                        value={brandData.colors.primary}
+                        onChange={(v) => handleColorChange('primary', v)}
+                      />
+                      <ColorPicker
+                        label="Button Color"
+                        value={brandData.colors.secondary}
+                        onChange={(v) => handleColorChange('secondary', v)}
+                      />
+                      <ColorPicker
+                        label="Highlight Color"
+                        value={brandData.colors.accent}
+                        onChange={(v) => handleColorChange('accent', v)}
+                      />
+                      <ColorPicker
+                        label="Header Background"
+                        value={brandData.headerBgColor || brandData.colors.primary}
+                        onChange={(v) => updateBrandData({ headerBgColor: v })}
+                      />
+                    </div>
+
+                    {/* Fonts */}
+                    <div className="space-y-3 pt-3 border-t border-neutral-700">
+                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Fonts</p>
+                      <FontSelector
+                        label="Heading Font"
+                        value={brandData.fonts.headingFont}
+                        onChange={(v) => handleFontChange('headingFont', v)}
+                        type="heading"
+                      />
+                      <FontSelector
+                        label="Body Font"
+                        value={brandData.fonts.bodyFont}
+                        onChange={(v) => handleFontChange('bodyFont', v)}
+                        type="body"
+                      />
+                    </div>
+
+                    {/* Logo */}
+                    <div className="pt-3 border-t border-neutral-700">
+                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Logo</p>
+                      <LogoUploader
+                        currentLogoUrl={brandData.logoUrl}
+                        onUpload={handleLogoChange}
+                        onRemove={handleLogoRemove}
+                      />
+                    </div>
                   </div>
+                )}
+              </div>
+
+              {/* Slide-Specific Settings */}
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-[10px] font-bold text-[#C15A36] bg-[#C15A36]/10 px-2 py-1 rounded">
+                    SLIDE {currentSlide + 1}
+                  </span>
+                  <span className="text-sm font-semibold text-white">{slideConfig.title}</span>
                 </div>
-              )}
 
-              {activeSection === 'fonts' && (
-                <div className="space-y-4">
-                  <FontSelector
-                    label="Heading Font"
-                    value={brandData.fonts.headingFont}
-                    onChange={(v) => handleFontChange('headingFont', v)}
-                    type="heading"
-                  />
-                  <FontSelector
-                    label="Body Font"
-                    value={brandData.fonts.bodyFont}
-                    onChange={(v) => handleFontChange('bodyFont', v)}
-                    type="body"
-                  />
-                </div>
-              )}
+                {slideConfig.fields.length === 0 ? (
+                  <p className="text-sm text-neutral-500 italic">
+                    No editable options for this slide yet.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Hero Slide Fields */}
+                    {slideConfig.fields.includes('donorHeadline') && (
+                      <FieldInput
+                        label="Headline"
+                        value={brandData.donorHeadline}
+                        onChange={(v) => handleFieldChange('donorHeadline', v)}
+                        placeholder="Making A Difference"
+                      />
+                    )}
+                    {slideConfig.fields.includes('heroHook') && (
+                      <FieldTextarea
+                        label="Hook / Subheadline"
+                        value={brandData.heroHook}
+                        onChange={(v) => handleFieldChange('heroHook', v)}
+                        placeholder="A brief, engaging description..."
+                        rows={2}
+                      />
+                    )}
+                    {slideConfig.fields.includes('badgeText') && (
+                      <FieldInput
+                        label="Badge Text"
+                        value={brandData.badgeText ?? 'Impact Deck'}
+                        onChange={(v) => updateBrandData({ badgeText: v })}
+                        placeholder="Impact Deck"
+                        hint="Leave empty to hide the badge"
+                      />
+                    )}
 
-              {activeSection === 'logo' && (
-                <LogoUploader
-                  currentLogoUrl={brandData.logoUrl}
-                  onUpload={handleLogoChange}
-                  onRemove={handleLogoRemove}
-                />
-              )}
+                    {/* Mission Slide Fields */}
+                    {slideConfig.fields.includes('missionHeadline') && (
+                      <FieldInput
+                        label="Section Headline"
+                        value={brandData.missionHeadline ?? 'Building A Better Future'}
+                        onChange={(v) => updateBrandData({ missionHeadline: v })}
+                        placeholder="Building A Better Future"
+                      />
+                    )}
+                    {slideConfig.fields.includes('mission') && (
+                      <FieldTextarea
+                        label="Mission Statement"
+                        value={brandData.mission}
+                        onChange={(v) => handleFieldChange('mission', v)}
+                        placeholder="Your organization's mission..."
+                        rows={3}
+                      />
+                    )}
+                    {slideConfig.fields.includes('coreValues') && (
+                      <ArrayField
+                        label="Core Values"
+                        values={brandData.coreValues || ['Integrity', 'Compassion', 'Excellence', 'Community']}
+                        onChange={(arr) => handleFieldChange('coreValues', arr)}
+                        onItemChange={(idx, val) => handleArrayItemChange('coreValues', idx, val, brandData.coreValues || [])}
+                        onAdd={() => handleAddArrayItem('coreValues', brandData.coreValues || [])}
+                        onRemove={(idx) => handleRemoveArrayItem('coreValues', idx, brandData.coreValues || [])}
+                        maxItems={4}
+                        itemLabel="Value"
+                      />
+                    )}
 
-              {activeSection === 'copy' && (
-                <SlideCopyEditor
-                  donorHeadline={brandData.donorHeadline}
-                  heroHook={brandData.heroHook}
-                  missionHeadline={brandData.missionHeadline ?? 'Building A Better Future'}
-                  mission={brandData.mission}
-                  coreValues={brandData.coreValues || ['Integrity', 'Compassion', 'Excellence', 'Community']}
-                  needHeadline={brandData.need.headline}
-                  needDescription={brandData.need.description}
-                  solution={brandData.solution}
-                  programs={brandData.programs || []}
-                  ctaButtonText={brandData.ctaButtonText ?? 'Donate Today'}
-                  onChange={handleCopyChange}
-                />
-              )}
+                    {/* Challenge Slide Fields */}
+                    {slideConfig.fields.includes('needHeadline') && (
+                      <FieldInput
+                        label="Challenge Headline"
+                        value={brandData.need.headline}
+                        onChange={(v) => handleFieldChange('needHeadline', v)}
+                        placeholder="Communities Need Support"
+                      />
+                    )}
+                    {slideConfig.fields.includes('needDescription') && (
+                      <FieldTextarea
+                        label="Challenge Description"
+                        value={brandData.need.description}
+                        onChange={(v) => handleFieldChange('needDescription', v)}
+                        placeholder="Describe the challenge..."
+                        rows={3}
+                      />
+                    )}
+                    {slideConfig.fields.includes('solution') && (
+                      <FieldTextarea
+                        label="Your Solution"
+                        value={brandData.solution}
+                        onChange={(v) => handleFieldChange('solution', v)}
+                        placeholder="How your organization addresses this challenge..."
+                        rows={3}
+                      />
+                    )}
 
-              {activeSection === 'cta' && (
-                <CtaEditor
-                  donateUrl={brandData.finalDonateUrl}
-                  buttonColor={brandData.colors.secondary}
-                  onDonateUrlChange={(url) => updateBrandData({ finalDonateUrl: url })}
-                  onButtonColorChange={(color) => handleColorChange('secondary', color)}
-                />
-              )}
+                    {/* Programs Slide Fields */}
+                    {slideConfig.fields.includes('programs') && (
+                      <ArrayField
+                        label="Programs / Services"
+                        values={brandData.programs || []}
+                        onChange={(arr) => handleFieldChange('programs', arr)}
+                        onItemChange={(idx, val) => handleArrayItemChange('programs', idx, val, brandData.programs || [])}
+                        onAdd={() => handleAddArrayItem('programs', brandData.programs || [])}
+                        onRemove={(idx) => handleRemoveArrayItem('programs', idx, brandData.programs || [])}
+                        maxItems={6}
+                        itemLabel="Program"
+                      />
+                    )}
+
+                    {/* CTA Slide Fields */}
+                    {slideConfig.fields.includes('ctaButtonText') && (
+                      <FieldInput
+                        label="Button Text"
+                        value={brandData.ctaButtonText ?? 'Donate Today'}
+                        onChange={(v) => updateBrandData({ ctaButtonText: v })}
+                        placeholder="Donate Today"
+                      />
+                    )}
+                    {slideConfig.fields.includes('finalDonateUrl') && (
+                      <FieldInput
+                        label="Button URL"
+                        value={brandData.finalDonateUrl}
+                        onChange={(v) => updateBrandData({ finalDonateUrl: v })}
+                        placeholder="https://your-donate-page.org/donate"
+                        type="url"
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -437,7 +581,7 @@ export default function EditDeckPage() {
         {/* Footer */}
         <div className="p-4 border-t border-neutral-800 bg-neutral-900">
           <p className="text-xs text-neutral-500 text-center">
-            Changes are previewed in real-time. Click "Save Changes" to update your live deck.
+            Navigate slides in the preview to see editing options for each slide.
           </p>
         </div>
       </div>
@@ -445,6 +589,122 @@ export default function EditDeckPage() {
       {/* Preview Panel */}
       <div className="flex-1 h-screen overflow-hidden p-4">
         <PreviewFrame html={previewHtml} deckUrl={deckUrl} />
+      </div>
+    </div>
+  );
+}
+
+// Reusable field components
+function FieldInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  hint,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  hint?: string;
+  type?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-neutral-400">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white
+          focus:outline-none focus:border-[#C15A36] transition-colors"
+      />
+      {hint && <p className="text-xs text-neutral-500">{hint}</p>}
+    </div>
+  );
+}
+
+function FieldTextarea({
+  label,
+  value,
+  onChange,
+  placeholder,
+  rows = 3,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-neutral-400">{label}</label>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white
+          focus:outline-none focus:border-[#C15A36] transition-colors resize-none"
+      />
+    </div>
+  );
+}
+
+function ArrayField({
+  label,
+  values,
+  onChange,
+  onItemChange,
+  onAdd,
+  onRemove,
+  maxItems,
+  itemLabel,
+}: {
+  label: string;
+  values: string[];
+  onChange: (values: string[]) => void;
+  onItemChange: (index: number, value: string) => void;
+  onAdd: () => void;
+  onRemove: (index: number) => void;
+  maxItems: number;
+  itemLabel: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-neutral-400">{label} (up to {maxItems})</label>
+      <div className="space-y-2">
+        {values.slice(0, maxItems).map((value, index) => (
+          <div key={index} className="flex gap-2">
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => onItemChange(index, e.target.value)}
+              placeholder={`${itemLabel} ${index + 1}`}
+              className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white
+                focus:outline-none focus:border-[#C15A36] transition-colors"
+            />
+            {values.length > 1 && (
+              <button
+                onClick={() => onRemove(index)}
+                className="p-2 text-neutral-500 hover:text-red-400 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        ))}
+        {values.length < maxItems && (
+          <button
+            onClick={onAdd}
+            className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white transition-colors"
+          >
+            <Plus className="w-3 h-3" /> Add {itemLabel}
+          </button>
+        )}
       </div>
     </div>
   );
