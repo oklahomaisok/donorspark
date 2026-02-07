@@ -55,6 +55,11 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     showShareButtons = true,
     showSocialLinks = false,
     socialLinks = [],
+    // Slide visibility (default all visible)
+    showMissionSlide = true,
+    showChallengeSlide = true,
+    showProgramsSlide = true,
+    showTestimonialsSlide = true,
   } = brandData;
 
   const primary = colors.primary || '#1D2350';
@@ -105,7 +110,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
       `<div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center animate-on-scroll" style="animation-delay: ${i * 0.15}s"><div class="text-3xl md:text-4xl font-black font-display text-[var(--accent)] mb-1"><span class="count-up" data-target="${escAttr(m.value)}">${escHtml(m.value)}</span></div><div class="text-[10px] md:text-xs uppercase tracking-wider text-neutral-300 font-medium">${escHtml(m.label)}</div></div>`
     ).join('\n');
     const gridCols = metricsData.length <= 2 ? 'grid-cols-1 max-w-xs mx-auto' : 'grid-cols-2';
-    metricsHtml = `<h2 class="text-2xl md:text-3xl mb-8 text-white font-display font-black ${headlineCase} tracking-tight animate-on-scroll text-center">By The <span class="text-[var(--accent)]">Numbers</span></h2><div class="${gridCols} grid gap-4">${cards}</div>`;
+    metricsHtml = `<h2 class="text-2xl md:text-3xl mb-8 text-[var(--text)] font-display font-black ${headlineCase} tracking-tight animate-on-scroll text-center">By The <span class="text-[var(--accent)]">Numbers</span></h2><div class="${gridCols} grid gap-4">${cards}</div>`;
   }
 
   const testimonialsData = testimonials.length >= 3 ? testimonials : [
@@ -132,11 +137,27 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     `<a href="${escAttr(link.url)}" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="${link.platform}">${socialIcons[link.platform] || ''}</a>`
   ).join('\n');
 
-  const totalSlides = showMetricsSlide ? 8 : 7;
+  // Calculate total slides based on visibility
+  let totalSlides = 3; // Hero + CTA + DonorSpark always visible
+  if (showMissionSlide) totalSlides++;
+  if (showChallengeSlide) totalSlides++;
+  if (showProgramsSlide) totalSlides++;
+  if (showMetricsSlide) totalSlides++;
+  if (showTestimonialsSlide) totalSlides++;
+
   let paginationDots = '';
   for (let i = 0; i < totalSlides; i++) {
     paginationDots += '<div class="w-2 h-2 rounded-full bg-neutral-400 cursor-pointer hover:bg-[var(--accent)] transition-all"></div>\n';
   }
+
+  // Calculate dynamic slide numbers
+  let slideNum = 1; // Hero is always 01
+  const missionSlideNum = showMissionSlide ? String(++slideNum).padStart(2, '0') : '';
+  const challengeSlideNum = showChallengeSlide ? String(++slideNum).padStart(2, '0') : '';
+  const programsSlideNum = showProgramsSlide ? String(++slideNum).padStart(2, '0') : '';
+  const metricsSlideNum = showMetricsSlide ? String(++slideNum).padStart(2, '0') : '';
+  const testimonialsSlideNum = showTestimonialsSlide ? String(++slideNum).padStart(2, '0') : '';
+  const ctaSlideNum = String(++slideNum).padStart(2, '0');
 
   const headlineWords = donorHeadline.split(' ');
   const headlineTop = headlineWords.slice(0, Math.ceil(headlineWords.length / 2)).join(' ');
@@ -209,49 +230,49 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             <div class="absolute inset-0 z-0">${heroMediaHtml}<div class="absolute inset-0 bg-black/40"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div></div>
             <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-between">
                 <div class="flex animate-on-scroll items-start justify-between">${badgeText ? `<span class="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold border border-[var(--accent)]/30 px-2 py-1 rounded bg-[var(--primary)]/80 backdrop-blur-md">${escHtml(badgeText)}</span>` : '<span></span>'}</div>
-                <div class="mt-auto"><h1 class="leading-[0.9] animate-on-scroll text-4xl md:text-5xl tracking-wide font-display ${headlineCase} text-white mb-4 drop-shadow-lg">${escHtml(headlineTop)}<br><span class="text-[var(--accent)]">${escHtml(headlineBottom)}</span></h1><div class="animate-on-scroll"><p class="text-sm text-neutral-100 max-w-[90%] border-l-4 border-[var(--accent)] pl-4 font-medium">${escHtml(heroHook)}</p></div></div>
-                <div class="pt-4 border-t border-white/10 flex justify-between items-end animate-on-scroll">${yearFounded ? `<div class="flex flex-col"><span class="text-[10px] text-neutral-300 uppercase mb-1 tracking-wider">Established</span><span class="font-display text-sm text-white">Since ${yearFounded}</span></div>` : '<div></div>'}<div class="text-[var(--accent)] flex items-center gap-2 text-xs uppercase tracking-widest font-bold">Scroll <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div></div>
+                <div class="mt-auto"><h1 class="leading-[0.9] animate-on-scroll text-4xl md:text-5xl tracking-wide font-display ${headlineCase} text-[var(--text)] mb-4 drop-shadow-lg">${escHtml(headlineTop)}<br><span class="text-[var(--accent)]">${escHtml(headlineBottom)}</span></h1><div class="animate-on-scroll"><p class="text-sm text-[var(--text)] max-w-[90%] border-l-4 border-[var(--accent)] pl-4 font-medium">${escHtml(heroHook)}</p></div></div>
+                <div class="pt-4 border-t border-white/10 flex justify-between items-end animate-on-scroll">${yearFounded ? `<div class="flex flex-col"><span class="text-[10px] text-[var(--text)]/70 uppercase mb-1 tracking-wider">Established</span><span class="font-display text-sm text-[var(--text)]">Since ${yearFounded}</span></div>` : '<div></div>'}<div class="text-[var(--accent)] flex items-center gap-2 text-xs uppercase tracking-widest font-bold">Scroll <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div></div>
             </div>
         </section>
-        <!-- Slide 2: Mission -->
+        ${showMissionSlide ? `<!-- Slide: Mission -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${actionImg}" class="w-full h-full object-cover" alt="Action"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[02]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(missionSlideTitle)}</span></header>
-                <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-white font-display font-black ${headlineCase} tracking-tight leading-none mb-3">${formatHeadline(missionHeadline, headlineCase)}</h2><div class="w-12 h-1 bg-[var(--accent)] mb-4"></div><p class="text-sm text-neutral-100 leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
+                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${missionSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(missionSlideTitle)}</span></header>
+                <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-[var(--text)] font-display font-black ${headlineCase} tracking-tight leading-none mb-3">${formatHeadline(missionHeadline, headlineCase)}</h2><div class="w-12 h-1 bg-[var(--accent)] mb-4"></div><p class="text-sm text-[var(--text)] leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
             </div>
-        </section>
-        <!-- Slide 3: Challenge & Solution -->
+        </section>` : ''}
+        ${showChallengeSlide ? `<!-- Slide: Challenge & Solution -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
             <div class="flex flex-col h-full p-4 md:p-10 z-10 overflow-y-auto hide-scrollbar">
-                <header class="flex animate-on-scroll items-center justify-between mb-3 md:mb-6 flex-shrink-0"><span class="font-mono text-xs text-[var(--accent)] font-bold">[03]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(challengeSlideTitle)}</span></header>
-                <div class="flex-grow flex flex-col justify-center"><div class="animate-on-scroll bg-white/5 border border-white/10 rounded-lg p-4 md:p-6"><div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"><div class="p-1.5 md:p-2 bg-[var(--accent)]/20 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h2 class="text-lg md:text-2xl text-white font-display font-black ${headlineCase}">${escHtml(need.headline)}</h2></div><p class="text-xs md:text-sm text-neutral-200 leading-relaxed">${escHtml(need.description)}</p></div><div class="flex justify-center my-2 md:my-4 animate-on-scroll text-white/30"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v15"/><path d="m19 12-7 7-7-7"/></svg></div><div class="animate-on-scroll bg-gradient-to-br from-[var(--accent)]/10 to-transparent border border-[var(--accent)]/30 rounded-lg p-4 md:p-6"><div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"><div class="p-1.5 md:p-2 bg-[var(--accent)] rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3 class="text-lg md:text-xl text-[var(--accent)] font-display font-black ${headlineCase}">${escHtml(solutionHeadline)}</h3></div><p class="text-xs md:text-sm text-neutral-200 leading-relaxed">${escHtml(solution)}</p></div></div>
+                <header class="flex animate-on-scroll items-center justify-between mb-3 md:mb-6 flex-shrink-0"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${challengeSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(challengeSlideTitle)}</span></header>
+                <div class="flex-grow flex flex-col justify-center"><div class="animate-on-scroll bg-white/5 border border-white/10 rounded-lg p-4 md:p-6"><div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"><div class="p-1.5 md:p-2 bg-[var(--accent)]/20 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h2 class="text-lg md:text-2xl text-[var(--text)] font-display font-black ${headlineCase}">${escHtml(need.headline)}</h2></div><p class="text-xs md:text-sm text-[var(--text)]/80 leading-relaxed">${escHtml(need.description)}</p></div><div class="flex justify-center my-2 md:my-4 animate-on-scroll text-[var(--text)]/30"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v15"/><path d="m19 12-7 7-7-7"/></svg></div><div class="animate-on-scroll bg-gradient-to-br from-[var(--accent)]/10 to-transparent border border-[var(--accent)]/30 rounded-lg p-4 md:p-6"><div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"><div class="p-1.5 md:p-2 bg-[var(--accent)] rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3 class="text-lg md:text-xl text-[var(--accent)] font-display font-black ${headlineCase}">${escHtml(solutionHeadline)}</h3></div><p class="text-xs md:text-sm text-[var(--text)]/80 leading-relaxed">${escHtml(solution)}</p></div></div>
             </div>
-        </section>
-        <!-- Slide 4: Programs -->
+        </section>` : ''}
+        ${showProgramsSlide ? `<!-- Slide: Programs -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${groupImg}" class="w-full h-full object-cover" alt="Programs"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[04]</span><div class="p-2 bg-white/10 rounded-full backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></div></header>
-                <div class="flex-grow flex flex-col justify-center"><div class="mb-6 animate-on-scroll"><h2 class="text-3xl md:text-4xl text-white font-display font-black tracking-tighter ${headlineCase} leading-none drop-shadow-xl">${formatHeadline(programsHeadline, headlineCase)}</h2></div><div class="animate-on-scroll bg-[var(--primary)]/70 p-4 rounded-lg backdrop-blur-md border border-white/10"><p class="leading-relaxed text-sm text-neutral-100 mb-4 font-medium">${escHtml(programsBody)}</p>${programsHtml ? `<div class="flex flex-wrap gap-2">${programsHtml}</div>` : ''}</div></div>
+                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${programsSlideNum}]</span><div class="p-2 bg-white/10 rounded-full backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></div></header>
+                <div class="flex-grow flex flex-col justify-center"><div class="mb-6 animate-on-scroll"><h2 class="text-3xl md:text-4xl text-[var(--text)] font-display font-black tracking-tighter ${headlineCase} leading-none drop-shadow-xl">${formatHeadline(programsHeadline, headlineCase)}</h2></div><div class="animate-on-scroll bg-[var(--primary)]/70 p-4 rounded-lg backdrop-blur-md border border-white/10"><p class="leading-relaxed text-sm text-[var(--text)] mb-4 font-medium">${escHtml(programsBody)}</p>${programsHtml ? `<div class="flex flex-wrap gap-2">${programsHtml}</div>` : ''}</div></div>
             </div>
-        </section>
-        ${showMetricsSlide ? `<!-- Slide 5: Metrics -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl"><div class="absolute inset-0 bg-grid-pattern opacity-20"></div><div class="p-6 md:p-10 h-full flex flex-col z-10"><header class="flex justify-between items-center mb-6 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[05]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Our Impact</span></header><div class="flex-grow flex flex-col justify-center">${metricsHtml}</div></div></section>` : ''}
-        <!-- Slide ${showMetricsSlide ? '6' : '5'}: Testimonials -->
+        </section>` : ''}
+        ${showMetricsSlide ? `<!-- Slide: Metrics -->
+        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl"><div class="absolute inset-0 bg-grid-pattern opacity-20"></div><div class="p-6 md:p-10 h-full flex flex-col z-10"><header class="flex justify-between items-center mb-6 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${metricsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Our Impact</span></header><div class="flex-grow flex flex-col justify-center">${metricsHtml}</div></div></section>` : ''}
+        ${showTestimonialsSlide ? `<!-- Slide: Testimonials -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${actionImg}" class="w-full h-full object-cover" alt="Background"><div class="absolute inset-0 bg-black/70"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${showMetricsSlide ? '06' : '05'}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">${escHtml(testimonialsSlideTitle)}</span></header>
+                <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${testimonialsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">${escHtml(testimonialsSlideTitle)}</span></header>
                 <div class="flex-grow flex flex-col animate-on-scroll items-center justify-center relative"><div class="absolute top-0 right-0 p-2 opacity-70 text-[10px] font-mono text-[var(--accent)] z-30 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.6 13a4 4 0 0 1-7.7 2.3l-2.6-7.5a1.7 1.7 0 0 0-3.3 1L9 18.2a5.3 5.3 0 0 0 2.2 4.1l6.3 3.6c2.4 1.4 5.3-.2 5.5-2.9l.6-9.1a4 4 0 0 0-5-4.1z"/></svg>TAP CARDS</div><div id="testimonial-stack" class="relative w-full max-w-[280px] md:max-w-[320px] aspect-square cursor-pointer">${testimonialCardsHtml}</div></div>
             </div>
-        </section>
-        <!-- Slide ${showMetricsSlide ? '7' : '6'}: CTA -->
+        </section>` : ''}
+        <!-- Slide: CTA -->
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
-                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">${formatHeadline(ctaHeadline, headlineCase)}</h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-6">${escHtml(ctaSubhead)}</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">${escHtml(ctaButtonText)}</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-[var(--text)]">${formatHeadline(ctaHeadline, headlineCase)}</h2><p class="leading-relaxed text-sm text-[var(--text)]/80 max-w-[90%] mx-auto mb-6">${escHtml(ctaSubhead)}</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">${escHtml(ctaButtonText)}</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
                     ${isPreviewMode ? `
                     <!-- Love your deck banner - only on CTA slide -->
                     <div class="mt-6 p-4 rounded-xl bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white">

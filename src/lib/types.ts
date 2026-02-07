@@ -124,6 +124,11 @@ export interface BrandData {
   showShareButtons?: boolean; // Show "Share This Story" section
   showSocialLinks?: boolean; // Show "Follow Us Online" section
   socialLinks?: SocialLink[];
+  // Slide visibility
+  showMissionSlide?: boolean; // Default true
+  showChallengeSlide?: boolean; // Default true
+  showProgramsSlide?: boolean; // Default true
+  showTestimonialsSlide?: boolean; // Default true
 }
 
 export interface SocialLink {

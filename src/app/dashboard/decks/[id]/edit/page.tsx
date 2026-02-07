@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Loader2, ChevronLeft, ChevronRight, Plus, X, Settings } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, ChevronLeft, ChevronRight, Plus, X, Settings, Eye, EyeOff } from 'lucide-react';
 import { ColorPicker } from '@/components/editor/color-picker';
 import { FontSelector } from '@/components/editor/font-selector';
 import { LogoUploader } from '@/components/editor/logo-uploader';
@@ -301,30 +301,51 @@ export default function EditDeckPage() {
     }
   };
 
+  // Build array of visible slide types
+  const getVisibleSlideTypes = () => {
+    const types: ('hero' | 'mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta' | 'donorspark')[] = ['hero'];
+    if (brandData?.showMissionSlide !== false) types.push('mission');
+    if (brandData?.showChallengeSlide !== false) types.push('challenge');
+    if (brandData?.showProgramsSlide !== false) types.push('programs');
+    if (hasMetricsSlide) types.push('metrics');
+    if (brandData?.showTestimonialsSlide !== false) types.push('testimonials');
+    types.push('cta', 'donorspark');
+    return types;
+  };
+
+  const visibleSlideTypes = getVisibleSlideTypes();
+
   // Get current slide info
   const getSlideInfo = () => {
-    if (hasMetricsSlide) {
-      return SLIDE_CONFIG[currentSlide] || { title: 'Unknown', subtitle: '' };
-    } else {
-      const mapping: Record<number, number> = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 5, 5: 6, 6: 7 };
-      return SLIDE_CONFIG[mapping[currentSlide]] || { title: 'Unknown', subtitle: '' };
-    }
+    const slideType = visibleSlideTypes[currentSlide] || 'hero';
+    const slideNames: Record<string, { title: string; subtitle: string }> = {
+      hero: { title: 'Slide 1', subtitle: 'Hero' },
+      mission: { title: 'Slide 2', subtitle: 'Mission' },
+      challenge: { title: 'Slide 3', subtitle: 'Challenge & Solution' },
+      programs: { title: 'Slide 4', subtitle: 'Programs' },
+      metrics: { title: 'Slide 5', subtitle: 'Metrics' },
+      testimonials: { title: 'Slide 6', subtitle: 'Testimonials' },
+      cta: { title: 'Slide 7', subtitle: 'CTA' },
+      donorspark: { title: 'Slide 8', subtitle: 'DonorSpark' },
+    };
+    return slideNames[slideType] || { title: 'Unknown', subtitle: '' };
   };
 
   const slideInfo = getSlideInfo();
 
   // Determine which slide type we're on
   const getSlideType = (): 'hero' | 'mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta' | 'donorspark' => {
-    if (hasMetricsSlide) {
-      const types = ['hero', 'mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta', 'donorspark'] as const;
-      return types[currentSlide] || 'hero';
-    } else {
-      const types = ['hero', 'mission', 'challenge', 'programs', 'testimonials', 'cta', 'donorspark'] as const;
-      return types[currentSlide] || 'hero';
-    }
+    return visibleSlideTypes[currentSlide] || 'hero';
   };
 
   const slideType = getSlideType();
+
+  // Toggle slide visibility
+  const toggleSlideVisibility = (slideKey: 'showMissionSlide' | 'showChallengeSlide' | 'showProgramsSlide' | 'showTestimonialsSlide') => {
+    if (!brandData) return;
+    const currentValue = brandData[slideKey] !== false; // default true
+    updateBrandData({ [slideKey]: !currentValue });
+  };
 
   if (loading) {
     return (
@@ -401,7 +422,7 @@ export default function EditDeckPage() {
                       onChange={(v) => handleColorChange('accent', v)}
                     />
                     <ColorPicker
-                      label="Text"
+                      label="Primary Text"
                       value={brandData.colors.text || '#ffffff'}
                       onChange={(v) => handleColorChange('text', v)}
                     />
@@ -437,6 +458,50 @@ export default function EditDeckPage() {
                       onUpload={handleLogoChange}
                       onRemove={handleLogoRemove}
                     />
+                  </div>
+
+                  {/* Slide Visibility */}
+                  <div className="pt-3 border-t border-neutral-700">
+                    <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider mb-2">Slide Visibility</p>
+                    <div className="space-y-1.5">
+                      <button
+                        onClick={() => toggleSlideVisibility('showMissionSlide')}
+                        className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
+                      >
+                        <span className="text-white">Mission</span>
+                        <span className={`flex items-center gap-1 ${brandData.showMissionSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
+                          {brandData.showMissionSlide !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => toggleSlideVisibility('showChallengeSlide')}
+                        className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
+                      >
+                        <span className="text-white">Challenge</span>
+                        <span className={`flex items-center gap-1 ${brandData.showChallengeSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
+                          {brandData.showChallengeSlide !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => toggleSlideVisibility('showProgramsSlide')}
+                        className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
+                      >
+                        <span className="text-white">Programs</span>
+                        <span className={`flex items-center gap-1 ${brandData.showProgramsSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
+                          {brandData.showProgramsSlide !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => toggleSlideVisibility('showTestimonialsSlide')}
+                        className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
+                      >
+                        <span className="text-white">Testimonials</span>
+                        <span className={`flex items-center gap-1 ${brandData.showTestimonialsSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
+                          {brandData.showTestimonialsSlide !== false ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        </span>
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-neutral-500 mt-2">Hero and CTA slides are always visible.</p>
                   </div>
                 </>
               )}
@@ -562,6 +627,16 @@ export default function EditDeckPage() {
               {/* Mission Slide */}
               {slideType === 'mission' && (
                 <div className="space-y-3">
+                  <button
+                    onClick={() => toggleSlideVisibility('showMissionSlide')}
+                    className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
+                  >
+                    <span className="text-neutral-400">Slide Visibility</span>
+                    <span className={`flex items-center gap-1 ${brandData.showMissionSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
+                      {brandData.showMissionSlide !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      {brandData.showMissionSlide !== false ? 'Visible' : 'Hidden'}
+                    </span>
+                  </button>
                   <FieldInput
                     label="Slide Title"
                     value={brandData.missionSlideTitle ?? 'Our Mission'}
@@ -596,6 +671,16 @@ export default function EditDeckPage() {
               {/* Challenge Slide */}
               {slideType === 'challenge' && (
                 <div className="space-y-3">
+                  <button
+                    onClick={() => toggleSlideVisibility('showChallengeSlide')}
+                    className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
+                  >
+                    <span className="text-neutral-400">Slide Visibility</span>
+                    <span className={`flex items-center gap-1 ${brandData.showChallengeSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
+                      {brandData.showChallengeSlide !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      {brandData.showChallengeSlide !== false ? 'Visible' : 'Hidden'}
+                    </span>
+                  </button>
                   <FieldInput
                     label="Slide Title"
                     value={brandData.challengeSlideTitle ?? 'The Challenge'}
@@ -634,6 +719,16 @@ export default function EditDeckPage() {
               {/* Programs Slide */}
               {slideType === 'programs' && (
                 <div className="space-y-3">
+                  <button
+                    onClick={() => toggleSlideVisibility('showProgramsSlide')}
+                    className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
+                  >
+                    <span className="text-neutral-400">Slide Visibility</span>
+                    <span className={`flex items-center gap-1 ${brandData.showProgramsSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
+                      {brandData.showProgramsSlide !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      {brandData.showProgramsSlide !== false ? 'Visible' : 'Hidden'}
+                    </span>
+                  </button>
                   <FieldInput
                     label="Section Headline"
                     value={brandData.programsHeadline ?? 'What We Offer'}
@@ -667,6 +762,16 @@ export default function EditDeckPage() {
               {/* Testimonials Slide */}
               {slideType === 'testimonials' && (
                 <div className="space-y-3">
+                  <button
+                    onClick={() => toggleSlideVisibility('showTestimonialsSlide')}
+                    className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
+                  >
+                    <span className="text-neutral-400">Slide Visibility</span>
+                    <span className={`flex items-center gap-1 ${brandData.showTestimonialsSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
+                      {brandData.showTestimonialsSlide !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      {brandData.showTestimonialsSlide !== false ? 'Visible' : 'Hidden'}
+                    </span>
+                  </button>
                   <FieldInput
                     label="Slide Title"
                     value={brandData.testimonialsSlideTitle ?? 'Success Stories'}
