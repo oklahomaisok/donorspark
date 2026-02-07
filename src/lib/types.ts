@@ -104,6 +104,8 @@ export interface BrandData {
   headerTextDark: boolean;
   sector: string;
   badgeText?: string; // "Impact Deck" badge - empty string hides it
+  missionHeadline?: string; // "Building A Better Future" - customizable
+  ctaButtonText?: string; // "Donate Today" - customizable
 }
 
 export interface SectorImages {

@@ -36,6 +36,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     images,
     testimonials = [],
     badgeText = 'Impact Deck',
+    missionHeadline = 'Building A Better Future',
+    ctaButtonText = 'Donate Today',
   } = brandData;
 
   const primary = colors.primary || '#1D2350';
@@ -184,7 +186,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             <div class="absolute inset-0 z-0"><img src="${actionImg}" class="w-full h-full object-cover" alt="Action"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[02]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">Our Mission</span></header>
-                <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-white font-display font-black ${headlineCase} tracking-tight leading-none mb-3">Building A<br><span class="text-[var(--accent)]">Better Future</span></h2><div class="w-12 h-1 bg-[var(--accent)] mb-4"></div><p class="text-sm text-neutral-100 leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
+                <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-white font-display font-black ${headlineCase} tracking-tight leading-none mb-3">${formatHeadline(missionHeadline, headlineCase)}</h2><div class="w-12 h-1 bg-[var(--accent)] mb-4"></div><p class="text-sm text-neutral-100 leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
             </div>
         </section>
         <!-- Slide 3: Challenge & Solution -->
@@ -217,7 +219,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
-                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-6">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">Donate Today</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-white">Join Our<br><span class="text-[var(--accent)]">Mission</span></h2><p class="leading-relaxed text-sm text-neutral-200 max-w-[90%] mx-auto mb-6">Your support helps us continue making a difference.</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">${escHtml(ctaButtonText)}</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
                     ${isPreviewMode ? `
                     <!-- Love your deck banner - only on CTA slide -->
                     <div class="mt-6 p-4 rounded-xl bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white">
@@ -414,4 +416,17 @@ function getButtonTextColor(bgColor: string): string {
   } catch {
     return '#ffffff';
   }
+}
+
+// Format headline with last word(s) in accent color
+function formatHeadline(headline: string, headlineCase: string): string {
+  const words = headline.split(' ');
+  if (words.length <= 1) {
+    return `<span class="text-[var(--accent)]">${escHtml(headline)}</span>`;
+  }
+  // Put roughly half the words on each line, with accent on the second part
+  const midpoint = Math.ceil(words.length / 2);
+  const firstPart = words.slice(0, midpoint).join(' ');
+  const secondPart = words.slice(midpoint).join(' ');
+  return `${escHtml(firstPart)}<br><span class="text-[var(--accent)]">${escHtml(secondPart)}</span>`;
 }

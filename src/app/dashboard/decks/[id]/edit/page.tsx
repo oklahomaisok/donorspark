@@ -141,18 +141,18 @@ export default function EditDeckPage() {
     setHasUnsavedChanges(true);
   }, [brandData]);
 
-  // Handle copy changes
-  const handleCopyChange = useCallback((field: string, value: string) => {
+  // Handle copy changes (supports both string and string[] values)
+  const handleCopyChange = useCallback((field: string, value: string | string[]) => {
     if (!brandData) return;
 
     setBrandData((prev) => {
       if (!prev) return prev;
 
       if (field === 'needHeadline') {
-        return { ...prev, need: { ...prev.need, headline: value } };
+        return { ...prev, need: { ...prev.need, headline: value as string } };
       }
       if (field === 'needDescription') {
-        return { ...prev, need: { ...prev.need, description: value } };
+        return { ...prev, need: { ...prev.need, description: value as string } };
       }
 
       return { ...prev, [field]: value };
@@ -410,10 +410,14 @@ export default function EditDeckPage() {
                 <SlideCopyEditor
                   donorHeadline={brandData.donorHeadline}
                   heroHook={brandData.heroHook}
+                  missionHeadline={brandData.missionHeadline ?? 'Building A Better Future'}
                   mission={brandData.mission}
+                  coreValues={brandData.coreValues || ['Integrity', 'Compassion', 'Excellence', 'Community']}
                   needHeadline={brandData.need.headline}
                   needDescription={brandData.need.description}
                   solution={brandData.solution}
+                  programs={brandData.programs || []}
+                  ctaButtonText={brandData.ctaButtonText ?? 'Donate Today'}
                   onChange={handleCopyChange}
                 />
               )}
