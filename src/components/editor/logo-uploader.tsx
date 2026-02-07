@@ -7,9 +7,10 @@ interface LogoUploaderProps {
   currentLogoUrl: string | null;
   onUpload: (url: string) => void;
   onRemove: () => void;
+  lightMode?: boolean;
 }
 
-export function LogoUploader({ currentLogoUrl, onUpload, onRemove }: LogoUploaderProps) {
+export function LogoUploader({ currentLogoUrl, onUpload, onRemove, lightMode = false }: LogoUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -25,9 +26,9 @@ export function LogoUploader({ currentLogoUrl, onUpload, onRemove }: LogoUploade
         throw new Error('Invalid file type. Use PNG, JPEG, WebP, or SVG.');
       }
 
-      // Validate file size (2MB max)
-      if (file.size > 2 * 1024 * 1024) {
-        throw new Error('File too large. Maximum size is 2MB.');
+      // Validate file size (4MB max)
+      if (file.size > 4 * 1024 * 1024) {
+        throw new Error('File too large. Maximum size is 4MB.');
       }
 
       const formData = new FormData();
@@ -78,6 +79,66 @@ export function LogoUploader({ currentLogoUrl, onUpload, onRemove }: LogoUploade
       uploadFile(file);
     }
   }, []);
+
+  if (lightMode) {
+    return (
+      <div className="space-y-2">
+        {currentLogoUrl ? (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center p-2 border border-gray-100">
+                <img src={currentLogoUrl} alt="Current logo" className="max-w-full max-h-full object-contain" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-2">Current logo</p>
+                <div className="flex gap-2">
+                  <label className="cursor-pointer text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded transition-colors">
+                    Replace
+                    <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleFileChange} className="hidden" disabled={isUploading} />
+                  </label>
+                  <button onClick={onRemove} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded transition-colors flex items-center gap-1">
+                    <X className="w-3 h-3" /> Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors
+              ${isDragging ? 'border-[#C15A36] bg-orange-50' : 'border-gray-300 hover:border-gray-400'}
+              ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+          >
+            <div className="flex flex-col items-center gap-2">
+              {isUploading ? (
+                <>
+                  <div className="w-8 h-8 border-2 border-[#C15A36] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-gray-500">Uploading...</p>
+                </>
+              ) : (
+                <>
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    <ImageIcon className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-600">Drag and drop your logo</p>
+                  <label className="cursor-pointer text-sm bg-[#C15A36] hover:bg-[#a84d2e] text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                    <Upload className="w-4 h-4" /> Choose File
+                    <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleFileChange} className="hidden" />
+                  </label>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPEG, WebP, or SVG. Max 4MB.</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {error && <p className="text-xs text-red-500">{error}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1.5">
@@ -151,7 +212,7 @@ export function LogoUploader({ currentLogoUrl, onUpload, onRemove }: LogoUploade
                     className="hidden"
                   />
                 </label>
-                <p className="text-xs text-neutral-500 mt-1">PNG, JPEG, WebP, or SVG. Max 2MB.</p>
+                <p className="text-xs text-neutral-500 mt-1">PNG, JPEG, WebP, or SVG. Max 4MB.</p>
               </>
             )}
           </div>

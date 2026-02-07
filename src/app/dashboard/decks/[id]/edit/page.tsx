@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Loader2, ChevronLeft, ChevronRight, Plus, X, Settings, Eye, EyeOff, GripVertical, Upload } from 'lucide-react';
+import {
+  ArrowLeft, Save, Loader2, Plus, X, Eye, EyeOff, GripVertical, Upload,
+  Palette, Type, ImageIcon, Layers, LayoutGrid, ChevronLeft, ChevronRight
+} from 'lucide-react';
 import { ColorPicker } from '@/components/editor/color-picker';
 import { FontSelector } from '@/components/editor/font-selector';
 import { LogoUploader } from '@/components/editor/logo-uploader';
@@ -11,16 +14,21 @@ import { SlideImageUploader } from '@/components/editor/slide-image-uploader';
 import { generateDeckHtml } from '@/lib/templates/deck-template';
 import type { BrandData, Testimonial, SocialLink, CustomImages, FocalPoint } from '@/lib/types';
 
-// Slide configuration
-const SLIDE_CONFIG: Record<number, { title: string; subtitle: string }> = {
-  0: { title: 'Slide 1', subtitle: 'Hero' },
-  1: { title: 'Slide 2', subtitle: 'Mission' },
-  2: { title: 'Slide 3', subtitle: 'Challenge & Solution' },
-  3: { title: 'Slide 4', subtitle: 'Programs' },
-  4: { title: 'Slide 5', subtitle: 'Metrics' },
-  5: { title: 'Slide 5', subtitle: 'Testimonials' },
-  6: { title: 'Slide 6', subtitle: 'CTA' },
-  7: { title: 'Slide 7', subtitle: 'DonorSpark' },
+// Tool categories for the left rail
+type ToolCategory = 'colors' | 'fonts' | 'logo' | 'photos' | 'slides' | null;
+
+// Slide configuration for content editing
+const SLIDE_TYPES = ['hero', 'mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'] as const;
+type SlideType = typeof SLIDE_TYPES[number];
+
+const SLIDE_LABELS: Record<SlideType, string> = {
+  hero: 'Hero',
+  mission: 'Mission',
+  challenge: 'Challenge',
+  programs: 'Programs',
+  metrics: 'Metrics',
+  testimonials: 'Testimonials',
+  cta: 'Call to Action',
 };
 
 const SOCIAL_PLATFORMS = [
@@ -43,7 +51,10 @@ export default function EditDeckPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [globalPanelOpen, setGlobalPanelOpen] = useState(true);
+
+  // Canva-style UI state
+  const [activeTool, setActiveTool] = useState<ToolCategory>(null);
+  const [activeSlideType, setActiveSlideType] = useState<SlideType>('hero');
 
   const [deckSlug, setDeckSlug] = useState<string>('');
   const [deckUrl, setDeckUrl] = useState<string>('');
@@ -59,11 +70,16 @@ export default function EditDeckPage() {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'slideChange') {
         setCurrentSlide(event.data.slideIndex);
+        // Update active slide type based on visible slides
+        const visibleTypes = getVisibleSlideTypes();
+        if (visibleTypes[event.data.slideIndex]) {
+          setActiveSlideType(visibleTypes[event.data.slideIndex] as SlideType);
+        }
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [brandData, hasMetricsSlide, userPlan]);
 
   // Fetch deck data on mount
   useEffect(() => {
@@ -166,6 +182,16 @@ export default function EditDeckPage() {
     setHasUnsavedChanges(true);
   }, [brandData]);
 
+  const handleLogoRemove = useCallback(() => {
+    if (!brandData) return;
+
+    setBrandData((prev) => {
+      if (!prev) return prev;
+      return { ...prev, logoUrl: null, logoSource: 'none' };
+    });
+    setHasUnsavedChanges(true);
+  }, [brandData]);
+
   // Handle custom image changes
   const handleCustomImageChange = useCallback((slideType: 'hero' | 'mission' | 'programs' | 'testimonials', url: string) => {
     if (!brandData) return;
@@ -193,16 +219,6 @@ export default function EditDeckPage() {
       const customImages = { ...(prev.customImages || {}) };
       (customImages as Record<string, FocalPoint>)[focalKey] = focal;
       return { ...prev, customImages };
-    });
-    setHasUnsavedChanges(true);
-  }, [brandData]);
-
-  const handleLogoRemove = useCallback(() => {
-    if (!brandData) return;
-
-    setBrandData((prev) => {
-      if (!prev) return prev;
-      return { ...prev, logoUrl: null, logoSource: 'none' };
     });
     setHasUnsavedChanges(true);
   }, [brandData]);
@@ -268,7 +284,6 @@ export default function EditDeckPage() {
   const handleTestimonialPhotoUpload = async (index: number, file: File) => {
     if (!brandData) return;
 
-    // Upload the file
     const formData = new FormData();
     formData.append('file', file);
 
@@ -361,14 +376,14 @@ export default function EditDeckPage() {
     }
   };
 
-  // Build array of visible slide types respecting custom order
-  const getVisibleSlideTypes = () => {
-    const types: ('hero' | 'mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta' | 'donorspark')[] = ['hero'];
+  // Build array of visible slide types
+  const defaultSlideOrder: ('mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta')[] =
+    ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'];
 
-    // Get custom order or default
+  const getVisibleSlideTypes = () => {
+    const types: string[] = ['hero'];
     const order = brandData?.slideOrder || defaultSlideOrder;
 
-    // Add slides in order, checking visibility for each
     for (const slideId of order) {
       if (slideId === 'mission' && brandData?.showMissionSlide !== false) types.push('mission');
       else if (slideId === 'challenge' && brandData?.showChallengeSlide !== false) types.push('challenge');
@@ -378,7 +393,6 @@ export default function EditDeckPage() {
       else if (slideId === 'cta' && brandData?.showCtaSlide !== false) types.push('cta');
     }
 
-    // DonorSpark slide only shows for free users
     if (userPlan === 'free') {
       types.push('donorspark');
     }
@@ -386,41 +400,10 @@ export default function EditDeckPage() {
     return types;
   };
 
-  // Memoize the default slide order
-  const defaultSlideOrder: ('mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta')[] =
-    ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'];
-
-  const visibleSlideTypes = getVisibleSlideTypes();
-
-  // Get current slide info
-  const getSlideInfo = () => {
-    const slideType = visibleSlideTypes[currentSlide] || 'hero';
-    const slideNames: Record<string, { title: string; subtitle: string }> = {
-      hero: { title: 'Slide 1', subtitle: 'Hero' },
-      mission: { title: 'Slide 2', subtitle: 'Mission' },
-      challenge: { title: 'Slide 3', subtitle: 'Challenge & Solution' },
-      programs: { title: 'Slide 4', subtitle: 'Programs' },
-      metrics: { title: 'Slide 5', subtitle: 'Metrics' },
-      testimonials: { title: 'Slide 6', subtitle: 'Testimonials' },
-      cta: { title: 'Slide 7', subtitle: 'CTA' },
-      donorspark: { title: 'Slide 8', subtitle: 'DonorSpark' },
-    };
-    return slideNames[slideType] || { title: 'Unknown', subtitle: '' };
-  };
-
-  const slideInfo = getSlideInfo();
-
-  // Determine which slide type we're on
-  const getSlideType = (): 'hero' | 'mission' | 'challenge' | 'programs' | 'metrics' | 'testimonials' | 'cta' | 'donorspark' => {
-    return visibleSlideTypes[currentSlide] || 'hero';
-  };
-
-  const slideType = getSlideType();
-
   // Toggle slide visibility
   const toggleSlideVisibility = (slideKey: 'showMissionSlide' | 'showChallengeSlide' | 'showProgramsSlide' | 'showTestimonialsSlide' | 'showCtaSlide') => {
     if (!brandData) return;
-    const currentValue = brandData[slideKey] !== false; // default true
+    const currentValue = brandData[slideKey] !== false;
     updateBrandData({ [slideKey]: !currentValue });
   };
 
@@ -463,7 +446,7 @@ export default function EditDeckPage() {
     mission: { label: 'Mission', visibilityKey: 'showMissionSlide' },
     challenge: { label: 'Challenge', visibilityKey: 'showChallengeSlide' },
     programs: { label: 'Programs', visibilityKey: 'showProgramsSlide' },
-    metrics: { label: 'Metrics' }, // Metrics visibility is controlled by hasValidMetrics
+    metrics: { label: 'Metrics' },
     testimonials: { label: 'Testimonials', visibilityKey: 'showTestimonialsSlide' },
     cta: { label: 'CTA', visibilityKey: 'showCtaSlide' },
   };
@@ -477,10 +460,10 @@ export default function EditDeckPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-[#C15A36] animate-spin mx-auto mb-4" />
-          <p className="text-neutral-400">Loading deck editor...</p>
+          <p className="text-gray-500">Loading editor...</p>
         </div>
       </div>
     );
@@ -488,16 +471,16 @@ export default function EditDeckPage() {
 
   if (error && !brandData) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">!</span>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="text-center max-w-md bg-white rounded-xl p-8 shadow-lg">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl text-red-600">!</span>
           </div>
-          <h1 className="text-xl font-bold text-white mb-2">Unable to Edit Deck</h1>
-          <p className="text-neutral-400 mb-6">{error}</p>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Unable to Edit Deck</h1>
+          <p className="text-gray-500 mb-6">{error}</p>
           <button
             onClick={() => router.push('/dashboard')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
@@ -507,847 +490,572 @@ export default function EditDeckPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-neutral-950 flex">
-      {/* Global Settings Panel (Collapsible) */}
-      <div
-        className={`flex-shrink-0 border-r border-neutral-800 flex flex-col h-screen bg-neutral-900 transition-all duration-300 ${
-          globalPanelOpen ? 'w-[280px]' : 'w-12'
-        }`}
-      >
-        {globalPanelOpen ? (
-          <>
-            {/* Header */}
-            <div className="p-3 border-b border-neutral-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Settings className="w-4 h-4 text-neutral-400" />
-                <span className="text-sm font-semibold text-white">Global Settings</span>
+  // Tool panels content
+  const renderToolPanel = () => {
+    if (!brandData || !activeTool) return null;
+
+    return (
+      <div className="w-72 bg-white border-r border-gray-200 h-full overflow-y-auto">
+        <div className="p-4">
+          {/* Colors Panel */}
+          {activeTool === 'colors' && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900">Colors</h3>
+              <ColorPicker
+                label="Background"
+                value={brandData.colors.primary}
+                onChange={(v) => handleColorChange('primary', v)}
+                lightMode
+              />
+              <ColorPicker
+                label="Primary Text"
+                value={brandData.colors.text || '#ffffff'}
+                onChange={(v) => handleColorChange('text', v)}
+                lightMode
+              />
+              <ColorPicker
+                label="Accent"
+                value={brandData.colors.accent}
+                onChange={(v) => handleColorChange('accent', v)}
+                lightMode
+              />
+              <ColorPicker
+                label="Button"
+                value={brandData.colors.secondary}
+                onChange={(v) => handleColorChange('secondary', v)}
+                lightMode
+              />
+              <ColorPicker
+                label="Header BG"
+                value={brandData.headerBgColor || brandData.colors.primary}
+                onChange={(v) => updateBrandData({ headerBgColor: v })}
+                lightMode
+              />
+            </div>
+          )}
+
+          {/* Fonts Panel */}
+          {activeTool === 'fonts' && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900">Typography</h3>
+              <FontSelector
+                label="Heading Font"
+                value={brandData.fonts.headingFont}
+                onChange={(v) => handleFontChange('headingFont', v)}
+                type="heading"
+                lightMode
+              />
+              <FontSelector
+                label="Body Font"
+                value={brandData.fonts.bodyFont}
+                onChange={(v) => handleFontChange('bodyFont', v)}
+                type="body"
+                lightMode
+              />
+            </div>
+          )}
+
+          {/* Logo Panel */}
+          {activeTool === 'logo' && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900">Logo</h3>
+              <LogoUploader
+                currentLogoUrl={brandData.logoUrl}
+                onUpload={handleLogoChange}
+                onRemove={handleLogoRemove}
+                lightMode
+              />
+            </div>
+          )}
+
+          {/* Photos Panel */}
+          {activeTool === 'photos' && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900">Slide Photos</h3>
+              <p className="text-xs text-gray-500">Customize background images for each slide</p>
+
+              <div className="space-y-3">
+                <SlideImageUploader
+                  label="Hero"
+                  currentUrl={brandData.customImages?.hero}
+                  defaultUrl={brandData.images?.hero || ''}
+                  slideType="hero"
+                  focalPoint={brandData.customImages?.heroFocal}
+                  onChange={(url) => handleCustomImageChange('hero', url)}
+                  onFocalPointChange={(focal) => handleFocalPointChange('hero', focal)}
+                />
+                <SlideImageUploader
+                  label="Mission"
+                  currentUrl={brandData.customImages?.mission}
+                  defaultUrl={brandData.images?.action || ''}
+                  slideType="mission"
+                  focalPoint={brandData.customImages?.missionFocal}
+                  onChange={(url) => handleCustomImageChange('mission', url)}
+                  onFocalPointChange={(focal) => handleFocalPointChange('mission', focal)}
+                />
+                <SlideImageUploader
+                  label="Programs"
+                  currentUrl={brandData.customImages?.programs}
+                  defaultUrl={brandData.images?.group || ''}
+                  slideType="programs"
+                  focalPoint={brandData.customImages?.programsFocal}
+                  onChange={(url) => handleCustomImageChange('programs', url)}
+                  onFocalPointChange={(focal) => handleFocalPointChange('programs', focal)}
+                />
+                <SlideImageUploader
+                  label="Testimonials"
+                  currentUrl={brandData.customImages?.testimonials}
+                  defaultUrl={brandData.images?.action || ''}
+                  slideType="testimonials"
+                  focalPoint={brandData.customImages?.testimonialsFocal}
+                  onChange={(url) => handleCustomImageChange('testimonials', url)}
+                  onFocalPointChange={(focal) => handleFocalPointChange('testimonials', focal)}
+                />
               </div>
-              <button
-                onClick={() => setGlobalPanelOpen(false)}
-                className="p-1 text-neutral-400 hover:text-white transition-colors"
-                title="Collapse panel"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
             </div>
+          )}
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-4">
-              {brandData && (
-                <>
-                  {/* Colors */}
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">Colors</p>
-                    <ColorPicker
-                      label="Background"
-                      value={brandData.colors.primary}
-                      onChange={(v) => handleColorChange('primary', v)}
-                    />
-                    <ColorPicker
-                      label="Primary Text"
-                      value={brandData.colors.text || '#ffffff'}
-                      onChange={(v) => handleColorChange('text', v)}
-                    />
-                    <ColorPicker
-                      label="Highlight"
-                      value={brandData.colors.accent}
-                      onChange={(v) => handleColorChange('accent', v)}
-                    />
-                    <ColorPicker
-                      label="Header BG"
-                      value={brandData.headerBgColor || brandData.colors.primary}
-                      onChange={(v) => updateBrandData({ headerBgColor: v })}
-                    />
+          {/* Slides Panel */}
+          {activeTool === 'slides' && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900">Slide Order</h3>
+              <p className="text-xs text-gray-500">Drag to reorder, click eye to show/hide</p>
+
+              <div className="space-y-1">
+                {/* Hero is always first */}
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 text-sm opacity-60">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 w-4" />
+                    <span className="text-gray-500">Hero</span>
                   </div>
+                  <Eye className="w-4 h-4 text-green-500" />
+                </div>
 
-                  {/* Fonts */}
-                  <div className="space-y-2 pt-3 border-t border-neutral-700">
-                    <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">Fonts</p>
-                    <FontSelector
-                      label="Heading"
-                      value={brandData.fonts.headingFont}
-                      onChange={(v) => handleFontChange('headingFont', v)}
-                      type="heading"
-                    />
-                    <FontSelector
-                      label="Body"
-                      value={brandData.fonts.bodyFont}
-                      onChange={(v) => handleFontChange('bodyFont', v)}
-                      type="body"
-                    />
-                  </div>
+                {/* Draggable slides */}
+                {getSlideOrder().map((slideId) => {
+                  const config = slideConfig[slideId];
+                  if (!config) return null;
+                  if (slideId === 'metrics' && !hasMetricsSlide) return null;
 
-                  {/* Logo */}
-                  <div className="pt-3 border-t border-neutral-700">
-                    <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider mb-2">Logo</p>
-                    <LogoUploader
-                      currentLogoUrl={brandData.logoUrl}
-                      onUpload={handleLogoChange}
-                      onRemove={handleLogoRemove}
-                    />
-                  </div>
+                  const visible = isSlideVisible(slideId);
+                  const isDragging = draggedSlide === slideId;
 
-                  {/* Slides - Visibility & Order */}
-                  <div className="pt-3 border-t border-neutral-700">
-                    <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider mb-2">Slides (Drag to Reorder)</p>
-                    <div className="space-y-1">
-                      {/* Hero is always first and not draggable */}
-                      <div className="flex items-center justify-between p-2 bg-neutral-800/30 rounded border border-neutral-700/50 text-xs opacity-60">
-                        <div className="flex items-center gap-2">
-                          <span className="text-neutral-600 w-4" />
-                          <span className="text-neutral-400">Hero</span>
-                        </div>
-                        <span className="text-green-400/60"><Eye className="w-3 h-3" /></span>
+                  return (
+                    <div
+                      key={slideId}
+                      draggable
+                      onDragStart={() => handleDragStart(slideId)}
+                      onDragOver={(e) => handleDragOver(e, slideId)}
+                      onDrop={(e) => handleDrop(e, slideId)}
+                      onDragEnd={handleDragEnd}
+                      className={`flex items-center justify-between p-2 bg-white rounded border transition-all text-sm cursor-grab active:cursor-grabbing ${
+                        isDragging ? 'border-[#C15A36] opacity-50' : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-700">{config.label}</span>
                       </div>
-
-                      {/* Draggable slides */}
-                      {getSlideOrder().map((slideId) => {
-                        const config = slideConfig[slideId];
-                        if (!config) return null;
-                        // Skip metrics if no valid metrics
-                        if (slideId === 'metrics' && !hasMetricsSlide) return null;
-
-                        const visible = isSlideVisible(slideId);
-                        const isDragging = draggedSlide === slideId;
-
-                        return (
-                          <div
-                            key={slideId}
-                            draggable
-                            onDragStart={() => handleDragStart(slideId)}
-                            onDragOver={(e) => handleDragOver(e, slideId)}
-                            onDrop={(e) => handleDrop(e, slideId)}
-                            onDragEnd={handleDragEnd}
-                            className={`flex items-center justify-between p-2 bg-neutral-800/50 rounded border transition-all text-xs cursor-grab active:cursor-grabbing ${
-                              isDragging ? 'border-[#C15A36] opacity-50' : 'border-neutral-700 hover:bg-neutral-800'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <GripVertical className="w-3 h-3 text-neutral-500" />
-                              <span className="text-white">{config.label}</span>
-                            </div>
-                            {config.visibilityKey ? (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleSlideVisibility(config.visibilityKey!);
-                                }}
-                                className={`flex items-center gap-1 ${visible ? 'text-green-400 hover:text-green-300' : 'text-neutral-500 hover:text-neutral-400'}`}
-                              >
-                                {visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                              </button>
-                            ) : (
-                              <span className="text-green-400/60"><Eye className="w-3 h-3" /></span>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {config.visibilityKey ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSlideVisibility(config.visibilityKey!);
+                          }}
+                          className={visible ? 'text-green-500 hover:text-green-600' : 'text-gray-300 hover:text-gray-400'}
+                        >
+                          {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </button>
+                      ) : (
+                        <Eye className="w-4 h-4 text-green-500/50" />
+                      )}
                     </div>
-                    <p className="text-[10px] text-neutral-500 mt-2">Hero slide is always first.</p>
-                  </div>
-                </>
-              )}
+                  );
+                })}
+              </div>
             </div>
-          </>
-        ) : (
-          // Collapsed state
-          <div className="flex flex-col items-center py-3">
-            <button
-              onClick={() => setGlobalPanelOpen(true)}
-              className="p-2 text-neutral-400 hover:text-white transition-colors"
-              title="Expand global settings"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <div className="mt-2 -rotate-90 whitespace-nowrap text-[10px] text-neutral-500 uppercase tracking-wider">
-              Global
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+    );
+  };
 
-      {/* Slide Settings Panel */}
-      <div className="w-[320px] flex-shrink-0 border-r border-neutral-800 flex flex-col h-screen">
-        {/* Header */}
-        <div className="p-3 border-b border-neutral-800 bg-neutral-900">
-          <div className="flex items-center justify-between mb-2">
-            <button
-              onClick={() => {
-                if (hasUnsavedChanges) {
-                  if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
-                    router.push('/dashboard');
-                  }
-                } else {
-                  router.push('/dashboard');
-                }
-              }}
-              className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1 text-xs"
-            >
-              <ArrowLeft className="w-3 h-3" />
-              Back
-            </button>
+  // Slide content editor (bento box style)
+  const renderSlideContent = () => {
+    if (!brandData) return null;
 
-            <div className="flex items-center gap-2">
-              {hasUnsavedChanges && (
-                <button
-                  onClick={handleReset}
-                  className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors"
-                >
-                  Reset
-                </button>
-              )}
-              <div className="relative group">
-                <button
-                  onClick={canSave ? handleSave : undefined}
-                  disabled={saving || !hasUnsavedChanges || !canSave}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all
-                    ${!canSave
-                      ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
-                      : hasUnsavedChanges
-                        ? 'bg-[#C15A36] hover:bg-[#a84d2e] text-white'
-                        : 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
-                    }`}
-                >
-                  {saving ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Save className="w-3 h-3" />
-                  )}
-                  Save
-                </button>
-                {/* Upgrade tooltip for free users */}
-                {!canSave && (
-                  <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-50">
-                    <div className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white shadow-xl whitespace-nowrap">
-                      <a href="/pricing" className="text-[#C15A36] hover:underline font-medium">Upgrade</a> to save edited slides
-                      <div className="absolute top-full right-4 border-4 border-transparent border-t-neutral-800" />
-                    </div>
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* Slide tabs */}
+        <div className="flex border-b border-gray-200 overflow-x-auto">
+          {SLIDE_TYPES.map((type) => {
+            // Skip metrics if no metrics, skip hidden slides
+            if (type === 'metrics' && !hasMetricsSlide) return null;
+            if (type === 'mission' && brandData.showMissionSlide === false) return null;
+            if (type === 'challenge' && brandData.showChallengeSlide === false) return null;
+            if (type === 'programs' && brandData.showProgramsSlide === false) return null;
+            if (type === 'testimonials' && brandData.showTestimonialsSlide === false) return null;
+            if (type === 'cta' && brandData.showCtaSlide === false) return null;
+
+            return (
+              <button
+                key={type}
+                onClick={() => setActiveSlideType(type)}
+                className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeSlideType === type
+                    ? 'text-[#C15A36] border-b-2 border-[#C15A36] bg-orange-50/50'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {SLIDE_LABELS[type]}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Slide content */}
+        <div className="p-4 max-h-[400px] overflow-y-auto">
+          {/* Hero */}
+          {activeSlideType === 'hero' && (
+            <div className="space-y-3">
+              <FieldInput label="Badge Text" value={brandData.badgeText ?? 'Impact Deck'} onChange={(v) => updateBrandData({ badgeText: v })} placeholder="Impact Deck" />
+              <FieldInput label="Headline" value={brandData.donorHeadline} onChange={(v) => handleFieldChange('donorHeadline', v)} placeholder="Making A Difference" />
+              <FieldTextarea label="Hook" value={brandData.heroHook} onChange={(v) => handleFieldChange('heroHook', v)} placeholder="A brief, engaging description..." rows={2} />
+            </div>
+          )}
+
+          {/* Mission */}
+          {activeSlideType === 'mission' && (
+            <div className="space-y-3">
+              <FieldInput label="Slide Title" value={brandData.missionSlideTitle ?? 'Our Mission'} onChange={(v) => updateBrandData({ missionSlideTitle: v })} />
+              <FieldInput label="Headline" value={brandData.missionHeadline ?? 'Building A Better Future'} onChange={(v) => updateBrandData({ missionHeadline: v })} />
+              <FieldTextarea label="Mission Statement" value={brandData.mission} onChange={(v) => handleFieldChange('mission', v)} rows={3} />
+              <ArrayField label="Core Values" values={brandData.coreValues || []} onItemChange={(idx, val) => handleArrayItemChange('coreValues', idx, val, brandData.coreValues || [])} onAdd={() => handleAddArrayItem('coreValues', brandData.coreValues || [])} onRemove={(idx) => handleRemoveArrayItem('coreValues', idx, brandData.coreValues || [])} maxItems={4} />
+            </div>
+          )}
+
+          {/* Challenge */}
+          {activeSlideType === 'challenge' && (
+            <div className="space-y-3">
+              <FieldInput label="Slide Title" value={brandData.challengeSlideTitle ?? 'The Challenge'} onChange={(v) => updateBrandData({ challengeSlideTitle: v })} />
+              <FieldInput label="Challenge Headline" value={brandData.need.headline} onChange={(v) => handleFieldChange('needHeadline', v)} />
+              <FieldTextarea label="Challenge Description" value={brandData.need.description} onChange={(v) => handleFieldChange('needDescription', v)} rows={2} />
+              <FieldInput label="Solution Headline" value={brandData.solutionHeadline ?? 'Our Solution'} onChange={(v) => updateBrandData({ solutionHeadline: v })} />
+              <FieldTextarea label="Solution Description" value={brandData.solution} onChange={(v) => handleFieldChange('solution', v)} rows={2} />
+            </div>
+          )}
+
+          {/* Programs */}
+          {activeSlideType === 'programs' && (
+            <div className="space-y-3">
+              <FieldInput label="Headline" value={brandData.programsHeadline ?? 'What We Offer'} onChange={(v) => updateBrandData({ programsHeadline: v })} />
+              <FieldTextarea label="Description" value={brandData.programsBody ?? ''} onChange={(v) => updateBrandData({ programsBody: v })} rows={2} />
+              <ArrayField label="Programs" values={brandData.programs || []} onItemChange={(idx, val) => handleArrayItemChange('programs', idx, val, brandData.programs || [])} onAdd={() => handleAddArrayItem('programs', brandData.programs || [])} onRemove={(idx) => handleRemoveArrayItem('programs', idx, brandData.programs || [])} maxItems={6} />
+            </div>
+          )}
+
+          {/* Metrics */}
+          {activeSlideType === 'metrics' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Impact Metrics</span>
+                {(brandData.metrics?.length || 0) < 5 && (
+                  <button
+                    onClick={() => {
+                      const metrics = [...(brandData.metrics || [])];
+                      metrics.push({ value: '', label: '' });
+                      updateBrandData({ metrics, hasValidMetrics: true });
+                    }}
+                    className="text-xs text-[#C15A36] hover:text-[#a84d2e] flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Add
+                  </button>
+                )}
+              </div>
+              {(brandData.metrics || []).map((metric, index) => (
+                <div key={index} className="flex gap-2 items-start">
+                  <input
+                    type="text"
+                    value={metric.value}
+                    onChange={(e) => {
+                      const metrics = [...(brandData.metrics || [])];
+                      metrics[index] = { ...metrics[index], value: e.target.value };
+                      updateBrandData({ metrics });
+                    }}
+                    placeholder="10,000+"
+                    className="w-24 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36]"
+                  />
+                  <input
+                    type="text"
+                    value={metric.label}
+                    onChange={(e) => {
+                      const metrics = [...(brandData.metrics || [])];
+                      metrics[index] = { ...metrics[index], label: e.target.value };
+                      updateBrandData({ metrics });
+                    }}
+                    placeholder="People Served"
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36]"
+                  />
+                  <button
+                    onClick={() => {
+                      const metrics = (brandData.metrics || []).filter((_, i) => i !== index);
+                      updateBrandData({ metrics, hasValidMetrics: metrics.length > 0 });
+                    }}
+                    className="p-1.5 text-gray-400 hover:text-red-500"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Testimonials */}
+          {activeSlideType === 'testimonials' && (
+            <div className="space-y-3">
+              <FieldInput label="Slide Title" value={brandData.testimonialsSlideTitle ?? 'Success Stories'} onChange={(v) => updateBrandData({ testimonialsSlideTitle: v })} />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Testimonials</span>
+                {(brandData.testimonials?.length || 0) < 5 && (
+                  <button onClick={handleAddTestimonial} className="text-xs text-[#C15A36] hover:text-[#a84d2e] flex items-center gap-1">
+                    <Plus className="w-3 h-3" /> Add
+                  </button>
+                )}
+              </div>
+              {(brandData.testimonials || []).map((testimonial, index) => (
+                <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-xs font-medium text-gray-500">#{index + 1}</span>
+                    <button onClick={() => handleRemoveTestimonial(index)} className="text-gray-400 hover:text-red-500">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <textarea
+                    value={testimonial.quote}
+                    onChange={(e) => handleTestimonialChange(index, 'quote', e.target.value)}
+                    placeholder="Quote..."
+                    rows={2}
+                    className="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36]"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" value={testimonial.author} onChange={(e) => handleTestimonialChange(index, 'author', e.target.value)} placeholder="Name" className="bg-white border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36]" />
+                    <input type="text" value={testimonial.role} onChange={(e) => handleTestimonialChange(index, 'role', e.target.value)} placeholder="Title" className="bg-white border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36]" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="text" value={testimonial.portrait || ''} onChange={(e) => handleTestimonialChange(index, 'portrait', e.target.value)} placeholder="Photo URL" className="flex-1 bg-white border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36]" />
+                    <label className="p-1.5 bg-white hover:bg-gray-100 border border-gray-200 rounded cursor-pointer">
+                      <Upload className="w-3 h-3 text-gray-500" />
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleTestimonialPhotoUpload(index, file); }} />
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* CTA */}
+          {activeSlideType === 'cta' && (
+            <div className="space-y-3">
+              <FieldInput label="Headline" value={brandData.ctaHeadline ?? 'Join Our Mission'} onChange={(v) => updateBrandData({ ctaHeadline: v })} />
+              <FieldTextarea label="Subheadline" value={brandData.ctaSubhead ?? ''} onChange={(v) => updateBrandData({ ctaSubhead: v })} rows={2} />
+              <FieldInput label="Button Text" value={brandData.ctaButtonText ?? 'Donate Today'} onChange={(v) => updateBrandData({ ctaButtonText: v })} />
+              <FieldInput label="Button URL" value={brandData.finalDonateUrl} onChange={(v) => updateBrandData({ finalDonateUrl: v })} type="url" />
+
+              <div className="pt-2 border-t border-gray-200 space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={brandData.showShareButtons !== false} onChange={(e) => updateBrandData({ showShareButtons: e.target.checked })} className="w-4 h-4 rounded border-gray-300 text-[#C15A36] focus:ring-[#C15A36]" />
+                  <span className="text-sm text-gray-700">Show share buttons</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={brandData.showSocialLinks === true} onChange={(e) => updateBrandData({ showSocialLinks: e.target.checked })} className="w-4 h-4 rounded border-gray-300 text-[#C15A36] focus:ring-[#C15A36]" />
+                  <span className="text-sm text-gray-700">Show social links</span>
+                </label>
+
+                {brandData.showSocialLinks && (
+                  <div className="space-y-2 pt-2">
+                    {(brandData.socialLinks || []).map((link, index) => (
+                      <div key={index} className="flex gap-2">
+                        <select value={link.platform} onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)} className="bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900">
+                          {SOCIAL_PLATFORMS.map(p => (<option key={p.value} value={p.value}>{p.label}</option>))}
+                        </select>
+                        <input type="url" value={link.url} onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)} placeholder="https://..." className="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900" />
+                        <button onClick={() => handleRemoveSocialLink(index)} className="p-1.5 text-gray-400 hover:text-red-500"><X className="w-4 h-4" /></button>
+                      </div>
+                    ))}
+                    {(brandData.socialLinks?.length || 0) < 6 && (
+                      <button onClick={handleAddSocialLink} className="text-xs text-[#C15A36] hover:text-[#a84d2e] flex items-center gap-1"><Plus className="w-3 h-3" /> Add Link</button>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Slide indicator */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-[#C15A36] bg-[#C15A36]/10 px-2 py-0.5 rounded">
-              {slideInfo.title.toUpperCase()}
-            </span>
-            <span className="text-sm font-semibold text-white">{slideInfo.subtitle}</span>
-          </div>
-        </div>
-
-        {/* Messages */}
-        {error && (
-          <div className="mx-3 mt-3 p-2 bg-red-900/30 border border-red-900 rounded text-xs text-red-300">
-            {error}
-          </div>
-        )}
-        {successMessage && (
-          <div className="mx-3 mt-3 p-2 bg-green-900/30 border border-green-900 rounded text-xs text-green-300">
-            {successMessage}
-          </div>
-        )}
-
-        {/* Slide Settings Content */}
-        <div className="flex-1 overflow-y-auto p-3">
-          {brandData && (
-            <>
-              {/* Hero Slide */}
-              {slideType === 'hero' && (
-                <div className="space-y-3">
-                  <SlideImageUploader
-                    label="Background Image"
-                    currentUrl={brandData.customImages?.hero}
-                    defaultUrl={brandData.images?.hero || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-hero-leader.jpg'}
-                    slideType="hero"
-                    focalPoint={brandData.customImages?.heroFocal}
-                    onChange={(url) => handleCustomImageChange('hero', url)}
-                    onFocalPointChange={(focal) => handleFocalPointChange('hero', focal)}
-                  />
-                  <FieldInput
-                    label="Badge Text"
-                    value={brandData.badgeText ?? 'Impact Deck'}
-                    onChange={(v) => updateBrandData({ badgeText: v })}
-                    placeholder="Impact Deck"
-                    hint="Leave empty to hide"
-                  />
-                  <FieldInput
-                    label="Headline"
-                    value={brandData.donorHeadline}
-                    onChange={(v) => handleFieldChange('donorHeadline', v)}
-                    placeholder="Making A Difference"
-                  />
-                  <FieldTextarea
-                    label="Hook / Subheadline"
-                    value={brandData.heroHook}
-                    onChange={(v) => handleFieldChange('heroHook', v)}
-                    placeholder="A brief, engaging description..."
-                    rows={2}
-                  />
-                </div>
-              )}
-
-              {/* Mission Slide */}
-              {slideType === 'mission' && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => toggleSlideVisibility('showMissionSlide')}
-                    className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
-                  >
-                    <span className="text-neutral-400">Slide Visibility</span>
-                    <span className={`flex items-center gap-1 ${brandData.showMissionSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
-                      {brandData.showMissionSlide !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                      {brandData.showMissionSlide !== false ? 'Visible' : 'Hidden'}
-                    </span>
-                  </button>
-                  <SlideImageUploader
-                    label="Background Image"
-                    currentUrl={brandData.customImages?.mission}
-                    defaultUrl={brandData.images?.action || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-action-neighbors.jpg'}
-                    slideType="mission"
-                    focalPoint={brandData.customImages?.missionFocal}
-                    onChange={(url) => handleCustomImageChange('mission', url)}
-                    onFocalPointChange={(focal) => handleFocalPointChange('mission', focal)}
-                  />
-                  <FieldInput
-                    label="Slide Title"
-                    value={brandData.missionSlideTitle ?? 'Our Mission'}
-                    onChange={(v) => updateBrandData({ missionSlideTitle: v })}
-                    placeholder="Our Mission"
-                  />
-                  <FieldInput
-                    label="Section Headline"
-                    value={brandData.missionHeadline ?? 'Building A Better Future'}
-                    onChange={(v) => updateBrandData({ missionHeadline: v })}
-                    placeholder="Building A Better Future"
-                  />
-                  <FieldTextarea
-                    label="Mission Statement"
-                    value={brandData.mission}
-                    onChange={(v) => handleFieldChange('mission', v)}
-                    placeholder="Your organization's mission..."
-                    rows={3}
-                  />
-                  <ArrayField
-                    label="Core Values"
-                    values={brandData.coreValues || []}
-                    onItemChange={(idx, val) => handleArrayItemChange('coreValues', idx, val, brandData.coreValues || [])}
-                    onAdd={() => handleAddArrayItem('coreValues', brandData.coreValues || [])}
-                    onRemove={(idx) => handleRemoveArrayItem('coreValues', idx, brandData.coreValues || [])}
-                    maxItems={4}
-                    itemLabel="Value"
-                  />
-                </div>
-              )}
-
-              {/* Challenge Slide */}
-              {slideType === 'challenge' && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => toggleSlideVisibility('showChallengeSlide')}
-                    className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
-                  >
-                    <span className="text-neutral-400">Slide Visibility</span>
-                    <span className={`flex items-center gap-1 ${brandData.showChallengeSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
-                      {brandData.showChallengeSlide !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                      {brandData.showChallengeSlide !== false ? 'Visible' : 'Hidden'}
-                    </span>
-                  </button>
-                  <FieldInput
-                    label="Slide Title"
-                    value={brandData.challengeSlideTitle ?? 'The Challenge'}
-                    onChange={(v) => updateBrandData({ challengeSlideTitle: v })}
-                    placeholder="The Challenge"
-                  />
-                  <FieldInput
-                    label="Challenge Headline"
-                    value={brandData.need.headline}
-                    onChange={(v) => handleFieldChange('needHeadline', v)}
-                    placeholder="Communities Need Support"
-                  />
-                  <FieldTextarea
-                    label="Challenge Description"
-                    value={brandData.need.description}
-                    onChange={(v) => handleFieldChange('needDescription', v)}
-                    placeholder="Describe the challenge..."
-                    rows={2}
-                  />
-                  <FieldInput
-                    label="Solution Headline"
-                    value={brandData.solutionHeadline ?? 'Our Solution'}
-                    onChange={(v) => updateBrandData({ solutionHeadline: v })}
-                    placeholder="Our Solution"
-                  />
-                  <FieldTextarea
-                    label="Solution Description"
-                    value={brandData.solution}
-                    onChange={(v) => handleFieldChange('solution', v)}
-                    placeholder="How you address this..."
-                    rows={2}
-                  />
-                </div>
-              )}
-
-              {/* Programs Slide */}
-              {slideType === 'programs' && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => toggleSlideVisibility('showProgramsSlide')}
-                    className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
-                  >
-                    <span className="text-neutral-400">Slide Visibility</span>
-                    <span className={`flex items-center gap-1 ${brandData.showProgramsSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
-                      {brandData.showProgramsSlide !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                      {brandData.showProgramsSlide !== false ? 'Visible' : 'Hidden'}
-                    </span>
-                  </button>
-                  <SlideImageUploader
-                    label="Background Image"
-                    currentUrl={brandData.customImages?.programs}
-                    defaultUrl={brandData.images?.group || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-group-gathering.jpg'}
-                    slideType="programs"
-                    focalPoint={brandData.customImages?.programsFocal}
-                    onChange={(url) => handleCustomImageChange('programs', url)}
-                    onFocalPointChange={(focal) => handleFocalPointChange('programs', focal)}
-                  />
-                  <FieldInput
-                    label="Section Headline"
-                    value={brandData.programsHeadline ?? 'What We Offer'}
-                    onChange={(v) => updateBrandData({ programsHeadline: v })}
-                    placeholder="What We Offer"
-                  />
-                  <FieldTextarea
-                    label="Body Copy"
-                    value={brandData.programsBody ?? ''}
-                    onChange={(v) => updateBrandData({ programsBody: v })}
-                    placeholder="Describe your programs..."
-                    rows={2}
-                  />
-                  <ArrayField
-                    label="Programs"
-                    values={brandData.programs || []}
-                    onItemChange={(idx, val) => handleArrayItemChange('programs', idx, val, brandData.programs || [])}
-                    onAdd={() => handleAddArrayItem('programs', brandData.programs || [])}
-                    onRemove={(idx) => handleRemoveArrayItem('programs', idx, brandData.programs || [])}
-                    maxItems={6}
-                    itemLabel="Program"
-                  />
-                </div>
-              )}
-
-              {/* Metrics Slide */}
-              {slideType === 'metrics' && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-neutral-400">Impact Metrics (up to 5)</label>
-                      {(brandData.metrics?.length || 0) < 5 && (
-                        <button
-                          onClick={() => {
-                            const metrics = [...(brandData.metrics || [])];
-                            metrics.push({ value: '', label: '' });
-                            updateBrandData({ metrics, hasValidMetrics: true });
-                          }}
-                          className="text-[10px] text-[#C15A36] hover:text-[#a84d2e] flex items-center gap-0.5"
-                        >
-                          <Plus className="w-3 h-3" /> Add
-                        </button>
-                      )}
-                    </div>
-                    {(brandData.metrics || []).map((metric, index) => (
-                      <div key={index} className="p-2 bg-neutral-800/50 rounded border border-neutral-700 space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-medium text-neutral-500">#{index + 1}</span>
-                          <button
-                            onClick={() => {
-                              const metrics = (brandData.metrics || []).filter((_, i) => i !== index);
-                              updateBrandData({
-                                metrics,
-                                hasValidMetrics: metrics.length > 0,
-                              });
-                            }}
-                            className="text-neutral-500 hover:text-red-400"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                        <input
-                          type="text"
-                          value={metric.value}
-                          onChange={(e) => {
-                            const metrics = [...(brandData.metrics || [])];
-                            metrics[index] = { ...metrics[index], value: e.target.value };
-                            updateBrandData({ metrics });
-                          }}
-                          placeholder="10,000+ or 95%"
-                          className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-sm text-white"
-                        />
-                        <input
-                          type="text"
-                          value={metric.label}
-                          onChange={(e) => {
-                            const metrics = [...(brandData.metrics || [])];
-                            metrics[index] = { ...metrics[index], label: e.target.value };
-                            updateBrandData({ metrics });
-                          }}
-                          placeholder="People Served"
-                          className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
-                        />
-                      </div>
-                    ))}
-                    {(brandData.metrics?.length || 0) === 0 && (
-                      <p className="text-[11px] text-neutral-500 italic py-2">No metrics added. Add metrics to show this slide.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Testimonials Slide */}
-              {slideType === 'testimonials' && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => toggleSlideVisibility('showTestimonialsSlide')}
-                    className="w-full flex items-center justify-between p-2 bg-neutral-800/50 rounded border border-neutral-700 hover:bg-neutral-800 transition-colors text-xs"
-                  >
-                    <span className="text-neutral-400">Slide Visibility</span>
-                    <span className={`flex items-center gap-1 ${brandData.showTestimonialsSlide !== false ? 'text-green-400' : 'text-neutral-500'}`}>
-                      {brandData.showTestimonialsSlide !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                      {brandData.showTestimonialsSlide !== false ? 'Visible' : 'Hidden'}
-                    </span>
-                  </button>
-                  <SlideImageUploader
-                    label="Background Image"
-                    currentUrl={brandData.customImages?.testimonials}
-                    defaultUrl={brandData.images?.action || 'https://oklahomaisok.github.io/nonprofit-decks/images/community-action-neighbors.jpg'}
-                    slideType="testimonials"
-                    focalPoint={brandData.customImages?.testimonialsFocal}
-                    onChange={(url) => handleCustomImageChange('testimonials', url)}
-                    onFocalPointChange={(focal) => handleFocalPointChange('testimonials', focal)}
-                  />
-                  <FieldInput
-                    label="Slide Title"
-                    value={brandData.testimonialsSlideTitle ?? 'Success Stories'}
-                    onChange={(v) => updateBrandData({ testimonialsSlideTitle: v })}
-                    placeholder="Success Stories"
-                  />
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-neutral-400">Testimonials (up to 5)</label>
-                      {(brandData.testimonials?.length || 0) < 5 && (
-                        <button
-                          onClick={handleAddTestimonial}
-                          className="text-[10px] text-[#C15A36] hover:text-[#a84d2e] flex items-center gap-0.5"
-                        >
-                          <Plus className="w-3 h-3" /> Add
-                        </button>
-                      )}
-                    </div>
-                    {(brandData.testimonials || []).map((testimonial, index) => (
-                      <div key={index} className="p-2 bg-neutral-800/50 rounded border border-neutral-700 space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-medium text-neutral-500">#{index + 1}</span>
-                          <button onClick={() => handleRemoveTestimonial(index)} className="text-neutral-500 hover:text-red-400">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                        <textarea
-                          value={testimonial.quote}
-                          onChange={(e) => handleTestimonialChange(index, 'quote', e.target.value)}
-                          placeholder="Quote..."
-                          rows={2}
-                          className="w-full bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white resize-none"
-                        />
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <input
-                            type="text"
-                            value={testimonial.author}
-                            onChange={(e) => handleTestimonialChange(index, 'author', e.target.value)}
-                            placeholder="Name"
-                            className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
-                          />
-                          <input
-                            type="text"
-                            value={testimonial.role}
-                            onChange={(e) => handleTestimonialChange(index, 'role', e.target.value)}
-                            placeholder="Title"
-                            className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="text"
-                              value={testimonial.portrait || ''}
-                              onChange={(e) => handleTestimonialChange(index, 'portrait', e.target.value)}
-                              placeholder="Photo URL"
-                              className="flex-1 bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
-                            />
-                            <label className="p-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded cursor-pointer transition-colors">
-                              <Upload className="w-3 h-3 text-neutral-400" />
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleTestimonialPhotoUpload(index, file);
-                                }}
-                              />
-                            </label>
-                          </div>
-                          {testimonial.portrait && (
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={testimonial.portrait}
-                                alt={testimonial.author || 'Portrait'}
-                                className="w-8 h-8 rounded-full object-cover border border-neutral-700"
-                              />
-                              <button
-                                onClick={() => handleTestimonialChange(index, 'portrait', '')}
-                                className="text-[10px] text-neutral-500 hover:text-red-400"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    {(brandData.testimonials?.length || 0) === 0 && (
-                      <p className="text-[11px] text-neutral-500 italic">Default testimonials shown.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* CTA Slide */}
-              {slideType === 'cta' && (
-                <div className="space-y-3">
-                  <FieldInput
-                    label="Headline"
-                    value={brandData.ctaHeadline ?? 'Join Our Mission'}
-                    onChange={(v) => updateBrandData({ ctaHeadline: v })}
-                    placeholder="Join Our Mission"
-                  />
-                  <FieldTextarea
-                    label="Subheadline"
-                    value={brandData.ctaSubhead ?? 'Your support helps us continue making a difference.'}
-                    onChange={(v) => updateBrandData({ ctaSubhead: v })}
-                    placeholder="Your support helps us..."
-                    rows={2}
-                  />
-                  <FieldInput
-                    label="Button Text"
-                    value={brandData.ctaButtonText ?? 'Donate Today'}
-                    onChange={(v) => updateBrandData({ ctaButtonText: v })}
-                    placeholder="Donate Today"
-                  />
-                  <ColorPicker
-                    label="Button Color"
-                    value={brandData.colors.secondary}
-                    onChange={(v) => handleColorChange('secondary', v)}
-                  />
-                  <FieldInput
-                    label="Button URL"
-                    value={brandData.finalDonateUrl}
-                    onChange={(v) => updateBrandData({ finalDonateUrl: v })}
-                    placeholder="https://..."
-                    type="url"
-                  />
-
-                  <div className="pt-2 border-t border-neutral-700 space-y-2">
-                    <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">Social</p>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={brandData.showShareButtons !== false}
-                        onChange={(e) => updateBrandData({ showShareButtons: e.target.checked })}
-                        className="w-3.5 h-3.5 rounded bg-neutral-800 border-neutral-600"
-                      />
-                      <span className="text-xs text-white">Share This Story</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={brandData.showSocialLinks === true}
-                        onChange={(e) => updateBrandData({ showSocialLinks: e.target.checked })}
-                        className="w-3.5 h-3.5 rounded bg-neutral-800 border-neutral-600"
-                      />
-                      <span className="text-xs text-white">Follow Us Online</span>
-                    </label>
-
-                    {brandData.showSocialLinks && (
-                      <div className="space-y-1.5 pt-1">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[10px] font-medium text-neutral-400">Your Links</label>
-                          {(brandData.socialLinks?.length || 0) < 6 && (
-                            <button
-                              onClick={handleAddSocialLink}
-                              className="text-[10px] text-[#C15A36] hover:text-[#a84d2e] flex items-center gap-0.5"
-                            >
-                              <Plus className="w-3 h-3" /> Add
-                            </button>
-                          )}
-                        </div>
-                        {(brandData.socialLinks || []).map((link, index) => (
-                          <div key={index} className="flex gap-1.5">
-                            <select
-                              value={link.platform}
-                              onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)}
-                              className="bg-neutral-800 border border-neutral-700 rounded px-1.5 py-1 text-[11px] text-white w-24"
-                            >
-                              {SOCIAL_PLATFORMS.map(p => (
-                                <option key={p.value} value={p.value}>{p.label}</option>
-                              ))}
-                            </select>
-                            <input
-                              type="url"
-                              value={link.url}
-                              onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)}
-                              placeholder="https://..."
-                              className="flex-1 bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-[11px] text-white"
-                            />
-                            <button onClick={() => handleRemoveSocialLink(index)} className="p-1 text-neutral-500 hover:text-red-400">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* DonorSpark Slide */}
-              {slideType === 'donorspark' && (
-                <p className="text-xs text-neutral-500 italic">This slide cannot be customized.</p>
-              )}
-            </>
           )}
         </div>
+      </div>
+    );
+  };
 
-        {/* Footer */}
-        <div className="p-2 border-t border-neutral-800 bg-neutral-900">
-          <p className="text-[10px] text-neutral-500 text-center">
-            <span className="font-mono bg-neutral-800 px-1 rounded">←</span>{' '}
-            <span className="font-mono bg-neutral-800 px-1 rounded">→</span> to navigate
-          </p>
-        </div>
+  return (
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Left Tool Rail */}
+      <div className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-4 gap-1">
+        <ToolButton icon={<Palette className="w-5 h-5" />} label="Colors" active={activeTool === 'colors'} onClick={() => setActiveTool(activeTool === 'colors' ? null : 'colors')} />
+        <ToolButton icon={<Type className="w-5 h-5" />} label="Fonts" active={activeTool === 'fonts'} onClick={() => setActiveTool(activeTool === 'fonts' ? null : 'fonts')} />
+        <ToolButton icon={<LayoutGrid className="w-5 h-5" />} label="Logo" active={activeTool === 'logo'} onClick={() => setActiveTool(activeTool === 'logo' ? null : 'logo')} />
+        <ToolButton icon={<ImageIcon className="w-5 h-5" />} label="Photos" active={activeTool === 'photos'} onClick={() => setActiveTool(activeTool === 'photos' ? null : 'photos')} />
+        <ToolButton icon={<Layers className="w-5 h-5" />} label="Slides" active={activeTool === 'slides'} onClick={() => setActiveTool(activeTool === 'slides' ? null : 'slides')} />
       </div>
 
-      {/* Preview Panel */}
-      <div className="flex-1 h-screen overflow-hidden p-4">
-        <PreviewFrame html={previewHtml} deckUrl={deckUrl} />
+      {/* Expandable Tool Panel */}
+      {activeTool && renderToolPanel()}
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-screen">
+        {/* Top Bar */}
+        <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4">
+          <button
+            onClick={() => {
+              if (hasUnsavedChanges) {
+                if (confirm('You have unsaved changes. Leave anyway?')) router.push('/dashboard');
+              } else {
+                router.push('/dashboard');
+              }
+            }}
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back</span>
+          </button>
+
+          <div className="flex items-center gap-3">
+            {error && <span className="text-xs text-red-600">{error}</span>}
+            {successMessage && <span className="text-xs text-green-600">{successMessage}</span>}
+
+            {hasUnsavedChanges && (
+              <button onClick={handleReset} className="text-sm text-gray-500 hover:text-gray-700">
+                Reset
+              </button>
+            )}
+
+            <div className="relative group">
+              <button
+                onClick={canSave ? handleSave : undefined}
+                disabled={saving || !hasUnsavedChanges || !canSave}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  !canSave
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : hasUnsavedChanges
+                      ? 'bg-[#C15A36] hover:bg-[#a84d2e] text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save
+              </button>
+              {!canSave && (
+                <div className="absolute top-full right-0 mt-2 hidden group-hover:block z-50">
+                  <div className="bg-gray-800 text-white rounded-lg px-3 py-2 text-xs shadow-xl whitespace-nowrap">
+                    <a href="/pricing" className="text-[#C15A36] hover:underline font-medium">Upgrade</a> to save changes
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Preview + Slide Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Preview */}
+          <div className="flex-1 p-6 flex items-center justify-center">
+            <div className="w-full max-w-md">
+              <PreviewFrame html={previewHtml} deckUrl={deckUrl} />
+            </div>
+          </div>
+
+          {/* Slide Content Panel (Bento Box) */}
+          <div className="w-96 p-4 overflow-y-auto">
+            {renderSlideContent()}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// Field components
-function FieldInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  hint,
-  type = 'text',
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  hint?: string;
-  type?: string;
-}) {
+// Tool Button Component
+function ToolButton({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-12 h-12 flex flex-col items-center justify-center rounded-lg transition-colors ${
+        active ? 'bg-violet-100 text-violet-600' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+      }`}
+    >
+      {icon}
+      <span className="text-[9px] mt-0.5 font-medium">{label}</span>
+    </button>
+  );
+}
+
+// Field Components (Light Mode)
+function FieldInput({ label, value, onChange, placeholder, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string }) {
   return (
     <div className="space-y-1">
-      <label className="text-xs font-medium text-neutral-400">{label}</label>
+      <label className="text-sm font-medium text-gray-700">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2.5 py-1.5 text-sm text-white
-          focus:outline-none focus:border-[#C15A36] transition-colors"
+        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] transition-colors"
       />
-      {hint && <p className="text-[10px] text-neutral-500">{hint}</p>}
     </div>
   );
 }
 
-function FieldTextarea({
-  label,
-  value,
-  onChange,
-  placeholder,
-  rows = 3,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  rows?: number;
-}) {
+function FieldTextarea({ label, value, onChange, placeholder, rows = 3 }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; rows?: number }) {
   return (
     <div className="space-y-1">
-      <label className="text-xs font-medium text-neutral-400">{label}</label>
+      <label className="text-sm font-medium text-gray-700">{label}</label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2.5 py-1.5 text-sm text-white
-          focus:outline-none focus:border-[#C15A36] transition-colors resize-none"
+        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] transition-colors resize-none"
       />
     </div>
   );
 }
 
-function ArrayField({
-  label,
-  values,
-  onItemChange,
-  onAdd,
-  onRemove,
-  maxItems,
-  itemLabel,
-}: {
-  label: string;
-  values: string[];
-  onItemChange: (index: number, value: string) => void;
-  onAdd: () => void;
-  onRemove: (index: number) => void;
-  maxItems: number;
-  itemLabel: string;
-}) {
+function ArrayField({ label, values, onItemChange, onAdd, onRemove, maxItems }: { label: string; values: string[]; onItemChange: (index: number, value: string) => void; onAdd: () => void; onRemove: (index: number) => void; maxItems: number }) {
   return (
-    <div className="space-y-1.5">
-      <label className="text-xs font-medium text-neutral-400">{label} (up to {maxItems})</label>
-      <div className="space-y-1.5">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700">{label}</label>
+        {values.length < maxItems && (
+          <button onClick={onAdd} className="text-xs text-[#C15A36] hover:text-[#a84d2e] flex items-center gap-1">
+            <Plus className="w-3 h-3" /> Add
+          </button>
+        )}
+      </div>
+      <div className="space-y-2">
         {values.slice(0, maxItems).map((value, index) => (
-          <div key={index} className="flex gap-1.5">
+          <div key={index} className="flex gap-2">
             <input
               type="text"
               value={value}
               onChange={(e) => onItemChange(index, e.target.value)}
-              placeholder={`${itemLabel} ${index + 1}`}
-              className="flex-1 bg-neutral-800 border border-neutral-700 rounded px-2.5 py-1.5 text-sm text-white
-                focus:outline-none focus:border-[#C15A36] transition-colors"
+              placeholder={`Item ${index + 1}`}
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36]"
             />
             {values.length > 1 && (
-              <button onClick={() => onRemove(index)} className="p-1.5 text-neutral-500 hover:text-red-400 transition-colors">
-                <X className="w-3.5 h-3.5" />
+              <button onClick={() => onRemove(index)} className="p-2 text-gray-400 hover:text-red-500">
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
         ))}
-        {values.length < maxItems && (
-          <button onClick={onAdd} className="flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white transition-colors">
-            <Plus className="w-3 h-3" /> Add {itemLabel}
-          </button>
-        )}
       </div>
     </div>
   );
