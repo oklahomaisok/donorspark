@@ -10,7 +10,7 @@ import {
 } from '@/db/queries';
 import { config } from '@/lib/config';
 import { PrimaryDeckCard } from '@/components/dashboard/primary-deck-card';
-import { LockedDeckTypes } from '@/components/dashboard/locked-deck-types';
+import { DeckTypeCards } from '@/components/dashboard/deck-type-cards';
 import { EditFeatures } from '@/components/dashboard/edit-features';
 import { AnalyticsSection } from '@/components/dashboard/analytics-section';
 import { PlanBadge } from '@/components/dashboard/plan-badge';
@@ -120,8 +120,31 @@ export default async function DashboardPage({
             siteUrl={config.siteUrl}
           />
 
-          {/* Locked Deck Types */}
-          <LockedDeckTypes currentPlan={user.plan as Plan} />
+          {/* Deck Type Cards with Preview Modal */}
+          <DeckTypeCards
+            currentPlan={user.plan as Plan}
+            previewData={{
+              orgName: primaryOrg.name,
+              sector: primaryDeck.sector || 'community',
+              colors: {
+                primary: (primaryDeck.brandData as Record<string, unknown>)?.colors
+                  ? ((primaryDeck.brandData as Record<string, unknown>).colors as { primary?: string })?.primary || '#1D2350'
+                  : '#1D2350',
+                accent: (primaryDeck.brandData as Record<string, unknown>)?.colors
+                  ? ((primaryDeck.brandData as Record<string, unknown>).colors as { accent?: string })?.accent || '#FFC303'
+                  : '#FFC303',
+              },
+              fonts: {
+                headingFont: (primaryDeck.brandData as Record<string, unknown>)?.fonts
+                  ? ((primaryDeck.brandData as Record<string, unknown>).fonts as { headingFont?: string })?.headingFont || 'Montserrat'
+                  : 'Montserrat',
+                bodyFont: (primaryDeck.brandData as Record<string, unknown>)?.fonts
+                  ? ((primaryDeck.brandData as Record<string, unknown>).fonts as { bodyFont?: string })?.bodyFont || 'Roboto'
+                  : 'Roboto',
+              },
+              logoUrl: (primaryDeck.brandData as Record<string, unknown>)?.logoUrl as string | undefined,
+            }}
+          />
 
           {/* Edit Features */}
           <EditFeatures currentPlan={user.plan as Plan} />
