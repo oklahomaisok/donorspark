@@ -45,6 +45,8 @@ export const PLAN_DETAILS = {
       '1 Impact Deck',
       'Basic analytics',
       'Share via link',
+      'Shareable QR Code',
+      'Share Links for Social Media',
       'DonorSpark branding',
     ],
   },
@@ -54,8 +56,7 @@ export const PLAN_DETAILS = {
     monthlyPrice: 49,
     annualPrice: 468,
     features: [
-      '5 Impact Decks',
-      '5 Thank-You Decks',
+      '5 Customizable Slide Decks',
       'Edit colors & fonts',
       'Replace images',
       'Remove DonorSpark branding',
@@ -70,7 +71,8 @@ export const PLAN_DETAILS = {
     annualPrice: 948,
     features: [
       'Everything in Starter',
-      'Unlimited decks',
+      '10 Customizable Slide Decks',
+      '50 Personalized Donor Appreciation Decks',
       'Annual Report Decks',
       'CSV donor personalization',
       'Bulk deck generation',

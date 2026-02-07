@@ -205,7 +205,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic group-hover:scale-110 transition-transform">2</div>
             <div>
               <h3 className="text-3xl serif mb-4">We Build Your Story</h3>
-              <p className="text-sm opacity-80 leading-relaxed">A custom 10-slide deck that answers: Why does this org exist? Who do they serve? What changes because of them?</p>
+              <p className="text-sm opacity-80 leading-relaxed">A custom mobile slide deck that answers: Why does this organization exist? Who do they serve? What impact are they having on the world?</p>
             </div>
           </div>
 
@@ -213,7 +213,7 @@ export default function Home() {
             <div className="w-12 h-12 bg-periwinkle/40 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic group-hover:scale-110 transition-transform">3</div>
             <div>
               <h3 className="text-3xl serif mb-4">Your Story Spreads</h3>
-              <p className="text-sm opacity-60 leading-relaxed">Send it to donors. Hand it to volunteers. Attach it to grant applications. Use it free or unlock the full version.</p>
+              <p className="text-sm opacity-60 leading-relaxed">Send it to donors. Share it with volunteers. Attach it to grant applications. Use it free or unlock the full version.</p>
             </div>
           </div>
         </section>
