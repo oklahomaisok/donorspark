@@ -19,5 +19,9 @@ export default defineConfig({
   machine: 'medium-2x',
   build: {
     extensions: [puppeteer()],
+    // Disable keepNames to prevent __name helper injection in page.evaluate()
+    esbuild: {
+      keepNames: false,
+    },
   },
 });
