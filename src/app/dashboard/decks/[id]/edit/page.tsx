@@ -50,8 +50,10 @@ export default function EditDeckPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // UI state
-  const [activeTool, setActiveTool] = useState<ToolCategory>(null);
+  const [activeTool, setActiveTool] = useState<ToolCategory>('design');
   const [activeSlideType, setActiveSlideType] = useState<SlideType>('hero');
+  const [draggedSlide, setDraggedSlide] = useState<string | null>(null);
+  const [dragOverSlide, setDragOverSlide] = useState<string | null>(null);
 
   // Data state
   const [orgName, setOrgName] = useState<string>('');
@@ -275,6 +277,50 @@ export default function EditDeckPage() {
     updateBrandData({ [slideKey]: !currentValue });
   };
 
+  // Slide reordering via drag and drop
+  const handleDragStart = (slideId: string) => {
+    setDraggedSlide(slideId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, slideId: string) => {
+    e.preventDefault();
+    if (draggedSlide && draggedSlide !== slideId) {
+      setDragOverSlide(slideId);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverSlide(null);
+  };
+
+  const handleDrop = (targetSlideId: string) => {
+    if (!draggedSlide || !brandData || draggedSlide === targetSlideId) {
+      setDraggedSlide(null);
+      setDragOverSlide(null);
+      return;
+    }
+
+    const currentOrder = brandData.slideOrder || ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'];
+    const newOrder = [...currentOrder];
+
+    const fromIndex = newOrder.indexOf(draggedSlide as typeof currentOrder[number]);
+    const toIndex = newOrder.indexOf(targetSlideId as typeof currentOrder[number]);
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      newOrder.splice(fromIndex, 1);
+      newOrder.splice(toIndex, 0, draggedSlide as typeof currentOrder[number]);
+      updateBrandData({ slideOrder: newOrder });
+    }
+
+    setDraggedSlide(null);
+    setDragOverSlide(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedSlide(null);
+    setDragOverSlide(null);
+  };
+
   // Get visible slides
   const getVisibleSlides = useCallback(() => {
     if (!brandData) return [];
@@ -311,8 +357,13 @@ export default function EditDeckPage() {
         if (!iframeDoc) return;
 
         const slideElement = iframeDoc.getElementById(`slide-${activeSlideType}`);
-        if (slideElement) {
-          slideElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        const slider = iframeDoc.getElementById('slider');
+        if (slideElement && slider) {
+          // Scroll horizontally to the slide
+          const slideLeft = slideElement.offsetLeft - slider.offsetLeft;
+          slider.scrollTo({ left: slideLeft - 20, behavior: 'smooth' });
+          // Also scroll the slide content to top if it has internal scroll
+          slideElement.scrollTo({ top: 0, behavior: 'smooth' });
         }
       } catch {
         // Cross-origin restrictions may apply
@@ -551,20 +602,19 @@ export default function EditDeckPage() {
               </div>
             )}
 
-            {activeTool === 'slides' && (
+            {activeTool === 'slides' && brandData && (
               <div className="p-4">
                 <p className="text-xs text-zinc-500 mb-3">Drag to reorder, click eye to show/hide</p>
                 <div className="space-y-1">
-                  {/* Hero - always first */}
+                  {/* Hero - always first, not draggable */}
                   <div className="flex items-center justify-between p-2 bg-zinc-900 rounded border border-zinc-800 text-sm opacity-60">
                     <span className="text-zinc-400">Hero</span>
                     <Eye className="w-4 h-4 text-green-500" />
                   </div>
-                  {/* Other slides */}
-                  {(['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'] as const).map((slideId) => {
+                  {/* Other slides - in order from slideOrder */}
+                  {(brandData.slideOrder || ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta']).map((slideId) => {
                     if (slideId === 'metrics' && !hasMetricsSlide) return null;
 
-                    // Metrics slide doesn't have a visibility toggle - it's based on hasMetricsSlide
                     const visibilityKeyMap: Record<string, 'showMissionSlide' | 'showChallengeSlide' | 'showProgramsSlide' | 'showTestimonialsSlide' | 'showCtaSlide'> = {
                       mission: 'showMissionSlide',
                       challenge: 'showChallengeSlide',
@@ -573,18 +623,32 @@ export default function EditDeckPage() {
                       cta: 'showCtaSlide',
                     };
                     const visibilityKey = slideId !== 'metrics' ? visibilityKeyMap[slideId] : undefined;
-
                     const isVisible = slideId === 'metrics' ? true : brandData[visibilityKey!] !== false;
+                    const isDragging = draggedSlide === slideId;
+                    const isDragOver = dragOverSlide === slideId;
 
                     return (
-                      <div key={slideId} className="flex items-center justify-between p-2 bg-zinc-900 rounded border border-zinc-800 text-sm hover:bg-zinc-800/50 transition-colors">
+                      <div
+                        key={slideId}
+                        draggable
+                        onDragStart={() => handleDragStart(slideId)}
+                        onDragOver={(e) => handleDragOver(e, slideId)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={() => handleDrop(slideId)}
+                        onDragEnd={handleDragEnd}
+                        className={`flex items-center justify-between p-2 rounded border text-sm transition-all cursor-grab active:cursor-grabbing ${
+                          isDragging ? 'opacity-50 bg-zinc-800 border-zinc-600' :
+                          isDragOver ? 'bg-zinc-700 border-[#C15A36] border-2' :
+                          'bg-zinc-900 border-zinc-800 hover:bg-zinc-800/50'
+                        }`}
+                      >
                         <div className="flex items-center gap-2">
-                          <GripVertical className="w-4 h-4 text-zinc-600 cursor-grab" />
-                          <span className="text-zinc-300">{SLIDE_NAMES[slideId]}</span>
+                          <GripVertical className="w-4 h-4 text-zinc-600" />
+                          <span className="text-zinc-300">{SLIDE_NAMES[slideId as SlideType]}</span>
                         </div>
                         {visibilityKey && (
                           <button
-                            onClick={() => toggleSlideVisibility(visibilityKey)}
+                            onClick={(e) => { e.stopPropagation(); toggleSlideVisibility(visibilityKey); }}
                             className={isVisible ? 'text-green-500 hover:text-green-400' : 'text-zinc-600 hover:text-zinc-500'}
                           >
                             {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -629,7 +693,7 @@ export default function EditDeckPage() {
           </div>
 
           {/* Bottom: Slide Thumbnails */}
-          <div className="h-32 border-t border-zinc-800 bg-[#09090b]/80 backdrop-blur p-3 overflow-x-auto flex items-center gap-3 flex-shrink-0">
+          <div className="h-32 border-t border-zinc-800 bg-[#09090b]/80 backdrop-blur p-3 overflow-x-auto flex items-center justify-center gap-3 flex-shrink-0">
             {visibleSlides.map(({ type, index }) => (
               <button
                 key={type}
