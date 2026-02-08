@@ -299,6 +299,29 @@ export default function EditDeckPage() {
     return generateDeckHtml(deckSlug, brandData, { hideDonorSparkSlide: userPlan !== 'free' });
   }, [brandData, deckSlug, userPlan]);
 
+  // Scroll to active slide when it changes
+  useEffect(() => {
+    if (!iframeRef.current) return;
+    const iframe = iframeRef.current;
+
+    // Wait a tick for the iframe to load/update
+    const timer = setTimeout(() => {
+      try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) return;
+
+        const slideElement = iframeDoc.getElementById(`slide-${activeSlideType}`);
+        if (slideElement) {
+          slideElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      } catch {
+        // Cross-origin restrictions may apply
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [activeSlideType, previewHtml]);
+
   // Save changes
   const handleSave = async () => {
     if (!brandData) return;
@@ -606,37 +629,28 @@ export default function EditDeckPage() {
           </div>
 
           {/* Bottom: Slide Thumbnails */}
-          <div className="h-36 border-t border-zinc-800 bg-[#09090b]/80 backdrop-blur p-3 overflow-x-auto flex items-center gap-3 flex-shrink-0">
+          <div className="h-32 border-t border-zinc-800 bg-[#09090b]/80 backdrop-blur p-3 overflow-x-auto flex items-center gap-3 flex-shrink-0">
             {visibleSlides.map(({ type, index }) => (
               <button
                 key={type}
                 onClick={() => setActiveSlideType(type)}
-                className={`min-w-[90px] h-[110px] rounded-xl border-2 transition-all flex flex-col overflow-hidden ${
+                className={`flex-shrink-0 w-24 h-24 rounded-lg border-2 transition-all overflow-hidden relative group ${
                   activeSlideType === type
-                    ? 'border-white ring-4 ring-white/10'
-                    : 'border-zinc-800 hover:border-zinc-600'
+                    ? 'border-white ring-2 ring-white/20 scale-105'
+                    : 'border-zinc-700 hover:border-zinc-500'
                 }`}
               >
-                {/* Mini preview */}
-                <div
-                  className="flex-1 p-2 text-left"
-                  style={{ backgroundColor: brandData?.colors.primary || '#1a1a1a' }}
-                >
-                  <div
-                    className="text-[8px] font-bold truncate mb-0.5"
-                    style={{ color: brandData?.colors.text || '#fff' }}
-                  >
-                    {SLIDE_NAMES[type]}
-                  </div>
-                  <div
-                    className="text-[6px] opacity-70 truncate"
-                    style={{ color: brandData?.colors.text || '#fff' }}
-                  >
-                    Slide {index + 1}
-                  </div>
+                {/* Mini slide preview */}
+                <SlideThumbnail type={type} brandData={brandData!} />
+                {/* Slide number badge */}
+                <div className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                  activeSlideType === type ? 'bg-white text-black' : 'bg-black/60 text-white'
+                }`}>
+                  {index + 1}
                 </div>
-                <div className="h-5 bg-zinc-900 flex items-center justify-center">
-                  <span className="text-[9px] text-zinc-500 font-medium">{index + 1}</span>
+                {/* Hover label */}
+                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-[10px] font-semibold text-white">{SLIDE_NAMES[type]}</span>
                 </div>
               </button>
             ))}
@@ -711,6 +725,136 @@ function ColorInput({ label, value, onChange }: { label: string; value: string; 
       </div>
     </div>
   );
+}
+
+// Slide Thumbnail Component - visual mini-preview of each slide type
+function SlideThumbnail({ type, brandData }: { type: SlideType; brandData: BrandData }) {
+  const primary = brandData.colors.primary || '#1a1a1a';
+  const accent = brandData.colors.accent || '#C15A36';
+  const text = brandData.colors.text || '#ffffff';
+  const heroImage = brandData.customImages?.hero || brandData.images?.hero;
+  const missionImage = brandData.customImages?.mission || brandData.images?.action;
+  const programsImage = brandData.customImages?.programs || brandData.images?.group;
+  const testimonialsImage = brandData.customImages?.testimonials || brandData.images?.action;
+
+  // Hero slide thumbnail
+  if (type === 'hero') {
+    return (
+      <div className="w-full h-full relative" style={{ backgroundColor: primary }}>
+        {heroImage && <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60" />}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute bottom-2 left-2 right-2">
+          <div className="h-1.5 w-8 rounded mb-1" style={{ backgroundColor: accent }} />
+          <div className="h-1 w-12 bg-white/80 rounded mb-0.5" />
+          <div className="h-1 w-10 bg-white/60 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  // Mission slide thumbnail
+  if (type === 'mission') {
+    return (
+      <div className="w-full h-full relative" style={{ backgroundColor: primary }}>
+        {missionImage && <img src={missionImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />}
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-2 flex flex-col justify-center">
+          <div className="h-1 w-10 bg-white/80 rounded mb-1" />
+          <div className="h-0.5 w-6 rounded mb-2" style={{ backgroundColor: accent }} />
+          <div className="grid grid-cols-2 gap-1">
+            <div className="h-3 rounded-sm bg-white/10" />
+            <div className="h-3 rounded-sm bg-white/10" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Challenge slide thumbnail
+  if (type === 'challenge') {
+    return (
+      <div className="w-full h-full p-2 flex flex-col gap-1" style={{ backgroundColor: primary }}>
+        <div className="flex-1 rounded-sm bg-white/10 p-1">
+          <div className="w-2 h-2 rounded-full mb-1" style={{ backgroundColor: accent, opacity: 0.5 }} />
+          <div className="h-0.5 w-8 bg-white/50 rounded" />
+        </div>
+        <div className="flex justify-center text-white/30 text-[6px]">↓</div>
+        <div className="flex-1 rounded-sm p-1 border" style={{ borderColor: accent, backgroundColor: `${accent}15` }}>
+          <div className="w-2 h-2 rounded-full mb-1" style={{ backgroundColor: accent }} />
+          <div className="h-0.5 w-8 bg-white/50 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  // Programs slide thumbnail
+  if (type === 'programs') {
+    return (
+      <div className="w-full h-full relative" style={{ backgroundColor: primary }}>
+        {programsImage && <img src={programsImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />}
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-2 flex flex-col justify-center">
+          <div className="h-1 w-10 bg-white/80 rounded mb-2" />
+          <div className="space-y-1">
+            <div className="flex items-center gap-1"><div className="w-1 h-1 rounded-full" style={{ backgroundColor: accent }} /><div className="h-0.5 w-6 bg-white/50 rounded" /></div>
+            <div className="flex items-center gap-1"><div className="w-1 h-1 rounded-full" style={{ backgroundColor: accent }} /><div className="h-0.5 w-8 bg-white/50 rounded" /></div>
+            <div className="flex items-center gap-1"><div className="w-1 h-1 rounded-full" style={{ backgroundColor: accent }} /><div className="h-0.5 w-5 bg-white/50 rounded" /></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Metrics slide thumbnail
+  if (type === 'metrics') {
+    return (
+      <div className="w-full h-full p-2" style={{ backgroundColor: primary }}>
+        <div className="grid grid-cols-2 gap-1 h-full">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-sm bg-white/10 p-1 flex flex-col items-center justify-center">
+              <div className="text-[8px] font-bold" style={{ color: accent }}>##</div>
+              <div className="h-0.5 w-4 bg-white/40 rounded mt-0.5" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Testimonials slide thumbnail
+  if (type === 'testimonials') {
+    return (
+      <div className="w-full h-full relative" style={{ backgroundColor: primary }}>
+        {testimonialsImage && <img src={testimonialsImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />}
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-2 flex items-center justify-center">
+          <div className="w-12 h-14 bg-white rounded-sm shadow-lg p-1 transform rotate-[-3deg]">
+            <div className="text-[6px] leading-tight" style={{ color: primary }}>&ldquo;...&rdquo;</div>
+            <div className="mt-1 flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-neutral-300" />
+              <div className="h-0.5 w-4 bg-neutral-300 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // CTA slide thumbnail
+  if (type === 'cta') {
+    return (
+      <div className="w-full h-full p-2 flex flex-col items-center justify-center" style={{ backgroundColor: primary }}>
+        {brandData.logoUrl && <img src={brandData.logoUrl} alt="" className="w-8 h-4 object-contain mb-1 opacity-70" />}
+        <div className="h-1 w-10 bg-white/80 rounded mb-1" />
+        <div className="h-0.5 w-8 bg-white/50 rounded mb-2" />
+        <div className="px-2 py-1 rounded text-[6px] font-bold" style={{ backgroundColor: brandData.colors.secondary || accent, color: text }}>
+          CTA
+        </div>
+      </div>
+    );
+  }
+
+  return <div className="w-full h-full" style={{ backgroundColor: primary }} />;
 }
 
 // Slide Properties Component

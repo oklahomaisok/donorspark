@@ -261,7 +261,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     </nav>
     <main id="slider" class="flex flex-row overflow-x-auto snap-x snap-mandatory hide-scrollbar w-full pt-24 md:pt-28 pb-6 md:pb-10 px-4 md:px-10 gap-x-4 md:gap-x-12 scroll-smooth" style="mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);">
         <!-- Slide 1: Hero -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
+        <section id="slide-hero" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0">${heroMediaHtml}<div class="absolute inset-0 bg-black/40"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div></div>
             <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-between">
                 <div class="flex animate-on-scroll items-start justify-between">${badgeText ? `<span class="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold border border-[var(--accent)]/30 px-2 py-1 rounded bg-[var(--primary)]/80 backdrop-blur-md">${escHtml(badgeText)}</span>` : '<span></span>'}</div>
@@ -270,7 +270,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             </div>
         </section>
         ${showMissionSlide ? `<!-- Slide: Mission -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
+        <section id="slide-mission" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${missionImg}" class="w-full h-full object-cover" style="object-position: ${missionFocal.x}% ${missionFocal.y}%;" alt="Action"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${missionSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(missionSlideTitle)}</span></header>
@@ -278,7 +278,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             </div>
         </section>` : ''}
         ${showChallengeSlide ? `<!-- Slide: Challenge & Solution -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
+        <section id="slide-challenge" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
             <div class="flex flex-col h-full p-4 md:p-10 z-10 overflow-y-auto hide-scrollbar">
                 <header class="flex animate-on-scroll items-center justify-between mb-3 md:mb-6 flex-shrink-0"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${challengeSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(challengeSlideTitle)}</span></header>
@@ -286,7 +286,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             </div>
         </section>` : ''}
         ${showProgramsSlide ? `<!-- Slide: Programs -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
+        <section id="slide-programs" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${programsImg}" class="w-full h-full object-cover" style="object-position: ${programsFocal.x}% ${programsFocal.y}%;" alt="Programs"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${programsSlideNum}]</span><div class="p-2 bg-white/10 rounded-full backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></div></header>
@@ -294,9 +294,9 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             </div>
         </section>` : ''}
         ${showMetricsSlide ? `<!-- Slide: Metrics -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl"><div class="absolute inset-0 bg-grid-pattern opacity-20"></div><div class="p-6 md:p-10 h-full flex flex-col z-10"><header class="flex justify-between items-center mb-6 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${metricsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Our Impact</span></header><div class="flex-grow flex flex-col justify-center">${metricsHtml}</div></div></section>` : ''}
+        <section id="slide-metrics" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl"><div class="absolute inset-0 bg-grid-pattern opacity-20"></div><div class="p-6 md:p-10 h-full flex flex-col z-10"><header class="flex justify-between items-center mb-6 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${metricsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">Our Impact</span></header><div class="flex-grow flex flex-col justify-center">${metricsHtml}</div></div></section>` : ''}
         ${showTestimonialsSlide ? `<!-- Slide: Testimonials -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
+        <section id="slide-testimonials" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${testimonialsImg}" class="w-full h-full object-cover" style="object-position: ${testimonialsFocal.x}% ${testimonialsFocal.y}%;" alt="Background"><div class="absolute inset-0 bg-black/70"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
                 <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${testimonialsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">${escHtml(testimonialsSlideTitle)}</span></header>
@@ -304,7 +304,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
             </div>
         </section>` : ''}
         ${showCtaSlide ? `<!-- Slide: CTA -->
-        <section class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
+        <section id="slide-cta" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
                 <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-[var(--text)]">${formatHeadline(ctaHeadline, headlineCase)}</h2><p class="leading-relaxed text-sm text-[var(--text)]/80 max-w-[90%] mx-auto mb-6">${escHtml(ctaSubhead)}</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">${escHtml(ctaButtonText)}</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
