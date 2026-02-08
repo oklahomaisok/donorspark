@@ -118,11 +118,23 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const url = body.url || '';
+    let url = (body.url || '').trim();
     const orgName = body.orgName || '';
 
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+    }
+
+    // Normalize URL: add https:// if no protocol specified
+    if (!url.match(/^https?:\/\//i)) {
+      url = `https://${url}`;
+    }
+
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL format. Please enter a valid website URL.' }, { status: 400 });
     }
 
     // Continue with user/org setup if authenticated
