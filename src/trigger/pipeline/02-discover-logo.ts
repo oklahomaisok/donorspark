@@ -221,15 +221,22 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
           }
         }
 
-        // Then try image selectors
+        // Then try image selectors - ordered by specificity
         const imgSelectors = [
+          // Organization-specific patterns
           'img[alt*="boys" i][alt*="girls" i], img[alt*="bgc" i]',
+          // WordPress custom logo class
+          'img.custom-logo, .custom-logo-link img, .site-branding img',
+          // Explicit logo selectors
           'img[src*="logo" i]',
           'img[alt*="logo" i]',
+          'img[class*="logo" i]',
+          '#logo img, .logo img, [id*="logo" i] img',
+          // Header/nav logo patterns
           'a[href="/"] img, a[href*="home"] img',
-          'header a img, .header a img',
-          '[class*="logo" i] img, #logo img, .site-logo img',
-          '[class*="photo"] img',
+          'header a img, .header a img, nav a:first-child img',
+          '[class*="logo" i] img, .site-logo img, .navbar-brand img',
+          // Generic header images (last resort within scraper)
           'header img, nav img, .header img, .navbar img',
         ];
 
@@ -292,7 +299,36 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
     }
   }
 
-  // Method 3: Google favicon as last resort (only if no logo found)
+  // Method 3: Try common high-res icon paths (better than Google favicon)
+  if (!logoUrl) {
+    const iconPaths = [
+      `/apple-touch-icon.png`,
+      `/apple-touch-icon-precomposed.png`,
+      `/apple-touch-icon-180x180.png`,
+      `/favicon-192x192.png`,
+      `/android-chrome-192x192.png`,
+    ];
+    for (const path of iconPaths) {
+      try {
+        const iconUrl = `https://${domain}${path}`;
+        const res = await fetch(iconUrl, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
+          const contentLength = res.headers.get('content-length');
+          // Only use if it's a decent size (>5KB suggests a real icon, not a tiny placeholder)
+          if (contentLength && parseInt(contentLength) > 5000) {
+            logoUrl = iconUrl;
+            logoSource = 'apple-touch-icon';
+            console.log('[Logo Discovery] Found apple-touch-icon:', iconUrl);
+            break;
+          }
+        }
+      } catch {
+        // Continue to next path
+      }
+    }
+  }
+
+  // Method 4: Google favicon as absolute last resort
   if (!logoUrl) {
     const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
     try {
@@ -301,6 +337,7 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
       if (buf.byteLength > 500) {
         logoUrl = faviconUrl;
         logoSource = 'google-favicon';
+        console.log('[Logo Discovery] Using Google favicon as fallback');
       }
     } catch {}
   }
