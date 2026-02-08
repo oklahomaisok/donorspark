@@ -630,46 +630,44 @@ export default function EditDeckPage() {
     if (!brandData) return null;
 
     return (
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Slide tabs - scrollable with visible overflow indicators */}
-        <div className="relative">
-          <div className="flex border-b border-gray-200 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-            {(() => {
-              // Build array of visible slides with their numbers
-              const visibleSlides: { type: SlideType; number: number }[] = [];
-              let slideNumber = 1;
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden max-w-lg">
+        {/* Slide tabs - compact to fit all */}
+        <div className="flex flex-wrap border-b border-gray-200 bg-gray-50">
+          {(() => {
+            // Build array of visible slides with their numbers
+            const visibleSlides: { type: SlideType; number: number }[] = [];
+            let slideNumber = 1;
 
-              for (const type of SLIDE_TYPES) {
-                if (type === 'metrics' && !hasMetricsSlide) continue;
-                if (type === 'mission' && brandData.showMissionSlide === false) continue;
-                if (type === 'challenge' && brandData.showChallengeSlide === false) continue;
-                if (type === 'programs' && brandData.showProgramsSlide === false) continue;
-                if (type === 'testimonials' && brandData.showTestimonialsSlide === false) continue;
-                if (type === 'cta' && brandData.showCtaSlide === false) continue;
+            for (const type of SLIDE_TYPES) {
+              if (type === 'metrics' && !hasMetricsSlide) continue;
+              if (type === 'mission' && brandData.showMissionSlide === false) continue;
+              if (type === 'challenge' && brandData.showChallengeSlide === false) continue;
+              if (type === 'programs' && brandData.showProgramsSlide === false) continue;
+              if (type === 'testimonials' && brandData.showTestimonialsSlide === false) continue;
+              if (type === 'cta' && brandData.showCtaSlide === false) continue;
 
-                visibleSlides.push({ type, number: slideNumber });
-                slideNumber++;
-              }
+              visibleSlides.push({ type, number: slideNumber });
+              slideNumber++;
+            }
 
-              return visibleSlides.map(({ type, number }) => (
-                <button
-                  key={type}
-                  onClick={() => setActiveSlideType(type)}
-                  className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
-                    activeSlideType === type
-                      ? 'text-[#C15A36] border-b-2 border-[#C15A36] bg-orange-50/50'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Slide {number}
-                </button>
-              ));
-            })()}
-          </div>
+            return visibleSlides.map(({ type, number }) => (
+              <button
+                key={type}
+                onClick={() => setActiveSlideType(type)}
+                className={`px-3 py-2 text-xs font-medium transition-colors ${
+                  activeSlideType === type
+                    ? 'text-[#C15A36] bg-white border-b-2 border-[#C15A36]'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {number}
+              </button>
+            ));
+          })()}
         </div>
 
-        {/* Slide content */}
-        <div className="p-4 max-h-[400px] overflow-y-auto">
+        {/* Slide content - auto-sized */}
+        <div className="p-4">
           {/* Hero */}
           {activeSlideType === 'hero' && (
             <div className="space-y-3">
@@ -970,16 +968,16 @@ export default function EditDeckPage() {
         </div>
 
         {/* Preview + Slide Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Preview */}
-          <div className="flex-1 p-6 flex items-center justify-center">
-            <div className="w-full max-w-md">
+        <div className="flex-1 flex overflow-hidden bg-[#141414]">
+          {/* Preview - shifted left, scaled to fit */}
+          <div className="w-[340px] flex-shrink-0 p-4 flex items-center justify-center">
+            <div className="w-full h-full max-h-[calc(100vh-120px)]">
               <PreviewFrame html={previewHtml} deckUrl={deckUrl} />
             </div>
           </div>
 
-          {/* Slide Content Panel (Bento Box) */}
-          <div className="w-96 p-4 overflow-y-auto">
+          {/* Slide Content Panel (Bento Box) - auto-sized to content */}
+          <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
             {renderSlideContent()}
           </div>
         </div>
