@@ -55,227 +55,189 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
       await new Promise(r => setTimeout(r, 1500));
 
       // Wrap evaluate in timeout to prevent hanging
-      const result = await withTimeout(page.evaluate(() => {
-        const rgbToHex = (r: number, g: number, b: number) =>
-          '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-
-        const parseRgb = (bg: string) => {
-          const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-          if (match) {
-            const [, r, g, b, a] = match;
-            return { r: Number(r), g: Number(g), b: Number(b), a: a !== undefined ? Number(a) : 1 };
+      // Use string-based evaluate to avoid esbuild __name injection issues
+      const result = await withTimeout(page.evaluate(`
+        (function() {
+          function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(function(x) { return x.toString(16).padStart(2, '0'); }).join('');
           }
-          return null;
-        };
 
-        const isTransparent = (bg: string) => {
-          const parsed = parseRgb(bg);
-          if (!parsed) return true;
-          // Check if alpha is 0 or color is black with potential transparency
-          return parsed.a === 0 || (parsed.r === 0 && parsed.g === 0 && parsed.b === 0 && bg.includes('rgba'));
-        };
-
-        // Extract header background color
-        let headerBg: string | null = null;
-        let headerIsTransparent = true;
-
-        const headerSelectors = ['header', '.header', 'nav', '.navbar', '.fl-page-header', '[role="banner"]'];
-        for (const sel of headerSelectors) {
-          const el = document.querySelector(sel);
-          if (el) {
-            const style = window.getComputedStyle(el);
-            const bg = style.backgroundColor;
-            if (!isTransparent(bg)) {
-              const parsed = parseRgb(bg);
-              if (parsed) {
-                headerBg = rgbToHex(parsed.r, parsed.g, parsed.b);
-                headerIsTransparent = false;
-                break;
-              }
+          function parseRgb(bg) {
+            var match = bg.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)(?:,\\s*([\\d.]+))?\\)/);
+            if (match) {
+              return { r: Number(match[1]), g: Number(match[2]), b: Number(match[3]), a: match[4] !== undefined ? Number(match[4]) : 1 };
             }
+            return null;
           }
-        }
 
-        // If header is transparent, check containers inside it
-        if (headerIsTransparent) {
-          const containers = document.querySelectorAll('header > div, .header > div, nav > div, [role="banner"] > div');
-          for (const el of Array.from(containers)) {
-            const style = window.getComputedStyle(el);
-            const bg = style.backgroundColor;
-            if (!isTransparent(bg)) {
-              const parsed = parseRgb(bg);
-              if (parsed && (parsed.r > 0 || parsed.g > 0 || parsed.b > 0)) {
-                headerBg = rgbToHex(parsed.r, parsed.g, parsed.b);
-                headerIsTransparent = false;
-                break;
-              }
-            }
+          function isTransparent(bg) {
+            var parsed = parseRgb(bg);
+            if (!parsed) return true;
+            return parsed.a === 0 || (parsed.r === 0 && parsed.g === 0 && parsed.b === 0 && bg.includes('rgba'));
           }
-        }
 
-        // If still transparent, check what's visually behind the header
-        // This could be a hero section, body background, or an image
-        if (headerIsTransparent) {
-          // Check hero/banner sections that might be behind the header
-          const heroSelectors = [
-            '.hero', '.banner', '[class*="hero"]', '[class*="banner"]',
-            'main > section:first-child', 'main > div:first-child',
-            '#hero', '.home-hero', '.site-hero'
-          ];
-          for (const sel of heroSelectors) {
-            const el = document.querySelector(sel);
+          var headerBg = null;
+          var headerIsTransparent = true;
+
+          var headerSelectors = ['header', '.header', 'nav', '.navbar', '.fl-page-header', '[role="banner"]'];
+          for (var i = 0; i < headerSelectors.length; i++) {
+            var el = document.querySelector(headerSelectors[i]);
             if (el) {
-              const style = window.getComputedStyle(el);
-              const bg = style.backgroundColor;
+              var style = window.getComputedStyle(el);
+              var bg = style.backgroundColor;
               if (!isTransparent(bg)) {
-                const parsed = parseRgb(bg);
+                var parsed = parseRgb(bg);
                 if (parsed) {
                   headerBg = rgbToHex(parsed.r, parsed.g, parsed.b);
+                  headerIsTransparent = false;
                   break;
                 }
               }
-              // Check for background image - if there's one, assume dark overlay
-              if (style.backgroundImage && style.backgroundImage !== 'none') {
-                headerBg = '#333333'; // Assume dark for hero images
-                break;
+            }
+          }
+
+          if (headerIsTransparent) {
+            var containers = document.querySelectorAll('header > div, .header > div, nav > div, [role="banner"] > div');
+            for (var j = 0; j < containers.length; j++) {
+              var style = window.getComputedStyle(containers[j]);
+              var bg = style.backgroundColor;
+              if (!isTransparent(bg)) {
+                var parsed = parseRgb(bg);
+                if (parsed && (parsed.r > 0 || parsed.g > 0 || parsed.b > 0)) {
+                  headerBg = rgbToHex(parsed.r, parsed.g, parsed.b);
+                  headerIsTransparent = false;
+                  break;
+                }
               }
             }
           }
-        }
 
-        // Check body background as last resort
-        if (headerIsTransparent && !headerBg) {
-          const bodyStyle = window.getComputedStyle(document.body);
-          const bg = bodyStyle.backgroundColor;
-          if (!isTransparent(bg)) {
-            const parsed = parseRgb(bg);
-            if (parsed) {
-              headerBg = rgbToHex(parsed.r, parsed.g, parsed.b);
-            }
-          }
-        }
-
-        // Default to white if we truly can't determine
-        if (!headerBg) {
-          headerBg = '#ffffff';
-        }
-
-        // Extract fonts from headings and body (do this early so all returns have it)
-        const extractFont = (el: Element | null): string | null => {
-          if (!el) return null;
-          const style = window.getComputedStyle(el);
-          const fontFamily = style.fontFamily;
-          if (!fontFamily) return null;
-          // Get the first font in the stack, remove quotes
-          const firstFont = fontFamily.split(',')[0].trim().replace(/["']/g, '');
-          // Skip generic families
-          if (['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', '-apple-system', 'BlinkMacSystemFont'].includes(firstFont.toLowerCase())) {
-            return null;
-          }
-          return firstFont;
-        };
-
-        let headingFont: string | null = null;
-        let bodyFont: string | null = null;
-
-        // Try to find heading font from h1, h2, or prominent text
-        const headingSelectors = ['h1', 'h2', '.hero h1', '.hero h2', 'header h1', '[class*="heading"]', '[class*="title"]'];
-        for (const sel of headingSelectors) {
-          const el = document.querySelector(sel);
-          const font = extractFont(el);
-          if (font) {
-            headingFont = font;
-            break;
-          }
-        }
-
-        // Try to find body font from paragraphs
-        const bodySelectors = ['p', 'body', 'main p', 'article p', '.content p'];
-        for (const sel of bodySelectors) {
-          const el = document.querySelector(sel);
-          const font = extractFont(el);
-          if (font) {
-            bodyFont = font;
-            break;
-          }
-        }
-
-        // Find logo - SVG first
-        const svgSelectors = [
-          'a[href="/"] svg, a[href*="home"] svg',
-          '[class*="logo"] svg, #logo svg, .site-logo svg',
-          'header svg:first-of-type, nav svg:first-of-type',
-        ];
-
-        for (const selector of svgSelectors) {
-          const svgs = document.querySelectorAll(selector);
-          for (const svg of Array.from(svgs)) {
-            const rect = svg.getBoundingClientRect();
-            if (rect.width >= 40 && rect.height >= 20 && rect.width <= 400) {
-              const svgElement = svg as SVGSVGElement;
-              const serializer = new XMLSerializer();
-              const svgString = serializer.serializeToString(svgElement);
-              const encodedSvg = encodeURIComponent(svgString);
-              return { logoUrl: `data:image/svg+xml,${encodedSvg}`, headerBg, headingFont, bodyFont };
-            }
-          }
-        }
-
-        // Then try image selectors - ordered by specificity
-        const imgSelectors = [
-          // Organization-specific patterns
-          'img[alt*="boys" i][alt*="girls" i], img[alt*="bgc" i]',
-          // WordPress custom logo class
-          'img.custom-logo, .custom-logo-link img, .site-branding img',
-          // Explicit logo selectors
-          'img[src*="logo" i]',
-          'img[alt*="logo" i]',
-          'img[class*="logo" i]',
-          '#logo img, .logo img, [id*="logo" i] img',
-          // Header/nav logo patterns
-          'a[href="/"] img, a[href*="home"] img',
-          'header a img, .header a img, nav a:first-child img',
-          '[class*="logo" i] img, .site-logo img, .navbar-brand img',
-          // Generic header images (last resort within scraper)
-          'header img, nav img, .header img, .navbar img',
-        ];
-
-        for (const selector of imgSelectors) {
-          const els = document.querySelectorAll(selector);
-          for (const el of Array.from(els)) {
-            const img = el as HTMLImageElement;
-            let src = img.src || img.dataset.src || img.dataset.lazySrc || img.getAttribute('data-lazy-src');
-            if (!src) continue;
-
-            // Try to get highest quality from srcset
-            const srcset = img.srcset || img.getAttribute('data-srcset');
-            if (srcset) {
-              const sources = srcset.split(',').map(s => {
-                const parts = s.trim().split(/\s+/);
-                const srcUrl = parts[0];
-                const width = parseInt(parts[1]?.replace('w', '') || '0', 10);
-                return { url: srcUrl, width };
-              }).filter(s => s.url && !s.url.includes('data:image'));
-
-              const best = sources.filter(s => s.width <= 1200 && s.width > 0)
-                .sort((a, b) => b.width - a.width)[0];
-              if (best) {
-                src = best.url;
+          if (headerIsTransparent) {
+            var heroSelectors = ['.hero', '.banner', '[class*="hero"]', '[class*="banner"]', 'main > section:first-child', 'main > div:first-child', '#hero', '.home-hero', '.site-hero'];
+            for (var k = 0; k < heroSelectors.length; k++) {
+              var el = document.querySelector(heroSelectors[k]);
+              if (el) {
+                var style = window.getComputedStyle(el);
+                var bg = style.backgroundColor;
+                if (!isTransparent(bg)) {
+                  var parsed = parseRgb(bg);
+                  if (parsed) {
+                    headerBg = rgbToHex(parsed.r, parsed.g, parsed.b);
+                    break;
+                  }
+                }
+                if (style.backgroundImage && style.backgroundImage !== 'none') {
+                  headerBg = '#333333';
+                  break;
+                }
               }
             }
-
-            const srcLower = src.toLowerCase();
-            const skip = ['data:image/gif', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
-            const banner = ['banner', 'alert', 'promo', 'hero', 'slide', 'carousel', 'background'];
-            if (skip.some(p => srcLower.includes(p))) continue;
-            if (banner.some(p => srcLower.includes(p))) continue;
-            if (img.naturalWidth > 0 && img.naturalWidth < 30) continue;
-            return { logoUrl: src, headerBg, headingFont, bodyFont };
           }
-        }
 
-        return { logoUrl: null as string | null, headerBg, headingFont, bodyFont };
-      }), 8000, { logoUrl: null as string | null, headerBg: '#ffffff', headingFont: null as string | null, bodyFont: null as string | null });
+          if (headerIsTransparent && !headerBg) {
+            var bodyStyle = window.getComputedStyle(document.body);
+            var bg = bodyStyle.backgroundColor;
+            if (!isTransparent(bg)) {
+              var parsed = parseRgb(bg);
+              if (parsed) {
+                headerBg = rgbToHex(parsed.r, parsed.g, parsed.b);
+              }
+            }
+          }
+
+          if (!headerBg) {
+            headerBg = '#ffffff';
+          }
+
+          function extractFont(el) {
+            if (!el) return null;
+            var style = window.getComputedStyle(el);
+            var fontFamily = style.fontFamily;
+            if (!fontFamily) return null;
+            var firstFont = fontFamily.split(',')[0].trim().replace(/["']/g, '');
+            var generics = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', '-apple-system', 'blinkmacystemfont'];
+            if (generics.indexOf(firstFont.toLowerCase()) !== -1) return null;
+            return firstFont;
+          }
+
+          var headingFont = null;
+          var bodyFont = null;
+
+          var headingSelectors = ['h1', 'h2', '.hero h1', '.hero h2', 'header h1', '[class*="heading"]', '[class*="title"]'];
+          for (var m = 0; m < headingSelectors.length; m++) {
+            var el = document.querySelector(headingSelectors[m]);
+            var font = extractFont(el);
+            if (font) { headingFont = font; break; }
+          }
+
+          var bodySelectors = ['p', 'body', 'main p', 'article p', '.content p'];
+          for (var n = 0; n < bodySelectors.length; n++) {
+            var el = document.querySelector(bodySelectors[n]);
+            var font = extractFont(el);
+            if (font) { bodyFont = font; break; }
+          }
+
+          var svgSelectors = ['a[href="/"] svg, a[href*="home"] svg', '[class*="logo"] svg, #logo svg, .site-logo svg', 'header svg:first-of-type, nav svg:first-of-type'];
+          for (var p = 0; p < svgSelectors.length; p++) {
+            var svgs = document.querySelectorAll(svgSelectors[p]);
+            for (var q = 0; q < svgs.length; q++) {
+              var rect = svgs[q].getBoundingClientRect();
+              if (rect.width >= 40 && rect.height >= 20 && rect.width <= 400) {
+                var serializer = new XMLSerializer();
+                var svgString = serializer.serializeToString(svgs[q]);
+                var encodedSvg = encodeURIComponent(svgString);
+                return { logoUrl: 'data:image/svg+xml,' + encodedSvg, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
+              }
+            }
+          }
+
+          var imgSelectors = [
+            'img[alt*="boys" i][alt*="girls" i], img[alt*="bgc" i]',
+            'img.custom-logo, .custom-logo-link img, .site-branding img',
+            'img[src*="logo" i]',
+            'img[alt*="logo" i]',
+            'img[class*="logo" i]',
+            '#logo img, .logo img, [id*="logo" i] img',
+            'a[href="/"] img, a[href*="home"] img',
+            'header a img, .header a img, nav a:first-child img',
+            '[class*="logo" i] img, .site-logo img, .navbar-brand img',
+            'header img, nav img, .header img, .navbar img'
+          ];
+
+          for (var r = 0; r < imgSelectors.length; r++) {
+            var els = document.querySelectorAll(imgSelectors[r]);
+            for (var s = 0; s < els.length; s++) {
+              var img = els[s];
+              var src = img.src || img.dataset.src || img.dataset.lazySrc || img.getAttribute('data-lazy-src');
+              if (!src) continue;
+
+              var srcset = img.srcset || img.getAttribute('data-srcset');
+              if (srcset) {
+                var sources = srcset.split(',').map(function(str) {
+                  var parts = str.trim().split(/\\s+/);
+                  var w = parts[1] ? parseInt(parts[1].replace('w', ''), 10) : 0;
+                  return { url: parts[0], width: w };
+                }).filter(function(x) { return x.url && x.url.indexOf('data:image') === -1; });
+                var best = sources.filter(function(x) { return x.width <= 1200 && x.width > 0; }).sort(function(a,b) { return b.width - a.width; })[0];
+                if (best) src = best.url;
+              }
+
+              var srcLower = src.toLowerCase();
+              var skip = ['data:image/gif', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
+              var banner = ['banner', 'alert', 'promo', 'hero', 'slide', 'carousel', 'background'];
+              var shouldSkip = false;
+              for (var t = 0; t < skip.length; t++) { if (srcLower.indexOf(skip[t]) !== -1) { shouldSkip = true; break; } }
+              if (shouldSkip) continue;
+              for (var u = 0; u < banner.length; u++) { if (srcLower.indexOf(banner[u]) !== -1) { shouldSkip = true; break; } }
+              if (shouldSkip) continue;
+              if (img.naturalWidth > 0 && img.naturalWidth < 30) continue;
+              return { logoUrl: src, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
+            }
+          }
+
+          return { logoUrl: null, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
+        })()
+      `) as Promise<{ logoUrl: string | null; headerBg: string | null; headingFont: string | null; bodyFont: string | null }>, 8000, { logoUrl: null as string | null, headerBg: '#ffffff', headingFont: null as string | null, bodyFont: null as string | null });
 
       headerBgColor = result.headerBg;
       detectedFonts = { heading: result.headingFont, body: result.bodyFont };
