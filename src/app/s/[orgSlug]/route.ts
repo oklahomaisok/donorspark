@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrganizationBySlug, getOrganizationDecks, incrementDeckViews } from '@/db/queries';
 import { config } from '@/lib/config';
+import { generateDeckToken } from '@/lib/deck-token';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -49,38 +50,27 @@ export async function GET(
     });
   }
 
-  // Fetch deck HTML from Vercel Blob
-  try {
-    const fetchUrl = `${primaryDeck.deckUrl}?t=${Date.now()}`;
-    const response = await fetch(fetchUrl, {
-      cache: 'no-store',
-      next: { revalidate: 0 },
-    });
-    let html = await response.text();
+  // Generate a short-lived token for content access
+  const token = generateDeckToken(orgSlug);
+  const contentUrl = `${config.siteUrl}/s/${orgSlug}/content?token=${token}`;
 
-    // If just claimed, inject a success toast
-    if (claimed) {
-      html = injectClaimSuccessToast(html, org.name);
-    }
+  // Serve iframe wrapper page
+  const wrapperHtml = generateIframeWrapper(org.name, contentUrl, claimed);
 
-    return new NextResponse(html, {
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': 'inline',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch deck' }, { status: 502 });
-  }
+  return new NextResponse(wrapperHtml, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+    },
+  });
 }
 
 /**
- * Inject a success toast when deck has just been claimed
+ * Generate iframe wrapper page that loads deck content
  */
-function injectClaimSuccessToast(html: string, orgName: string): string {
-  const toast = `
-    <div id="claim-toast" style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 60; background: #16A34A; color: white; padding: 12px 24px; border-radius: 9999px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 3.7s forwards;">
+function generateIframeWrapper(orgName: string, contentUrl: string, showClaimToast: boolean): string {
+  const claimToast = showClaimToast ? `
+    <div id="claim-toast" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 60; background: #16A34A; color: white; padding: 12px 24px; border-radius: 9999px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 3.7s forwards;">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
             <polyline points="22 4 12 14.01 9 11.01"/>
@@ -92,7 +82,39 @@ function injectClaimSuccessToast(html: string, orgName: string): string {
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
     </style>
     <script>setTimeout(() => document.getElementById('claim-toast')?.remove(), 4000);</script>
-  `;
+  ` : '';
 
-  return html.replace('</body>', `${toast}</body>`);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>${escapeHtml(orgName)} | Impact Deck</title>
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+    </style>
+</head>
+<body>
+    ${claimToast}
+    <iframe src="${contentUrl}"
+            title="${escapeHtml(orgName)} Impact Deck"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            loading="eager"
+            referrerpolicy="no-referrer"></iframe>
+    <script>
+        // Prevent iframe URL inspection via dev tools console
+        Object.defineProperty(document.querySelector('iframe'), 'src', {
+            get: function() { return 'about:blank'; },
+            configurable: false
+        });
+    </script>
+</body>
+</html>`;
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

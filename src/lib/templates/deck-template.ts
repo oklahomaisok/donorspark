@@ -479,6 +479,22 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
       document.querySelectorAll('.ds-link').forEach(function(el){el.addEventListener('click',function(){t('donorspark_click');});});
     })();
     </script>
+    <script>
+    (function(){
+      // Content protection - disable right-click, keyboard shortcuts, text selection
+      document.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
+      document.addEventListener('keydown',function(e){
+        if((e.ctrlKey||e.metaKey)&&['s','u','p','c'].includes(e.key.toLowerCase())){e.preventDefault();return false;}
+        if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['i','j','c'].includes(e.key.toLowerCase()))){e.preventDefault();return false;}
+      });
+      document.addEventListener('selectstart',function(e){e.preventDefault();return false;});
+      document.addEventListener('dragstart',function(e){e.preventDefault();return false;});
+    })();
+    </script>
+    <style>
+      *{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;}
+      img{pointer-events:none;-webkit-user-drag:none;user-drag:none;}
+    </style>
 </body>
 </html>`;
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDeckBySlug, getOrganizationById } from '@/db/queries';
 import { config } from '@/lib/config';
+import { generateDeckToken } from '@/lib/deck-token';
 
 // Force dynamic rendering to avoid caching
 export const dynamic = 'force-dynamic';
@@ -49,104 +50,76 @@ export async function GET(
     }, { status: 202 });
   }
 
-  // Debug: Log what URL we're fetching
-  console.log(`Fetching deck ${slug} from ${deck.deckUrl}`);
-
-  // Proxy the deck HTML from Vercel Blob
-  try {
-    // Add timestamp to bust any caching
-    const fetchUrl = `${deck.deckUrl}?t=${Date.now()}`;
-    const response = await fetch(fetchUrl, {
-      cache: 'no-store',
-      next: { revalidate: 0 },
+  if (debug) {
+    return NextResponse.json({
+      slug,
+      deckUrl: deck.deckUrl,
+      isAnonymous: !deck.userId,
+      tempToken: deck.tempToken ? '[present]' : null,
+      expiresAt: deck.expiresAt,
     });
-    let html = await response.text();
-
-    // For anonymous decks (no userId), inject preview mode
-    const isAnonymous = !deck.userId;
-    if (isAnonymous && deck.tempToken) {
-      const claimUrl = `${config.siteUrl}/claim/${deck.tempToken}`;
-      const expiresAt = deck.expiresAt ? new Date(deck.expiresAt).toISOString() : null;
-      html = injectPreviewMode(html, claimUrl, expiresAt);
-    }
-
-    if (debug) {
-      return NextResponse.json({
-        slug,
-        deckUrl: deck.deckUrl,
-        htmlLength: html.length,
-        htmlPreview: html.substring(0, 500),
-        isAnonymous,
-        tempToken: deck.tempToken ? '[present]' : null,
-        expiresAt: deck.expiresAt,
-      });
-    }
-
-    return new NextResponse(html, {
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': 'inline',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch deck' }, { status: 502 });
   }
+
+  // Generate a short-lived token for content access
+  const token = generateDeckToken(slug);
+
+  // For anonymous decks, pass preview mode params
+  const isAnonymous = !deck.userId;
+  let contentUrl = `${config.siteUrl}/decks/${slug}/content?token=${token}`;
+
+  if (isAnonymous && deck.tempToken && deck.expiresAt) {
+    const claimUrl = encodeURIComponent(`${config.siteUrl}/claim/${deck.tempToken}`);
+    const expiresAt = new Date(deck.expiresAt).toISOString();
+    contentUrl += `&preview=true&claimUrl=${claimUrl}&expires=${expiresAt}`;
+  }
+
+  // Serve iframe wrapper page
+  const wrapperHtml = generateIframeWrapper(deck.orgName, contentUrl);
+
+  return new NextResponse(wrapperHtml, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+    },
+  });
 }
 
 /**
- * Inject preview mode: full-width countdown banner on CTA slide (replaces share buttons)
+ * Generate iframe wrapper page that loads deck content
  */
-function injectPreviewMode(html: string, claimUrl: string, expiresAt: string | null): string {
-  // Replace share buttons on CTA slide with full-width countdown banner
-  const shareButtonsPattern = /<p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story<\/p>\s*<div class="flex items-center gap-3">[\s\S]*?<\/div>/;
-
-  const countdownBanner = `
-                    <!-- Full-width countdown banner on CTA slide -->
-                    <div class="w-[calc(100%+3rem)] md:w-[calc(100%+5rem)] -mx-6 md:-mx-10 mt-4 px-6 py-5 bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white text-center">
-                        <div class="text-white/80 text-xs uppercase tracking-widest mb-1">This Slide Deck Expires In</div>
-                        <div id="countdown-timer" class="text-white text-2xl md:text-3xl font-mono font-bold mb-2" data-expires="${expiresAt || ''}">--:--:--</div>
-                        <div class="text-white text-sm font-medium mb-3">Want to Save & Share It?</div>
-                        <a href="${claimUrl}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#C15A36] rounded-full text-sm font-bold hover:bg-neutral-100 transition-all shadow-lg hover:scale-105">
-                            Create Your Free Account
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                        </a>
-                    </div>`;
-
-  html = html.replace(shareButtonsPattern, countdownBanner);
-
-  // Inject countdown timer script before </body>
-  const countdownScript = `
+function generateIframeWrapper(orgName: string, contentUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>${escapeHtml(orgName)} | Impact Deck</title>
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+    </style>
+</head>
+<body>
+    <iframe src="${contentUrl}"
+            title="${escapeHtml(orgName)} Impact Deck"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            loading="eager"
+            referrerpolicy="no-referrer"></iframe>
     <script>
-    (function() {
-        var timer = document.getElementById('countdown-timer');
-        if (!timer) return;
-        var expires = timer.dataset.expires;
-        if (!expires) return;
-        var expiryTime = new Date(expires).getTime();
-        function update() {
-            var now = Date.now();
-            var diff = expiryTime - now;
-            if (diff <= 0) {
-                timer.textContent = '00:00:00';
-                return;
-            }
-            var hours = Math.floor(diff / (1000 * 60 * 60));
-            var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            var seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            timer.textContent =
-                hours.toString().padStart(2, '0') + ':' +
-                minutes.toString().padStart(2, '0') + ':' +
-                seconds.toString().padStart(2, '0');
-        }
-        update();
-        setInterval(update, 1000);
-    })();
-    </script>`;
+        // Prevent iframe URL inspection via dev tools console
+        Object.defineProperty(document.querySelector('iframe'), 'src', {
+            get: function() { return 'about:blank'; },
+            configurable: false
+        });
+    </script>
+</body>
+</html>`;
+}
 
-  html = html.replace('</body>', countdownScript + '</body>');
-
-  return html;
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 /**
