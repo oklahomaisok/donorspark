@@ -14,22 +14,14 @@ import { SlideImageUploader } from '@/components/editor/slide-image-uploader';
 import { generateDeckHtml } from '@/lib/templates/deck-template';
 import type { BrandData, Testimonial, SocialLink, CustomImages, FocalPoint } from '@/lib/types';
 
-// Tool categories for the left rail
-type ToolCategory = 'colors' | 'fonts' | 'logo' | 'photos' | 'slides' | null;
+// Tool categories for the left rail (Photos removed - now per-slide)
+type ToolCategory = 'colors' | 'fonts' | 'logo' | 'slides' | null;
 
 // Slide configuration for content editing
 const SLIDE_TYPES = ['hero', 'mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta'] as const;
 type SlideType = typeof SLIDE_TYPES[number];
 
-const SLIDE_LABELS: Record<SlideType, string> = {
-  hero: 'Hero',
-  mission: 'Mission',
-  challenge: 'Challenge',
-  programs: 'Programs',
-  metrics: 'Metrics',
-  testimonials: 'Testimonials',
-  cta: 'Call to Action',
-};
+// Slide labels now use "Slide 1", "Slide 2", etc. based on visible order
 
 const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook' },
@@ -568,53 +560,6 @@ export default function EditDeckPage() {
             </div>
           )}
 
-          {/* Photos Panel */}
-          {activeTool === 'photos' && (
-            <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Slide Photos</h3>
-              <p className="text-xs text-gray-500">Customize background images for each slide</p>
-
-              <div className="space-y-3">
-                <SlideImageUploader
-                  label="Hero"
-                  currentUrl={brandData.customImages?.hero}
-                  defaultUrl={brandData.images?.hero || ''}
-                  slideType="hero"
-                  focalPoint={brandData.customImages?.heroFocal}
-                  onChange={(url) => handleCustomImageChange('hero', url)}
-                  onFocalPointChange={(focal) => handleFocalPointChange('hero', focal)}
-                />
-                <SlideImageUploader
-                  label="Mission"
-                  currentUrl={brandData.customImages?.mission}
-                  defaultUrl={brandData.images?.action || ''}
-                  slideType="mission"
-                  focalPoint={brandData.customImages?.missionFocal}
-                  onChange={(url) => handleCustomImageChange('mission', url)}
-                  onFocalPointChange={(focal) => handleFocalPointChange('mission', focal)}
-                />
-                <SlideImageUploader
-                  label="Programs"
-                  currentUrl={brandData.customImages?.programs}
-                  defaultUrl={brandData.images?.group || ''}
-                  slideType="programs"
-                  focalPoint={brandData.customImages?.programsFocal}
-                  onChange={(url) => handleCustomImageChange('programs', url)}
-                  onFocalPointChange={(focal) => handleFocalPointChange('programs', focal)}
-                />
-                <SlideImageUploader
-                  label="Testimonials"
-                  currentUrl={brandData.customImages?.testimonials}
-                  defaultUrl={brandData.images?.action || ''}
-                  slideType="testimonials"
-                  focalPoint={brandData.customImages?.testimonialsFocal}
-                  onChange={(url) => handleCustomImageChange('testimonials', url)}
-                  onFocalPointChange={(focal) => handleFocalPointChange('testimonials', focal)}
-                />
-              </div>
-            </div>
-          )}
-
           {/* Slides Panel */}
           {activeTool === 'slides' && (
             <div className="space-y-4">
@@ -686,31 +631,41 @@ export default function EditDeckPage() {
 
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Slide tabs */}
-        <div className="flex border-b border-gray-200 overflow-x-auto">
-          {SLIDE_TYPES.map((type) => {
-            // Skip metrics if no metrics, skip hidden slides
-            if (type === 'metrics' && !hasMetricsSlide) return null;
-            if (type === 'mission' && brandData.showMissionSlide === false) return null;
-            if (type === 'challenge' && brandData.showChallengeSlide === false) return null;
-            if (type === 'programs' && brandData.showProgramsSlide === false) return null;
-            if (type === 'testimonials' && brandData.showTestimonialsSlide === false) return null;
-            if (type === 'cta' && brandData.showCtaSlide === false) return null;
+        {/* Slide tabs - scrollable with visible overflow indicators */}
+        <div className="relative">
+          <div className="flex border-b border-gray-200 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            {(() => {
+              // Build array of visible slides with their numbers
+              const visibleSlides: { type: SlideType; number: number }[] = [];
+              let slideNumber = 1;
 
-            return (
-              <button
-                key={type}
-                onClick={() => setActiveSlideType(type)}
-                className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors ${
-                  activeSlideType === type
-                    ? 'text-[#C15A36] border-b-2 border-[#C15A36] bg-orange-50/50'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {SLIDE_LABELS[type]}
-              </button>
-            );
-          })}
+              for (const type of SLIDE_TYPES) {
+                if (type === 'metrics' && !hasMetricsSlide) continue;
+                if (type === 'mission' && brandData.showMissionSlide === false) continue;
+                if (type === 'challenge' && brandData.showChallengeSlide === false) continue;
+                if (type === 'programs' && brandData.showProgramsSlide === false) continue;
+                if (type === 'testimonials' && brandData.showTestimonialsSlide === false) continue;
+                if (type === 'cta' && brandData.showCtaSlide === false) continue;
+
+                visibleSlides.push({ type, number: slideNumber });
+                slideNumber++;
+              }
+
+              return visibleSlides.map(({ type, number }) => (
+                <button
+                  key={type}
+                  onClick={() => setActiveSlideType(type)}
+                  className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
+                    activeSlideType === type
+                      ? 'text-[#C15A36] border-b-2 border-[#C15A36] bg-orange-50/50'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Slide {number}
+                </button>
+              ));
+            })()}
+          </div>
         </div>
 
         {/* Slide content */}
@@ -721,6 +676,19 @@ export default function EditDeckPage() {
               <FieldInput label="Badge Text" value={brandData.badgeText ?? 'Impact Deck'} onChange={(v) => updateBrandData({ badgeText: v })} placeholder="Impact Deck" />
               <FieldInput label="Headline" value={brandData.donorHeadline} onChange={(v) => handleFieldChange('donorHeadline', v)} placeholder="Making A Difference" />
               <FieldTextarea label="Hook" value={brandData.heroHook} onChange={(v) => handleFieldChange('heroHook', v)} placeholder="A brief, engaging description..." rows={2} />
+
+              <div className="pt-3 border-t border-gray-200">
+                <label className="text-sm font-medium text-gray-700 block mb-2">Background Photo</label>
+                <SlideImageUploader
+                  label="Hero"
+                  currentUrl={brandData.customImages?.hero}
+                  defaultUrl={brandData.images?.hero || ''}
+                  slideType="hero"
+                  focalPoint={brandData.customImages?.heroFocal}
+                  onChange={(url) => handleCustomImageChange('hero', url)}
+                  onFocalPointChange={(focal) => handleFocalPointChange('hero', focal)}
+                />
+              </div>
             </div>
           )}
 
@@ -731,6 +699,19 @@ export default function EditDeckPage() {
               <FieldInput label="Headline" value={brandData.missionHeadline ?? 'Building A Better Future'} onChange={(v) => updateBrandData({ missionHeadline: v })} />
               <FieldTextarea label="Mission Statement" value={brandData.mission} onChange={(v) => handleFieldChange('mission', v)} rows={3} />
               <ArrayField label="Core Values" values={brandData.coreValues || []} onItemChange={(idx, val) => handleArrayItemChange('coreValues', idx, val, brandData.coreValues || [])} onAdd={() => handleAddArrayItem('coreValues', brandData.coreValues || [])} onRemove={(idx) => handleRemoveArrayItem('coreValues', idx, brandData.coreValues || [])} maxItems={4} />
+
+              <div className="pt-3 border-t border-gray-200">
+                <label className="text-sm font-medium text-gray-700 block mb-2">Background Photo</label>
+                <SlideImageUploader
+                  label="Mission"
+                  currentUrl={brandData.customImages?.mission}
+                  defaultUrl={brandData.images?.action || ''}
+                  slideType="mission"
+                  focalPoint={brandData.customImages?.missionFocal}
+                  onChange={(url) => handleCustomImageChange('mission', url)}
+                  onFocalPointChange={(focal) => handleFocalPointChange('mission', focal)}
+                />
+              </div>
             </div>
           )}
 
@@ -751,6 +732,19 @@ export default function EditDeckPage() {
               <FieldInput label="Headline" value={brandData.programsHeadline ?? 'What We Offer'} onChange={(v) => updateBrandData({ programsHeadline: v })} />
               <FieldTextarea label="Description" value={brandData.programsBody ?? ''} onChange={(v) => updateBrandData({ programsBody: v })} rows={2} />
               <ArrayField label="Programs" values={brandData.programs || []} onItemChange={(idx, val) => handleArrayItemChange('programs', idx, val, brandData.programs || [])} onAdd={() => handleAddArrayItem('programs', brandData.programs || [])} onRemove={(idx) => handleRemoveArrayItem('programs', idx, brandData.programs || [])} maxItems={6} />
+
+              <div className="pt-3 border-t border-gray-200">
+                <label className="text-sm font-medium text-gray-700 block mb-2">Background Photo</label>
+                <SlideImageUploader
+                  label="Programs"
+                  currentUrl={brandData.customImages?.programs}
+                  defaultUrl={brandData.images?.group || ''}
+                  slideType="programs"
+                  focalPoint={brandData.customImages?.programsFocal}
+                  onChange={(url) => handleCustomImageChange('programs', url)}
+                  onFocalPointChange={(focal) => handleFocalPointChange('programs', focal)}
+                />
+              </div>
             </div>
           )}
 
@@ -850,6 +844,19 @@ export default function EditDeckPage() {
                   </div>
                 </div>
               ))}
+
+              <div className="pt-3 border-t border-gray-200">
+                <label className="text-sm font-medium text-gray-700 block mb-2">Background Photo</label>
+                <SlideImageUploader
+                  label="Testimonials"
+                  currentUrl={brandData.customImages?.testimonials}
+                  defaultUrl={brandData.images?.action || ''}
+                  slideType="testimonials"
+                  focalPoint={brandData.customImages?.testimonialsFocal}
+                  onChange={(url) => handleCustomImageChange('testimonials', url)}
+                  onFocalPointChange={(focal) => handleFocalPointChange('testimonials', focal)}
+                />
+              </div>
             </div>
           )}
 
@@ -902,7 +909,6 @@ export default function EditDeckPage() {
         <ToolButton icon={<Palette className="w-5 h-5" />} label="Colors" active={activeTool === 'colors'} onClick={() => setActiveTool(activeTool === 'colors' ? null : 'colors')} />
         <ToolButton icon={<Type className="w-5 h-5" />} label="Fonts" active={activeTool === 'fonts'} onClick={() => setActiveTool(activeTool === 'fonts' ? null : 'fonts')} />
         <ToolButton icon={<LayoutGrid className="w-5 h-5" />} label="Logo" active={activeTool === 'logo'} onClick={() => setActiveTool(activeTool === 'logo' ? null : 'logo')} />
-        <ToolButton icon={<ImageIcon className="w-5 h-5" />} label="Photos" active={activeTool === 'photos'} onClick={() => setActiveTool(activeTool === 'photos' ? null : 'photos')} />
         <ToolButton icon={<Layers className="w-5 h-5" />} label="Slides" active={activeTool === 'slides'} onClick={() => setActiveTool(activeTool === 'slides' ? null : 'slides')} />
       </div>
 
