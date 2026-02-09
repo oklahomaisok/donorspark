@@ -61,8 +61,7 @@ export async function extractColors(
 async function extractLogoColorsViaPage(imageUrl: string): Promise<LogoColorEntry[]> {
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    ignoreHTTPSErrors: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'],
   });
   const page = await browser.newPage();
   try {

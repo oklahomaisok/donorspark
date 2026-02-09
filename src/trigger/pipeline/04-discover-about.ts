@@ -8,8 +8,7 @@ export async function discoverAboutPage(url: string, domain: string, origin: str
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      ignoreHTTPSErrors: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'],
     });
     const page = await browser.newPage();
     try {
