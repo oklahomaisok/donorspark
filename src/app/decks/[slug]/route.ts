@@ -75,7 +75,7 @@ export async function GET(
 
   // Serve iframe wrapper page
   const ogImageUrl = deck.ogImageUrl ? `${config.siteUrl}/api/og/${slug}` : '';
-  const faviconUrl = deck.orgUrl ? `${deck.orgUrl.replace(/\/$/, '')}/favicon.ico` : '';
+  const faviconUrl = deck.orgUrl ? `https://www.google.com/s2/favicons?domain=${new URL(deck.orgUrl).hostname}&sz=32` : '';
   const wrapperHtml = generateIframeWrapper(deck.orgName, contentUrl, slug, ogImageUrl, faviconUrl);
 
   return new NextResponse(wrapperHtml, {
