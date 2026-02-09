@@ -234,8 +234,12 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         .animate-on-scroll.animate { animation-play-state: running; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .slide-container { width: 90vw; height: 75vh; min-width: 0; }
-        @media (min-width: 768px) { .slide-container { width: 500px; height: auto; aspect-ratio: 3/4; } }
+        /* Mobile: fill available viewport minus header (64px) and padding (top 96px, bottom 24px) */
+        /* Using dvh for dynamic viewport that accounts for mobile browser chrome */
+        .slide-container { width: 90vw; height: calc(100dvh - 130px); min-height: 500px; max-height: 800px; min-width: 0; }
+        /* Fallback for browsers without dvh support */
+        @supports not (height: 100dvh) { .slide-container { height: calc(100vh - 130px); } }
+        @media (min-width: 768px) { .slide-container { width: 500px; height: auto; min-height: unset; max-height: unset; aspect-ratio: 3/4; } }
         .bg-grid-pattern { background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0); background-size: 32px 32px; }
         .testimonial-card { position: absolute; inset: 0; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease, filter 0.5s ease; transform-origin: center bottom; will-change: transform; }
         .card-pos-0 { transform: translateY(0) scale(1); z-index: 30; opacity: 1; filter: blur(0px); pointer-events: auto; }
