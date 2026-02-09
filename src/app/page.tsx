@@ -8,7 +8,7 @@ import { PricingSection } from '@/components/pricing-section';
 type Phase = 'idle' | 'generating' | 'complete' | 'error';
 
 export default function Home() {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState('www.');
   const [phase, setPhase] = useState<Phase>('idle');
   const [runId, setRunId] = useState('');
   const [publicAccessToken, setPublicAccessToken] = useState('');
@@ -18,8 +18,14 @@ export default function Home() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = url.trim();
-    if (!trimmed) return;
+    let trimmed = url.trim();
+    if (!trimmed || trimmed === 'www.') return;
+
+    // Normalize URL: remove duplicate www., add https:// if needed
+    trimmed = trimmed.replace(/^(https?:\/\/)?(www\.)+/i, '');
+    if (!trimmed.startsWith('http')) {
+      trimmed = 'https://www.' + trimmed;
+    }
 
     setPhase('generating');
     setError('');
@@ -57,7 +63,7 @@ export default function Home() {
   }, []);
 
   function resetForm() {
-    setUrl('');
+    setUrl('www.');
     setPhase('idle');
     setRunId('');
     setPublicAccessToken('');
@@ -97,7 +103,7 @@ export default function Home() {
                     type="text"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="Enter your nonprofit's website URL..."
+                    placeholder="yournonprofit.org"
                     className="flex-grow bg-transparent px-5 py-3 outline-none text-ink placeholder:text-ink/40 w-full text-center md:text-left"
                   />
                   <button
@@ -110,7 +116,7 @@ export default function Home() {
               )}
 
               {phase === 'idle' && (
-                <p className="mt-4 text-xs uppercase tracking-widest opacity-40">Paste your URL. Get a custom story deck instantly.</p>
+                <p className="mt-4 text-xs uppercase tracking-widest opacity-40">Get a custom story deck instantly.</p>
               )}
 
               {/* Error State */}
