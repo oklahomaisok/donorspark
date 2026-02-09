@@ -59,6 +59,7 @@ export default function EditDeckPage() {
   const [orgName, setOrgName] = useState<string>('');
   const [deckSlug, setDeckSlug] = useState<string>('');
   const [deckUrl, setDeckUrl] = useState<string>('');
+  const [saveTimestamp, setSaveTimestamp] = useState<number>(Date.now());
   const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [originalBrandData, setOriginalBrandData] = useState<BrandData | null>(null);
   const [hasMetricsSlide, setHasMetricsSlide] = useState(false);
@@ -396,6 +397,7 @@ export default function EditDeckPage() {
       setDeckUrl(data.deckUrl);
       setOriginalBrandData(JSON.parse(JSON.stringify(brandData)));
       setHasUnsavedChanges(false);
+      setSaveTimestamp(Date.now()); // Bust cache for preview link
       setSuccessMessage('Saved!');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
@@ -464,7 +466,7 @@ export default function EditDeckPage() {
 
           {deckSlug && (
             <a
-              href={`/decks/${deckSlug}`}
+              href={`/decks/${deckSlug}?v=${saveTimestamp}`}
               target="_blank"
               rel="noopener noreferrer"
               className="h-8 px-3 rounded-md border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 transition-colors flex items-center gap-2"

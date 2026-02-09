@@ -15,6 +15,28 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
   ]);
 }
 
+// Follow redirects to get the final URL (handles 301/302 redirects)
+async function resolveRedirects(url: string): Promise<string> {
+  if (!url || url.startsWith('data:')) return url;
+
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(5000)
+    });
+    // res.url contains the final URL after all redirects
+    if (res.ok && res.url !== url) {
+      console.log('[Logo Discovery] URL redirected:', url.substring(0, 60), '->', res.url.substring(0, 60));
+      return res.url;
+    }
+    return url;
+  } catch (e) {
+    console.log('[Logo Discovery] Redirect check failed:', e instanceof Error ? e.message : 'unknown');
+    return url;
+  }
+}
+
 export async function discoverLogo(url: string, domain: string): Promise<LogoResult> {
   let logoUrl: string | null = null;
   let logoSource = 'none';
@@ -227,19 +249,41 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
             var els = document.querySelectorAll(imgSelectors[r]);
             for (var s = 0; s < els.length; s++) {
               var img = els[s];
-              var src = img.src || img.dataset.src || img.dataset.lazySrc || img.getAttribute('data-lazy-src');
-              if (!src) continue;
 
+              // First try srcset - often has full CDN URLs (e.g., Wix sites)
               var srcset = img.srcset || img.getAttribute('data-srcset');
+              var src = null;
               if (srcset) {
-                var sources = srcset.split(',').map(function(str) {
-                  var parts = str.trim().split(/\\s+/);
-                  var w = parts[1] ? parseInt(parts[1].replace('w', ''), 10) : 0;
-                  return { url: parts[0], width: w };
-                }).filter(function(x) { return x.url && x.url.indexOf('data:image') === -1; });
-                var best = sources.filter(function(x) { return x.width <= 1200 && x.width > 0; }).sort(function(a,b) { return b.width - a.width; })[0];
+                // Parse srcset properly - URLs can contain commas (like Wix CDN URLs)
+                // Format: "url1 descriptor1, url2 descriptor2" where descriptor is like "1x" or "152w"
+                // Use regex to match: URL followed by whitespace and descriptor
+                var sources = [];
+                var srcsetRegex = /(https?:\\/\\/[^\\s]+)\\s+(\\d+(?:\\.\\d+)?[wx])/g;
+                var match;
+                while ((match = srcsetRegex.exec(srcset)) !== null) {
+                  var url = match[1];
+                  var descriptor = match[2];
+                  var w = 0;
+                  if (descriptor.indexOf('w') !== -1) {
+                    w = parseInt(descriptor.replace('w', ''), 10) || 0;
+                  } else if (descriptor.indexOf('x') !== -1) {
+                    var density = parseFloat(descriptor.replace('x', '')) || 1;
+                    w = Math.round(density * 200);
+                  }
+                  if (url.indexOf('data:image') === -1) {
+                    sources.push({ url: url, width: w });
+                  }
+                }
+                // Sort by width descending and pick the best one under 1200px, or just the first
+                var best = sources.filter(function(x) { return x.width <= 1200; }).sort(function(a,b) { return b.width - a.width; })[0] || sources[0];
                 if (best) src = best.url;
               }
+
+              // Fall back to src or data attributes
+              if (!src) {
+                src = img.src || img.dataset.src || img.dataset.lazySrc || img.getAttribute('data-lazy-src');
+              }
+              if (!src) continue;
 
               // Convert relative URLs to absolute
               src = toAbsoluteUrl(src);
@@ -247,10 +291,17 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
               var srcLower = src.toLowerCase();
               var skip = ['data:image/gif', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
               var banner = ['banner', 'alert', 'promo', 'hero', 'slide', 'carousel', 'background'];
+              var badges = ['badge', 'award', 'usnews', 'ranking', 'seal', 'best-', 'top-', 'accredit', 'certif', 'rated', 'winner'];
               var shouldSkip = false;
               for (var t = 0; t < skip.length; t++) { if (srcLower.indexOf(skip[t]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
               for (var u = 0; u < banner.length; u++) { if (srcLower.indexOf(banner[u]) !== -1) { shouldSkip = true; break; } }
+              if (shouldSkip) continue;
+              for (var v = 0; v < badges.length; v++) { if (srcLower.indexOf(badges[v]) !== -1) { shouldSkip = true; break; } }
+              if (shouldSkip) continue;
+              // Also check alt text for badge-related keywords
+              var altText = (img.alt || '').toLowerCase();
+              for (var w = 0; w < badges.length; w++) { if (altText.indexOf(badges[w]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
               if (img.naturalWidth > 0 && img.naturalWidth < 30) continue;
               return { logoUrl: src, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
@@ -266,7 +317,8 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
 
       // Prefer scraped logo over apistemic if found
       if (result.logoUrl) {
-        logoUrl = result.logoUrl;
+        // Resolve any redirects to get the final URL
+        logoUrl = await resolveRedirects(result.logoUrl);
         logoSource = 'scraper';
         console.log('[Logo Discovery] Found via DOM scrape:', logoUrl?.substring(0, 100));
       } else {
