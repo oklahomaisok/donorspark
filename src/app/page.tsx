@@ -304,40 +304,43 @@ export default function Home() {
 }
 
 /* ─────────────────────────────────────────────
-   Hero Phone — Animated deck cycling
+   Hero Phone — Real deck slides with video backgrounds
 ───────────────────────────────────────────── */
+const IMAGE_BASE = 'https://oklahomaisok.github.io/nonprofit-decks/images';
+const VIDEO_BASE = 'https://donorspark-videos.vercel.app';
+
 const heroSlides = [
   {
-    gradient: 'from-indigo-800 via-indigo-700 to-blue-600',
-    accent: 'bg-blue-400',
-    orgName: 'Youth Forward',
-    tagline: 'Empowering the next generation',
-    metric: '12,000',
-    metricLabel: 'students served across 8 schools',
+    sector: 'veterans',
+    primary: '#1D2350',
+    accent: '#FFC303',
+    orgName: 'Veterans Alliance',
+    headline: 'Honoring Those Who Served',
+    badge: 'Impact Deck',
   },
   {
-    gradient: 'from-amber-700 via-amber-600 to-orange-500',
-    accent: 'bg-amber-400',
-    orgName: 'Paws & Purpose',
-    tagline: 'Every animal deserves a second chance',
-    metric: '2,400',
-    metricLabel: 'animals rescued in 2025',
+    sector: 'youth-development',
+    primary: '#0C2340',
+    accent: '#C8102E',
+    orgName: 'Sea Cadets',
+    headline: 'Building Tomorrow\'s Leaders',
+    badge: 'Impact Deck',
   },
   {
-    gradient: 'from-emerald-800 via-emerald-700 to-green-600',
-    accent: 'bg-emerald-400',
-    orgName: 'Green Valley Conservancy',
-    tagline: 'Protecting wild spaces',
-    metric: '850',
-    metricLabel: 'acres of habitat preserved',
+    sector: 'food-bank',
+    primary: '#2D5A27',
+    accent: '#F7941D',
+    orgName: 'Community Food Bank',
+    headline: 'No One Goes Hungry',
+    badge: 'Impact Deck',
   },
   {
-    gradient: 'from-rose-800 via-rose-700 to-pink-600',
-    accent: 'bg-rose-400',
-    orgName: 'Meals That Matter',
-    tagline: 'No family should go hungry',
-    metric: '180,000',
-    metricLabel: 'meals delivered this year',
+    sector: 'animal-welfare',
+    primary: '#1E3A5F',
+    accent: '#E85D04',
+    orgName: 'Rescue League',
+    headline: 'Every Life Matters',
+    badge: 'Impact Deck',
   },
 ];
 
@@ -352,16 +355,21 @@ function HeroPhone() {
         setActiveIndex(prev => (prev + 1) % heroSlides.length);
         setIsTransitioning(false);
       }, 400);
-    }, 3000);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
   const slide = heroSlides[activeIndex];
+  const videoSrc = `${VIDEO_BASE}/${slide.sector}-hero-leader.mp4`;
+  const posterSrc = `${IMAGE_BASE}/${slide.sector}-hero-leader.jpg`;
 
   return (
     <div className="relative">
       {/* Glow behind phone */}
-      <div className={`absolute -inset-6 bg-gradient-to-b ${slide.gradient} rounded-full blur-[60px] opacity-30 transition-all duration-700`} />
+      <div
+        className="absolute -inset-6 rounded-full blur-[60px] opacity-40 transition-all duration-700"
+        style={{ backgroundColor: slide.primary }}
+      />
 
       {/* Phone frame */}
       <div className="relative w-[220px] md:w-[260px] rounded-[36px] md:rounded-[42px] bg-ink p-2 md:p-2.5 shadow-2xl">
@@ -369,49 +377,62 @@ function HeroPhone() {
         <div className="absolute top-2 md:top-2.5 left-1/2 -translate-x-1/2 w-20 md:w-24 h-5 md:h-6 bg-ink rounded-full z-20" />
 
         {/* Screen */}
-        <div className={`rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19] bg-gradient-to-b ${slide.gradient} relative transition-all duration-700`}>
-          {/* Shimmer */}
-          <div className="absolute inset-0 deck-shimmer" />
+        <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19] relative">
+          {/* Video/Image background */}
+          <video
+            key={slide.sector}
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={posterSrc}
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+            style={{ opacity: isTransitioning ? 0 : 1 }}
+          >
+            <source src={videoSrc} type="video/mp4" />
+          </video>
+
+          {/* Dark overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80" />
 
           {/* Slide content */}
           <div
             className="absolute inset-0 flex flex-col justify-between p-5 md:p-6 pt-12 md:pt-14 text-white transition-opacity duration-400"
             style={{ opacity: isTransitioning ? 0 : 1 }}
           >
-            {/* Top */}
+            {/* Top — badge + logo area */}
             <div>
-              <span className={`inline-block px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-bold uppercase tracking-wider ${slide.accent} text-ink/80`}>
-                Impact Deck
+              <span
+                className="inline-block px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-bold uppercase tracking-wider"
+                style={{ backgroundColor: slide.accent, color: slide.primary }}
+              >
+                {slide.badge}
               </span>
-              <p className="text-[10px] md:text-[11px] opacity-60 mt-2 leading-relaxed">{slide.tagline}</p>
             </div>
 
-            {/* Middle visual placeholder */}
-            <div className="h-20 md:h-24 rounded-xl bg-white/10 flex items-end p-3">
-              <div className="flex gap-2">
-                <div className="w-7 h-7 rounded-full bg-white/20" />
-                <div className="flex flex-col gap-1">
-                  <div className="w-16 h-2 rounded bg-white/20" />
-                  <div className="w-12 h-2 rounded bg-white/15" />
-                </div>
-              </div>
+            {/* Center — headline */}
+            <div className="text-center py-4">
+              <h4
+                className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-tight mb-2"
+                style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
+              >
+                {slide.headline}
+              </h4>
+              <p className="text-xs opacity-70 italic">{slide.orgName}</p>
             </div>
 
-            {/* Bottom — metrics */}
+            {/* Bottom — nav dots */}
             <div>
-              <h4 className="font-serif text-lg md:text-xl leading-tight mb-2 italic">{slide.orgName}</h4>
-              <div className="text-4xl md:text-5xl font-bold tracking-tight mb-0.5">{slide.metric}</div>
-              <div className="text-[10px] md:text-[11px] opacity-50 leading-snug mb-4">{slide.metricLabel}</div>
-
-              {/* Pagination dots */}
               <div className="flex items-center justify-between">
                 <div className="flex gap-1.5">
                   {heroSlides.map((_, i) => (
                     <div
                       key={i}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === activeIndex ? 'bg-white w-4' : 'bg-white/30 w-1.5'
-                      }`}
+                      className="h-1.5 rounded-full transition-all duration-300"
+                      style={{
+                        width: i === activeIndex ? '16px' : '6px',
+                        backgroundColor: i === activeIndex ? slide.accent : 'rgba(255,255,255,0.3)',
+                      }}
                     />
                   ))}
                 </div>
