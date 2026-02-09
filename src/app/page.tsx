@@ -101,94 +101,102 @@ export default function Home() {
       <main className="w-full max-w-[1400px] mx-auto px-4 pt-20 pb-12 flex flex-col gap-4">
 
         {/* ═══════════════════════════════════════════
-            HERO — One action, one promise
+            HERO — Side by side: copy left, animated phone right
         ═══════════════════════════════════════════ */}
-        <section className="relative min-h-[85vh] flex flex-col justify-center items-center text-center card bg-white/40 p-8 md:p-12 border border-ink/5 overflow-hidden">
+        <section className="relative card bg-white/40 p-6 md:p-10 lg:p-12 border border-ink/5 overflow-hidden">
           {/* Organic background shapes */}
           <div className="absolute top-[5%] right-[5%] w-[400px] h-[400px] bg-salmon rounded-full blur-[120px] opacity-30 blob" />
           <div className="absolute bottom-[5%] left-[5%] w-[500px] h-[500px] bg-sage rounded-full blur-[120px] opacity-30 blob" style={{ animationDelay: '-7s' }} />
           <div className="absolute top-[40%] left-[40%] w-[300px] h-[300px] bg-periwinkle rounded-full blur-[100px] opacity-20 blob" style={{ animationDelay: '-12s' }} />
 
-          <div className="relative z-10 max-w-4xl mx-auto">
-            <h1 className="text-6xl md:text-8xl lg:text-9xl mb-8 leading-[0.95]">
-              Show donors exactly<br />
-              <span className="italic text-ink/80">where their money goes.</span>
-            </h1>
+          <div className="relative z-10 w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-center justify-center py-8 md:py-12">
+            {/* Left — Copy + CTA */}
+            <div className="text-center lg:text-left flex-1 max-w-xl">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl mb-5 leading-[0.95]">
+                Show donors exactly<br />
+                <span className="italic text-ink/80">where their money goes.</span>
+              </h1>
 
-            <p className="text-xl md:text-2xl opacity-50 max-w-xl mx-auto mb-10 leading-relaxed">
-              Paste your nonprofit&apos;s URL. Get a branded impact deck in 60 seconds.
-            </p>
+              <p className="text-lg md:text-xl opacity-50 max-w-md mb-6 leading-relaxed mx-auto lg:mx-0">
+                Paste your nonprofit&apos;s URL. Get a branded impact deck in 60 seconds.
+              </p>
 
-            {/* Input Form */}
-            {phase === 'idle' && (
-              <form onSubmit={handleSubmit} className="bg-white p-2 rounded-3xl md:rounded-full shadow-lg max-w-lg mx-auto flex flex-col md:flex-row items-stretch md:items-center gap-2 border border-ink/10 focus-within:ring-2 focus-within:ring-ink transition-shadow">
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="yournonprofit.org"
-                  className="flex-grow bg-transparent px-6 py-3.5 outline-none text-ink placeholder:text-ink/30 w-full text-center md:text-left"
-                />
-                <button
-                  type="submit"
-                  className="bg-ink text-cream px-8 py-3.5 rounded-full font-medium hover:scale-105 transition-transform whitespace-nowrap cursor-pointer"
-                >
-                  Generate Free Deck &rarr;
-                </button>
-              </form>
-            )}
+              {/* Input Form */}
+              {phase === 'idle' && (
+                <form onSubmit={handleSubmit} className="bg-white p-2 rounded-2xl md:rounded-full shadow-lg max-w-md flex flex-col md:flex-row items-stretch md:items-center gap-2 border border-ink/10 focus-within:ring-2 focus-within:ring-ink transition-shadow mx-auto lg:mx-0">
+                  <input
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="yournonprofit.org"
+                    className="flex-grow bg-transparent px-5 py-3 outline-none text-ink placeholder:text-ink/30 w-full text-center md:text-left"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-ink text-cream px-6 py-3 rounded-full font-medium hover:scale-105 transition-transform whitespace-nowrap cursor-pointer text-sm"
+                  >
+                    Generate Free Deck &rarr;
+                  </button>
+                </form>
+              )}
 
-            {phase === 'idle' && (
-              <p className="mt-5 text-xs uppercase tracking-widest opacity-30">No sign-up required. Free forever for your first deck.</p>
-            )}
+              {phase === 'idle' && (
+                <p className="mt-4 text-xs uppercase tracking-widest opacity-30 mx-auto lg:mx-0">No sign-up required. Free forever for your first deck.</p>
+              )}
 
-            {/* Error State */}
-            {phase === 'error' && (
-              <div className="mt-8 max-w-md mx-auto">
-                <p className="text-red-500 text-sm mb-4">{error}</p>
-                <button onClick={resetForm} className="text-xs uppercase tracking-widest opacity-40 hover:opacity-60 cursor-pointer">Try again</button>
-              </div>
-            )}
+              {/* Error State */}
+              {phase === 'error' && (
+                <div className="mt-6 max-w-md mx-auto lg:mx-0">
+                  <p className="text-red-500 text-sm mb-4">{error}</p>
+                  <button onClick={resetForm} className="text-xs uppercase tracking-widest opacity-40 hover:opacity-60 cursor-pointer">Try again</button>
+                </div>
+              )}
 
-            {/* Generating State */}
-            {phase === 'generating' && runId && publicAccessToken && (
-              <div className="mt-8">
-                <GenerationProgress
-                  runId={runId}
-                  publicAccessToken={publicAccessToken}
-                  onComplete={handleComplete}
-                  onError={handleError}
-                />
-              </div>
-            )}
+              {/* Generating State */}
+              {phase === 'generating' && runId && publicAccessToken && (
+                <div className="mt-6 mx-auto lg:mx-0 max-w-md">
+                  <GenerationProgress
+                    runId={runId}
+                    publicAccessToken={publicAccessToken}
+                    onComplete={handleComplete}
+                    onError={handleError}
+                  />
+                </div>
+              )}
 
-            {/* Result Preview */}
-            {phase === 'complete' && result && (
-              <div className="mt-8 max-w-md mx-auto">
-                <p className="text-sm opacity-60 mb-4">Your deck is ready!</p>
-                <a href={`/decks/${result.slug}`} target="_blank" rel="noopener noreferrer" className="block group">
-                  <div className="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-shadow bg-ink">
-                    {!ogFailed && result.ogImageUrl ? (
-                      <img
-                        src={result.ogImageUrl}
-                        alt="Deck Preview"
-                        className="w-full"
-                        onError={() => setOgFailed(true)}
-                      />
-                    ) : (
-                      <div className="aspect-[1200/630] flex flex-col items-center justify-center text-cream p-8 text-center">
-                        <div className="text-xl font-medium mb-1">{result.orgName} Impact Deck</div>
-                        <div className="text-sm opacity-60">Click to view</div>
+              {/* Result Preview */}
+              {phase === 'complete' && result && (
+                <div className="mt-6 max-w-md mx-auto lg:mx-0">
+                  <p className="text-sm opacity-60 mb-4">Your deck is ready!</p>
+                  <a href={`/decks/${result.slug}`} target="_blank" rel="noopener noreferrer" className="block group">
+                    <div className="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-shadow bg-ink">
+                      {!ogFailed && result.ogImageUrl ? (
+                        <img
+                          src={result.ogImageUrl}
+                          alt="Deck Preview"
+                          className="w-full"
+                          onError={() => setOgFailed(true)}
+                        />
+                      ) : (
+                        <div className="aspect-[1200/630] flex flex-col items-center justify-center text-cream p-8 text-center">
+                          <div className="text-xl font-medium mb-1">{result.orgName} Impact Deck</div>
+                          <div className="text-sm opacity-60">Click to view</div>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/10 transition-colors flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-ink px-4 py-2 rounded-full text-sm font-medium">View Deck &rarr;</span>
                       </div>
-                    )}
-                    <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/10 transition-colors flex items-center justify-center">
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-ink px-4 py-2 rounded-full text-sm font-medium">View Deck &rarr;</span>
                     </div>
-                  </div>
-                </a>
-                <button onClick={resetForm} className="mt-4 text-xs uppercase tracking-widest opacity-40 hover:opacity-60 cursor-pointer">Generate another deck</button>
-              </div>
-            )}
+                  </a>
+                  <button onClick={resetForm} className="mt-4 text-xs uppercase tracking-widest opacity-40 hover:opacity-60 cursor-pointer">Generate another deck</button>
+                </div>
+              )}
+            </div>
+
+            {/* Right — Animated deck phone */}
+            <div className="flex justify-center items-center flex-shrink-0 mt-4 lg:mt-0">
+              <HeroPhone />
+            </div>
           </div>
         </section>
 
@@ -470,6 +478,128 @@ function BottomCTA({ onSubmit }: { onSubmit: (value: string) => void }) {
       >
         Get My Free Deck
       </button>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Hero Phone — Animated deck cycling
+───────────────────────────────────────────── */
+const heroSlides = [
+  {
+    gradient: 'from-indigo-800 via-indigo-700 to-blue-600',
+    accent: 'bg-blue-400',
+    orgName: 'Youth Forward',
+    tagline: 'Empowering the next generation',
+    metric: '12,000',
+    metricLabel: 'students served across 8 schools',
+  },
+  {
+    gradient: 'from-amber-700 via-amber-600 to-orange-500',
+    accent: 'bg-amber-400',
+    orgName: 'Paws & Purpose',
+    tagline: 'Every animal deserves a second chance',
+    metric: '2,400',
+    metricLabel: 'animals rescued in 2025',
+  },
+  {
+    gradient: 'from-emerald-800 via-emerald-700 to-green-600',
+    accent: 'bg-emerald-400',
+    orgName: 'Green Valley Conservancy',
+    tagline: 'Protecting wild spaces',
+    metric: '850',
+    metricLabel: 'acres of habitat preserved',
+  },
+  {
+    gradient: 'from-rose-800 via-rose-700 to-pink-600',
+    accent: 'bg-rose-400',
+    orgName: 'Meals That Matter',
+    tagline: 'No family should go hungry',
+    metric: '180,000',
+    metricLabel: 'meals delivered this year',
+  },
+];
+
+function HeroPhone() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setActiveIndex(prev => (prev + 1) % heroSlides.length);
+        setIsTransitioning(false);
+      }, 400);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const slide = heroSlides[activeIndex];
+
+  return (
+    <div className="relative">
+      {/* Glow behind phone */}
+      <div className={`absolute -inset-6 bg-gradient-to-b ${slide.gradient} rounded-full blur-[60px] opacity-30 transition-all duration-700`} />
+
+      {/* Phone frame */}
+      <div className="relative w-[220px] md:w-[260px] rounded-[36px] md:rounded-[42px] bg-ink p-2 md:p-2.5 shadow-2xl">
+        {/* Dynamic Island */}
+        <div className="absolute top-2 md:top-2.5 left-1/2 -translate-x-1/2 w-20 md:w-24 h-5 md:h-6 bg-ink rounded-full z-20" />
+
+        {/* Screen */}
+        <div className={`rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19] bg-gradient-to-b ${slide.gradient} relative transition-all duration-700`}>
+          {/* Shimmer */}
+          <div className="absolute inset-0 deck-shimmer" />
+
+          {/* Slide content */}
+          <div
+            className="absolute inset-0 flex flex-col justify-between p-5 md:p-6 pt-12 md:pt-14 text-white transition-opacity duration-400"
+            style={{ opacity: isTransitioning ? 0 : 1 }}
+          >
+            {/* Top */}
+            <div>
+              <span className={`inline-block px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-bold uppercase tracking-wider ${slide.accent} text-ink/80`}>
+                Impact Deck
+              </span>
+              <p className="text-[10px] md:text-[11px] opacity-60 mt-2 leading-relaxed">{slide.tagline}</p>
+            </div>
+
+            {/* Middle visual placeholder */}
+            <div className="h-20 md:h-24 rounded-xl bg-white/10 flex items-end p-3">
+              <div className="flex gap-2">
+                <div className="w-7 h-7 rounded-full bg-white/20" />
+                <div className="flex flex-col gap-1">
+                  <div className="w-16 h-2 rounded bg-white/20" />
+                  <div className="w-12 h-2 rounded bg-white/15" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom — metrics */}
+            <div>
+              <h4 className="font-serif text-lg md:text-xl leading-tight mb-2 italic">{slide.orgName}</h4>
+              <div className="text-4xl md:text-5xl font-bold tracking-tight mb-0.5">{slide.metric}</div>
+              <div className="text-[10px] md:text-[11px] opacity-50 leading-snug mb-4">{slide.metricLabel}</div>
+
+              {/* Pagination dots */}
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1.5">
+                  {heroSlides.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        i === activeIndex ? 'bg-white w-4' : 'bg-white/30 w-1.5'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-[8px] uppercase tracking-widest opacity-40">Swipe &rarr;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
