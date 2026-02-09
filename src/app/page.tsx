@@ -183,7 +183,7 @@ export default function Home() {
                 You&apos;re doing the work. <span className="text-salmon italic">But your story isn&apos;t inspiring others.</span>
               </h2>
               <p className="text-lg opacity-70 leading-relaxed max-w-md">
-                A board member asks for something to share. A volunteer wants to explain your mission. You send your website link or a PDF annual report. Here&apos;s the problem: Websites don&apos;t get forwarded. 40-page reports don&apos;t get read. And that Canva doc you made at 11pm doesn&apos;t make anyone feel the weight of what you do. The gap isn&apos;t your impact — it&apos;s how you package it.
+                &ldquo;Build it and they will come&rdquo; doesn&apos;t apply to nonprofits attracting donors. Just because you&apos;re improving lives doesn&apos;t mean others get it. The problem isn&apos;t your impact — it&apos;s how you package it.
               </p>
             </div>
 
