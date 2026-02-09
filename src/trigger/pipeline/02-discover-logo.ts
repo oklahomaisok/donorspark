@@ -183,8 +183,18 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
             for (var q = 0; q < svgs.length; q++) {
               var rect = svgs[q].getBoundingClientRect();
               if (rect.width >= 40 && rect.height >= 20 && rect.width <= 400) {
+                // Check viewBox - skip tiny icon SVGs (hamburger menus, arrows, etc.)
+                var vb = svgs[q].getAttribute('viewBox');
+                if (vb) {
+                  var vbParts = vb.trim().split(/[\s,]+/);
+                  var vbW = parseFloat(vbParts[2]) || 0;
+                  var vbH = parseFloat(vbParts[3]) || 0;
+                  if (vbW > 0 && vbH > 0 && vbW < 40 && vbH < 40) continue;
+                }
                 var serializer = new XMLSerializer();
                 var svgString = serializer.serializeToString(svgs[q]);
+                // Skip simple icon SVGs (real logos are typically 1KB+)
+                if (svgString.length < 1000) continue;
                 var encodedSvg = encodeURIComponent(svgString);
                 return { logoUrl: 'data:image/svg+xml,' + encodedSvg, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
               }
