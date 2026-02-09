@@ -133,20 +133,22 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
       // Show popup when reaching last slide
       function checkLastSlide() {
         if (shown) return;
-        var container = document.querySelector('.slides-container');
+        var container = document.getElementById('slider');
         if (!container) return;
         var scrollLeft = container.scrollLeft;
         var maxScroll = container.scrollWidth - container.clientWidth;
-        // Show when scrolled 90% or more to the end
-        if (scrollLeft >= maxScroll * 0.9 && maxScroll > 0) {
+        // Show when scrolled 85% or more to the end
+        if (scrollLeft >= maxScroll * 0.85 && maxScroll > 0) {
           shown = true;
           popup.style.display = 'flex';
         }
       }
 
-      var container = document.querySelector('.slides-container');
+      var container = document.getElementById('slider');
       if (container) {
         container.addEventListener('scroll', checkLastSlide);
+        // Also check after a delay in case user is already at the end
+        setTimeout(checkLastSlide, 1000);
       }
 
       // Close on backdrop click
