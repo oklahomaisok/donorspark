@@ -84,9 +84,9 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
         <h2 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin-bottom:0.5rem;font-family:system-ui,sans-serif;">Love Your Deck?</h2>
         <p style="color:#666;margin-bottom:1rem;font-size:0.95rem;font-family:system-ui,sans-serif;">This preview expires in:</p>
         <div id="countdown-timer" data-expires="${expiresAt}" style="font-size:2.5rem;font-weight:700;font-family:ui-monospace,monospace;background:linear-gradient(135deg,#C15A36,#E07A50);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem;">--:--:--</div>
-        <p style="color:#888;font-size:0.875rem;margin-bottom:1.5rem;font-family:system-ui,sans-serif;">Create a free account to save & share it forever</p>
+        <p style="color:#888;font-size:0.875rem;margin-bottom:1.5rem;font-family:system-ui,sans-serif;">Save it forever with one click</p>
         <a href="${claimUrl}" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 1.75rem;background:linear-gradient(135deg,#C15A36,#E07A50);color:white;border-radius:9999px;font-weight:600;font-size:0.95rem;text-decoration:none;box-shadow:0 4px 14px rgba(193,90,54,0.4);transition:transform 0.2s,box-shadow 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(193,90,54,0.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 14px rgba(193,90,54,0.4)'">
-          Create Free Account
+          Save My Deck
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </a>
       </div>
@@ -143,7 +143,7 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
                 <span id="banner-countdown" data-expires="${expiresAt}" style="color:white;font-weight:700;font-family:ui-monospace,monospace;font-size:0.875rem;">--:--:--</span>
               </div>
               <a href="${claimUrl}" style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 1rem;background:white;color:#C15A36;border-radius:9999px;font-weight:600;font-size:0.8rem;text-decoration:none;transition:transform 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                Save Your Deck Free
+                Save My Deck
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
