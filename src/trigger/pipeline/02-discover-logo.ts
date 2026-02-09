@@ -214,6 +214,15 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
             'header img, nav img, .header img, .navbar img'
           ];
 
+          // Helper to convert relative URL to absolute
+          function toAbsoluteUrl(url) {
+            if (!url || url.indexOf('data:') === 0) return url;
+            if (url.indexOf('http') === 0 || url.indexOf('//') === 0) return url;
+            var a = document.createElement('a');
+            a.href = url;
+            return a.href;
+          }
+
           for (var r = 0; r < imgSelectors.length; r++) {
             var els = document.querySelectorAll(imgSelectors[r]);
             for (var s = 0; s < els.length; s++) {
@@ -231,6 +240,9 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
                 var best = sources.filter(function(x) { return x.width <= 1200 && x.width > 0; }).sort(function(a,b) { return b.width - a.width; })[0];
                 if (best) src = best.url;
               }
+
+              // Convert relative URLs to absolute
+              src = toAbsoluteUrl(src);
 
               var srcLower = src.toLowerCase();
               var skip = ['data:image/gif', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
