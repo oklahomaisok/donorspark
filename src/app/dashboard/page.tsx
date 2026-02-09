@@ -1,6 +1,9 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+
+// Force dynamic rendering to ensure Clerk env vars are available
+export const dynamic = 'force-dynamic';
 import {
   getUserByClerkId,
   getUserDecks,
