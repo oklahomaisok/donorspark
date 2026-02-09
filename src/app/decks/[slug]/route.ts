@@ -75,7 +75,8 @@ export async function GET(
 
   // Serve iframe wrapper page
   const ogImageUrl = deck.ogImageUrl ? `${config.siteUrl}/api/og/${slug}` : '';
-  const wrapperHtml = generateIframeWrapper(deck.orgName, contentUrl, slug, ogImageUrl);
+  const faviconUrl = deck.orgUrl ? `${deck.orgUrl.replace(/\/$/, '')}/favicon.ico` : '';
+  const wrapperHtml = generateIframeWrapper(deck.orgName, contentUrl, slug, ogImageUrl, faviconUrl);
 
   return new NextResponse(wrapperHtml, {
     headers: {
@@ -88,7 +89,7 @@ export async function GET(
 /**
  * Generate iframe wrapper page that loads deck content
  */
-function generateIframeWrapper(orgName: string, contentUrl: string, slug: string, ogImageUrl: string): string {
+function generateIframeWrapper(orgName: string, contentUrl: string, slug: string, ogImageUrl: string, faviconUrl: string): string {
   const title = `${escapeHtml(orgName)} | Impact Deck`;
   const description = `See the impact ${escapeHtml(orgName)} is making.`;
   const deckUrl = `${config.siteUrl}/decks/${slug}`;
@@ -110,7 +111,8 @@ function generateIframeWrapper(orgName: string, contentUrl: string, slug: string
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${title}">
     <meta name="twitter:description" content="${description}">
-    <meta name="twitter:image" content="${ogImageUrl}">` : ''}
+    <meta name="twitter:image" content="${ogImageUrl}">` : ''}${faviconUrl ? `
+    <link rel="icon" href="${faviconUrl}">` : ''}
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
