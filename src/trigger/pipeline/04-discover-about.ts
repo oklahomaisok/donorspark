@@ -9,6 +9,7 @@ export async function discoverAboutPage(url: string, domain: string, origin: str
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      ignoreHTTPSErrors: true,
     });
     const page = await browser.newPage();
     try {

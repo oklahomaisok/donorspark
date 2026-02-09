@@ -4,6 +4,7 @@ export async function screenshotOgImage(ogHtml: string): Promise<Buffer> {
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    ignoreHTTPSErrors: true,
   });
   const page = await browser.newPage();
   try {
