@@ -164,13 +164,13 @@ export default async function ClaimPage({
                 href={`/sign-up?redirect_url=${encodeURIComponent(`/claim/${tempToken}`)}`}
                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#C15A36] text-white rounded-lg font-semibold hover:bg-[#a84d2e] transition-colors text-lg"
               >
-                Continue with Google
+                Get Started Free
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 12h14"/>
                   <path d="m12 5 7 7-7 7"/>
                 </svg>
               </Link>
-              <p className="text-center text-xs text-neutral-400">Free forever. No credit card required.</p>
+              <p className="text-center text-xs text-neutral-400">Sign up with Google or email. No credit card required.</p>
 
               <div className="relative pt-2">
                 <div className="absolute inset-0 flex items-center">
