@@ -103,30 +103,57 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
     (function() {
       var popup = document.getElementById('preview-popup');
       var timer = document.getElementById('countdown-timer');
+      var bannerTimer = document.getElementById('banner-countdown');
       var shown = false;
 
-      // Countdown timer
-      if (timer) {
-        var expires = timer.dataset.expires;
-        if (expires) {
-          var expiryTime = new Date(expires).getTime();
-          function updateTimer() {
-            var now = Date.now();
-            var diff = expiryTime - now;
-            if (diff <= 0) {
-              timer.textContent = '00:00:00';
-              return;
-            }
+      // Countdown timer function (updates both popup and banner timers)
+      var expires = timer ? timer.dataset.expires : (bannerTimer ? bannerTimer.dataset.expires : null);
+      if (expires) {
+        var expiryTime = new Date(expires).getTime();
+        function updateTimers() {
+          var now = Date.now();
+          var diff = expiryTime - now;
+          var text = '00:00:00';
+          if (diff > 0) {
             var hours = Math.floor(diff / (1000 * 60 * 60));
             var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             var seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            timer.textContent =
-              hours.toString().padStart(2, '0') + ':' +
-              minutes.toString().padStart(2, '0') + ':' +
-              seconds.toString().padStart(2, '0');
+            text = hours.toString().padStart(2, '0') + ':' +
+                   minutes.toString().padStart(2, '0') + ':' +
+                   seconds.toString().padStart(2, '0');
           }
-          updateTimer();
-          setInterval(updateTimer, 1000);
+          if (timer) timer.textContent = text;
+          if (bannerTimer) bannerTimer.textContent = text;
+        }
+        updateTimers();
+        setInterval(updateTimers, 1000);
+      }
+
+      // Inject banner on CTA slide
+      var ctaSlide = document.getElementById('slide-cta');
+      if (ctaSlide) {
+        var donateBtn = ctaSlide.querySelector('#ds-donate-btn');
+        if (donateBtn && donateBtn.parentElement) {
+          var banner = document.createElement('div');
+          banner.innerHTML = \`
+            <div style="margin-top:1.5rem;padding:1rem 1.25rem;background:linear-gradient(135deg,#C15A36,#E07A50);border-radius:0.75rem;text-align:center;">
+              <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-bottom:0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span style="color:rgba(255,255,255,0.9);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;font-family:system-ui,sans-serif;">Preview expires in</span>
+                <span id="banner-countdown" data-expires="${expiresAt}" style="color:white;font-weight:700;font-family:ui-monospace,monospace;font-size:0.875rem;">--:--:--</span>
+              </div>
+              <a href="${claimUrl}" style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 1rem;background:white;color:#C15A36;border-radius:9999px;font-weight:600;font-size:0.8rem;text-decoration:none;transition:transform 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                Save Your Deck Free
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          \`;
+          donateBtn.parentElement.appendChild(banner);
+          // Update banner timer reference
+          bannerTimer = document.getElementById('banner-countdown');
+          if (bannerTimer && expires) {
+            updateTimers();
+          }
         }
       }
 
