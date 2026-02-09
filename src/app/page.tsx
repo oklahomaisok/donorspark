@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { Nav } from '@/components/nav';
 import { GenerationProgress } from '@/components/generation-progress';
 import { PricingSection } from '@/components/pricing-section';
-import Link from 'next/link';
 
 type Phase = 'idle' | 'generating' | 'complete' | 'error';
 
@@ -16,23 +15,6 @@ export default function Home() {
   const [result, setResult] = useState<{ deckUrl: string; ogImageUrl: string; orgName: string; slug: string } | null>(null);
   const [error, setError] = useState('');
   const [ogFailed, setOgFailed] = useState(false);
-
-  // Scroll reveal observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('revealed');
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-    );
-
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,64 +66,51 @@ export default function Home() {
     setOgFailed(false);
   }
 
-  function handleBottomSubmit(value: string) {
-    if (!value.trim()) return;
-    setUrl(value.trim());
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => {
-      const form = document.querySelector('form');
-      if (form) form.requestSubmit();
-    }, 600);
-  }
-
   return (
     <>
       <Nav />
 
       <main className="w-full max-w-[1400px] mx-auto px-4 pt-20 pb-12 flex flex-col gap-4">
 
-        {/* ═══════════════════════════════════════════
-            HERO — Side by side: copy left, animated phone right
-        ═══════════════════════════════════════════ */}
+        {/* Hero Section — Side by side with animated phone */}
         <section className="relative card bg-white/40 p-6 md:p-10 lg:p-12 border border-ink/5 overflow-hidden">
-          {/* Organic background shapes */}
-          <div className="absolute top-[5%] right-[5%] w-[400px] h-[400px] bg-salmon rounded-full blur-[120px] opacity-30 blob" />
-          <div className="absolute bottom-[5%] left-[5%] w-[500px] h-[500px] bg-sage rounded-full blur-[120px] opacity-30 blob" style={{ animationDelay: '-7s' }} />
-          <div className="absolute top-[40%] left-[40%] w-[300px] h-[300px] bg-periwinkle rounded-full blur-[100px] opacity-20 blob" style={{ animationDelay: '-12s' }} />
+          {/* Animated Blobs */}
+          <div className="absolute top-[10%] right-[10%] w-64 h-64 bg-salmon rounded-full blur-[80px] opacity-40 blob" />
+          <div className="absolute bottom-[10%] left-[10%] w-80 h-80 bg-sage rounded-full blur-[80px] opacity-40 blob" style={{ animationDelay: '-5s' }} />
 
           <div className="relative z-10 w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-center justify-center py-8 md:py-12">
             {/* Left — Copy + CTA */}
             <div className="text-center lg:text-left flex-1 max-w-xl">
+              <p className="text-sm uppercase tracking-widest opacity-60 mb-4">Story Decks for Nonprofits</p>
               <h1 className="text-4xl md:text-5xl lg:text-6xl mb-5 leading-[0.95]">
-                Show donors exactly<br />
-                <span className="italic text-ink/80">where their money goes.</span>
+                Donors won&apos;t give to a mission <span className="italic">they don&apos;t understand.</span>
               </h1>
 
-              <p className="text-lg md:text-xl opacity-50 max-w-md mb-6 leading-relaxed mx-auto lg:mx-0">
-                Paste your nonprofit&apos;s URL. Get a branded impact deck in 60 seconds.
+              <p className="text-lg md:text-xl opacity-60 max-w-lg mb-6 leading-relaxed mx-auto lg:mx-0">
+                We turn your nonprofit&apos;s story into a mobile slide deck that makes your impact instantly clear.
               </p>
 
               {/* Input Form */}
               {phase === 'idle' && (
-                <form onSubmit={handleSubmit} className="bg-white p-2 rounded-2xl md:rounded-full shadow-lg max-w-md flex flex-col md:flex-row items-stretch md:items-center gap-2 border border-ink/10 focus-within:ring-2 focus-within:ring-ink transition-shadow mx-auto lg:mx-0">
+                <form onSubmit={handleSubmit} className="bg-white p-2 rounded-2xl md:rounded-full shadow-lg max-w-md flex flex-col md:flex-row items-stretch md:items-center gap-2 border border-ink/10 focus-within:ring-2 focus-within:ring-ink mx-auto lg:mx-0">
                   <input
                     type="text"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="yournonprofit.org"
-                    className="flex-grow bg-transparent px-5 py-3 outline-none text-ink placeholder:text-ink/30 w-full text-center md:text-left"
+                    placeholder="Enter your nonprofit's website URL..."
+                    className="flex-grow bg-transparent px-5 py-3 outline-none text-ink placeholder:text-ink/40 w-full text-center md:text-left"
                   />
                   <button
                     type="submit"
                     className="bg-ink text-cream px-6 py-3 rounded-full font-medium hover:scale-105 transition-transform whitespace-nowrap cursor-pointer text-sm"
                   >
-                    Generate Free Deck &rarr;
+                    Get Free Deck &rarr;
                   </button>
                 </form>
               )}
 
               {phase === 'idle' && (
-                <p className="mt-4 text-xs uppercase tracking-widest opacity-30 mx-auto lg:mx-0">No sign-up required. Free forever for your first deck.</p>
+                <p className="mt-4 text-xs uppercase tracking-widest opacity-40">Paste your URL. Get a custom story deck instantly.</p>
               )}
 
               {/* Error State */}
@@ -200,188 +169,125 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════
-            DECK SHOWCASE — Show the product
-        ═══════════════════════════════════════════ */}
-        <section className="card bg-white border border-ink/5 py-16 md:py-24 px-8 overflow-hidden">
-          <div className="reveal text-center mb-14">
-            <p className="text-xs uppercase tracking-widest opacity-40 mb-4">What you get</p>
-            <h2 className="text-4xl md:text-6xl">A deck that tells your story<br /><span className="italic">without you saying a word.</span></h2>
-          </div>
-
-          {/* Phone Mockups */}
-          <div className="flex justify-center items-end gap-4 md:gap-8 max-w-4xl mx-auto">
-            {/* Phone 1 — Animal Welfare */}
-            <div className="reveal reveal-delay-1 hidden md:block flex-shrink-0 translate-y-4 -rotate-3">
-              <PhoneMockup
-                gradient="from-amber-700 via-amber-600 to-orange-500"
-                badge="Impact Deck"
-                orgName="Paws & Purpose"
-                metric="2,400"
-                metricLabel="animals rescued in 2025"
-                accentColor="bg-amber-400"
-              />
-            </div>
-
-            {/* Phone 2 — Center, elevated */}
-            <div className="reveal reveal-delay-2 flex-shrink-0 scale-105 md:scale-110 z-10">
-              <PhoneMockup
-                gradient="from-indigo-800 via-indigo-700 to-blue-600"
-                badge="Impact Deck"
-                orgName="Youth Forward"
-                metric="12,000"
-                metricLabel="students served across 8 schools"
-                accentColor="bg-blue-400"
-              />
-            </div>
-
-            {/* Phone 3 — Environmental */}
-            <div className="reveal reveal-delay-3 hidden md:block flex-shrink-0 translate-y-4 rotate-3">
-              <PhoneMockup
-                gradient="from-emerald-800 via-emerald-700 to-green-600"
-                badge="Impact Deck"
-                orgName="Green Valley Conservancy"
-                metric="850"
-                metricLabel="acres of habitat preserved"
-                accentColor="bg-emerald-400"
-              />
-            </div>
-          </div>
-
-          <p className="reveal text-center mt-12 text-sm opacity-40 max-w-md mx-auto">
-            Your brand colors. Your mission. Your metrics. Every deck is unique — generated from your website in seconds.
-          </p>
-        </section>
-
-        {/* ═══════════════════════════════════════════
-            THE PROBLEM — Lead with the pain
-        ═══════════════════════════════════════════ */}
-        <section className="card bg-ink text-cream p-8 md:p-20 min-h-[60vh] flex flex-col justify-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-salmon rounded-full blur-[200px] opacity-10" />
-
-          <div className="reveal relative z-10 max-w-4xl">
-            <p className="text-salmon text-sm uppercase tracking-widest mb-6">The problem</p>
-            <h2 className="text-6xl md:text-8xl mb-8 leading-[0.95]">
-              68% of first-time donors<br />
-              <span className="italic text-cream/60">never give again.</span>
-            </h2>
-          </div>
-
-          <div className="reveal grid grid-cols-1 md:grid-cols-2 gap-12 mt-8 relative z-10">
-            <div className="border-l border-cream/15 pl-8">
-              <h3 className="text-2xl md:text-3xl serif mb-4">They never hear back.</h3>
-              <p className="opacity-50 leading-relaxed">
-                No impact report. No story. No proof their donation mattered. They gave once, felt nothing, and moved on. It&apos;s not your impact — it&apos;s your packaging.
+        {/* Problem Section (Dark) */}
+        <section className="card bg-ink text-cream p-8 md:p-20 min-h-[70vh] flex flex-col justify-center relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+            <div>
+              <h2 className="text-5xl md:text-7xl mb-8">
+                You&apos;re doing the work. <span className="text-salmon italic">But your story isn&apos;t traveling.</span>
+              </h2>
+              <p className="text-lg opacity-70 leading-relaxed max-w-md">
+                A board member asks for something to share. A volunteer wants to explain your mission. You send your website link or a PDF annual report.
               </p>
             </div>
-            <div className="border-l border-cream/15 pl-8">
-              <h3 className="text-2xl md:text-3xl serif mb-4">60 seconds is all you get.</h3>
-              <p className="opacity-50 leading-relaxed">
-                Donors won&apos;t read your website. Board prospects won&apos;t open a PDF. If your story isn&apos;t clear in the time it takes to scroll a phone screen, the moment passes — and so does the gift.
-              </p>
-            </div>
-          </div>
-        </section>
 
-        {/* ═══════════════════════════════════════════
-            HOW IT WORKS — Three steps, spacious
-        ═══════════════════════════════════════════ */}
-        <section className="py-12">
-          <div className="reveal text-center mb-16">
-            <h2 className="text-5xl md:text-7xl">From website to impact deck<br /><span className="italic">in 60 seconds.</span></h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="reveal reveal-delay-1 card bg-white p-10 md:p-12 flex flex-col justify-between min-h-[380px] hover:shadow-lg border border-ink/5 group">
-              <div>
-                <div className="w-14 h-14 bg-salmon/15 rounded-2xl flex items-center justify-center mb-8 text-salmon font-serif text-2xl italic group-hover:scale-110 transition-transform">1</div>
-                <h3 className="text-3xl md:text-4xl serif mb-4">Paste your URL</h3>
+            <div className="flex flex-col gap-12">
+              <div className="border-l border-cream/20 pl-8">
+                <h3 className="text-3xl serif mb-3">Here&apos;s what happens next: Nothing.</h3>
+                <p className="opacity-60">Because websites don&apos;t get forwarded. 40-page reports don&apos;t get read. And that Canva doc you made at 11pm doesn&apos;t make anyone feel the weight of what you do.</p>
               </div>
-              <p className="text-sm opacity-50 leading-relaxed">
-                That&apos;s it. We pull your mission, metrics, colors, logo, and story from your website automatically.
-              </p>
-            </div>
-
-            <div className="reveal reveal-delay-2 card bg-sage p-10 md:p-12 flex flex-col justify-between min-h-[380px] hover:shadow-lg group">
-              <div>
-                <div className="w-14 h-14 bg-ink/10 rounded-2xl flex items-center justify-center mb-8 text-ink font-serif text-2xl italic group-hover:scale-110 transition-transform">2</div>
-                <h3 className="text-3xl md:text-4xl serif mb-4">We build your story</h3>
-              </div>
-              <p className="text-sm opacity-70 leading-relaxed">
-                AI transforms your content into a mobile-first slide deck — branded, beautiful, and ready to share.
-              </p>
-            </div>
-
-            <div className="reveal reveal-delay-3 card bg-white p-10 md:p-12 flex flex-col justify-between min-h-[380px] hover:shadow-lg border border-ink/5 group">
-              <div>
-                <div className="w-14 h-14 bg-periwinkle/40 rounded-2xl flex items-center justify-center mb-8 text-ink font-serif text-2xl italic group-hover:scale-110 transition-transform">3</div>
-                <h3 className="text-3xl md:text-4xl serif mb-4">Donors get it</h3>
-              </div>
-              <p className="text-sm opacity-50 leading-relaxed">
-                One link. Works on any phone. Share with donors, board members, grantmakers, and volunteers. No app needed.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════
-            TESTIMONIAL — One powerful quote
-        ═══════════════════════════════════════════ */}
-        <section className="reveal card bg-periwinkle p-10 md:p-24 text-center">
-          <div className="max-w-3xl mx-auto">
-            <p className="serif text-3xl md:text-5xl leading-snug mb-10">
-              &ldquo;We&apos;ve had a website for five years. This is the first time someone outside our org could explain what we do in under a minute.&rdquo;
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center text-ink font-serif italic text-lg">S</div>
-              <div className="text-left">
-                <div className="text-sm font-medium">Sarah Chen</div>
-                <div className="text-xs opacity-50">Executive Director, Youth Futures Fund</div>
+              <div className="border-l border-cream/20 pl-8">
+                <h3 className="text-3xl serif mb-3">The gap isn&apos;t your impact.</h3>
+                <p className="opacity-60">It&apos;s how you package it. Donors don&apos;t give to missions they don&apos;t understand. You need something scannable, shareable, and emotionally resonant.</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* More testimonials — compact strip */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="reveal card bg-white border border-ink/5 p-8 md:p-10">
-            <p className="serif text-xl md:text-2xl mb-6">
-              &ldquo;I sent this to three board members asking for connections. All three forwarded it. That&apos;s never happened before.&rdquo;
-            </p>
-            <div className="text-xs uppercase tracking-widest opacity-40">
-              Marcus Johnson &middot; Development Director, CHA
-            </div>
+        {/* How It Works (Bento Grid) */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-12">
+          <div className="col-span-1 md:col-span-3 text-center py-12">
+            <h2 className="text-5xl md:text-6xl">From Mission to Movement</h2>
           </div>
-          <div className="reveal card bg-white border border-ink/5 p-8 md:p-10">
-            <p className="serif text-xl md:text-2xl mb-6">
-              &ldquo;Our volunteers used to stumble when recruiting. Now they just pull up the deck. Recruitment is up 40%.&rdquo;
-            </p>
-            <div className="text-xs uppercase tracking-widest opacity-40">
-              Jennifer Martinez &middot; Founder, Arts Access Collective
-            </div>
-          </div>
-        </div>
 
-        {/* ═══════════════════════════════════════════
-            PRICING
-        ═══════════════════════════════════════════ */}
+          <div className="card bg-white p-10 flex flex-col justify-between min-h-[320px] hover:shadow-lg border border-ink/5 group">
+            <div className="w-12 h-12 bg-salmon/20 rounded-full flex items-center justify-center mb-6 text-salmon font-serif text-xl italic group-hover:scale-110 transition-transform">1</div>
+            <div>
+              <h3 className="text-3xl serif mb-4">Share Your Website</h3>
+              <p className="text-sm opacity-60 leading-relaxed">Paste your URL. We extract your mission, impact data, beneficiary stories, and translate them into a narrative arc.</p>
+            </div>
+          </div>
+
+          <div className="card bg-sage p-10 flex flex-col justify-between min-h-[320px] hover:shadow-lg group">
+            <div className="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic group-hover:scale-110 transition-transform">2</div>
+            <div>
+              <h3 className="text-3xl serif mb-4">We Build Your Story</h3>
+              <p className="text-sm opacity-80 leading-relaxed">A custom 10-slide deck that answers: Why does this org exist? Who do they serve? What changes because of them?</p>
+            </div>
+          </div>
+
+          <div className="card bg-white p-10 flex flex-col justify-between min-h-[320px] hover:shadow-lg border border-ink/5 group">
+            <div className="w-12 h-12 bg-periwinkle/40 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic group-hover:scale-110 transition-transform">3</div>
+            <div>
+              <h3 className="text-3xl serif mb-4">Your Story Spreads</h3>
+              <p className="text-sm opacity-60 leading-relaxed">Send it to donors. Hand it to volunteers. Attach it to grant applications. Use it free or unlock the full version.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="card bg-periwinkle mt-4 p-8 md:p-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 divide-y md:divide-y-0 md:divide-x divide-ink/10">
+            <div className="px-4">
+              <p className="serif text-2xl md:text-3xl mb-6">&ldquo;We&apos;ve had a website for five years. This is the first time someone outside our org could explain what we do in under a minute.&rdquo;</p>
+              <div className="text-xs uppercase tracking-widest opacity-60">
+                Sarah Chen<br />Executive Director, Youth Futures Fund
+              </div>
+            </div>
+            <div className="px-4 pt-8 md:pt-0">
+              <p className="serif text-2xl md:text-3xl mb-6">&ldquo;I sent this to three board members asking for connections. All three forwarded it. That&apos;s never happened before.&rdquo;</p>
+              <div className="text-xs uppercase tracking-widest opacity-60">
+                Marcus Johnson<br />Development Director, CHA
+              </div>
+            </div>
+            <div className="px-4 pt-8 md:pt-0">
+              <p className="serif text-2xl md:text-3xl mb-6">&ldquo;Our volunteers used to stumble when recruiting. Now they just pull up the deck. Recruitment is up 40%.&rdquo;</p>
+              <div className="text-xs uppercase tracking-widest opacity-60">
+                Jennifer Martinez<br />Founder, Arts Access Collective
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing */}
         <PricingSection onGetFreeClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
 
-        {/* ═══════════════════════════════════════════
-            FINAL CTA — Mirror the hero
-        ═══════════════════════════════════════════ */}
-        <section className="card bg-white p-8 md:p-28 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-salmon via-sage to-periwinkle" />
-          <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] bg-salmon rounded-full blur-[150px] opacity-15" />
-          <div className="absolute top-[10%] left-[5%] w-[300px] h-[300px] bg-sage rounded-full blur-[120px] opacity-15" />
+        {/* Final CTA */}
+        <section className="card bg-white p-8 md:p-32 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-salmon via-sage to-periwinkle" />
 
-          <div className="reveal relative z-10 max-w-3xl mx-auto">
-            <h2 className="text-5xl md:text-7xl mb-6">
-              Ready to show donors<br /><span className="italic">your impact?</span>
-            </h2>
-            <p className="text-lg opacity-50 mb-10">Free forever for your first deck. No credit card required.</p>
+          <div className="relative z-10 max-w-3xl mx-auto">
+            <h2 className="text-5xl md:text-7xl mb-6">Ready to give your impact the story it deserves?</h2>
+            <p className="text-lg opacity-60 mb-12">Get your custom deck instantly. No credit card required.</p>
 
-            <BottomCTA onSubmit={handleBottomSubmit} />
+            <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+              <input
+                type="text"
+                placeholder="What's your nonprofit's website?"
+                className="bg-cream px-6 py-4 rounded-full w-full md:w-96 outline-none focus:ring-1 focus:ring-ink"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = (e.target as HTMLInputElement).value.trim();
+                    if (val) {
+                      setUrl(val);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setTimeout(() => {
+                        const form = document.querySelector('form');
+                        if (form) form.requestSubmit();
+                      }, 500);
+                    }
+                  }
+                }}
+              />
+              <button
+                className="bg-ink text-white px-8 py-4 rounded-full w-full md:w-auto hover:scale-105 transition-transform cursor-pointer"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                Get My Free Deck
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -394,91 +300,6 @@ export default function Home() {
         <div>&copy; 2026 DonorSpark. All rights reserved.</div>
       </footer>
     </>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Phone Mockup Component
-───────────────────────────────────────────── */
-function PhoneMockup({
-  gradient,
-  badge,
-  orgName,
-  metric,
-  metricLabel,
-  accentColor,
-}: {
-  gradient: string;
-  badge: string;
-  orgName: string;
-  metric: string;
-  metricLabel: string;
-  accentColor: string;
-}) {
-  return (
-    <div className="relative w-[200px] md:w-[240px] rounded-[36px] bg-ink p-2 shadow-2xl">
-      {/* Notch */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-ink rounded-b-xl z-10" />
-      {/* Screen */}
-      <div className={`rounded-[28px] overflow-hidden aspect-[9/19] bg-gradient-to-b ${gradient} relative`}>
-        {/* Shimmer overlay */}
-        <div className="absolute inset-0 deck-shimmer" />
-        {/* Content */}
-        <div className="absolute inset-0 flex flex-col justify-between p-5 pt-10 text-white">
-          {/* Top */}
-          <div>
-            <span className={`inline-block px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider ${accentColor} text-ink/80`}>
-              {badge}
-            </span>
-          </div>
-          {/* Bottom */}
-          <div>
-            <h4 className="font-serif text-lg md:text-xl leading-tight mb-4 italic">{orgName}</h4>
-            <div className="text-4xl md:text-5xl font-bold tracking-tight mb-1">{metric}</div>
-            <div className="text-[10px] opacity-60 leading-snug mb-4">{metricLabel}</div>
-            <div className="flex items-center justify-between">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-              </div>
-              <span className="text-[9px] uppercase tracking-widest opacity-50">Swipe &rarr;</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Bottom CTA (separate to avoid state issues)
-───────────────────────────────────────────── */
-function BottomCTA({ onSubmit }: { onSubmit: (value: string) => void }) {
-  const [value, setValue] = useState('');
-
-  return (
-    <div className="flex flex-col md:flex-row gap-3 justify-center items-center max-w-lg mx-auto">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="yournonprofit.org"
-        className="bg-cream px-6 py-4 rounded-full w-full md:flex-1 outline-none focus:ring-2 focus:ring-ink transition-shadow text-center md:text-left"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            onSubmit(value);
-          }
-        }}
-      />
-      <button
-        className="bg-ink text-cream px-8 py-4 rounded-full w-full md:w-auto hover:scale-105 transition-transform cursor-pointer font-medium whitespace-nowrap"
-        onClick={() => onSubmit(value)}
-      >
-        Get My Free Deck
-      </button>
-    </div>
   );
 }
 
