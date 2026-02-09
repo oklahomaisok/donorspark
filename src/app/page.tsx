@@ -116,7 +116,7 @@ export default function Home() {
               )}
 
               {phase === 'idle' && (
-                <p className="mt-4 text-xs uppercase tracking-widest opacity-40 text-center lg:text-left max-w-md mx-auto lg:mx-0">Enter your nonprofit&apos;s website. Get a custom story deck instantly.</p>
+                <p className="mt-4 text-xs uppercase tracking-widest opacity-40 text-center lg:text-left max-w-md mx-auto lg:mx-0">Enter your nonprofit&apos;s website.<br />Get a custom story deck instantly.</p>
               )}
 
               {/* Error State */}
