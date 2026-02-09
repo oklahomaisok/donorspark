@@ -462,9 +462,9 @@ export default function EditDeckPage() {
           {error && <span className="text-xs text-red-400">{error}</span>}
           {successMessage && <span className="text-xs text-green-400">{successMessage}</span>}
 
-          {deckUrl && (
+          {deckSlug && (
             <a
-              href={deckUrl}
+              href={`/decks/${deckSlug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="h-8 px-3 rounded-md border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 transition-colors flex items-center gap-2"
