@@ -174,21 +174,21 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div>
               <h2 className="text-5xl md:text-7xl mb-8">
-                You&apos;re doing the work. <span className="text-salmon italic">But your story isn&apos;t traveling.</span>
+                You&apos;re doing the work. <span className="text-salmon italic">But your story isn&apos;t inspiring others.</span>
               </h2>
               <p className="text-lg opacity-70 leading-relaxed max-w-md">
-                A board member asks for something to share. A volunteer wants to explain your mission. You send your website link or a PDF annual report.
+                A board member asks for something to share. A volunteer wants to explain your mission. You send your website link or a PDF annual report. Here&apos;s the problem: Websites don&apos;t get forwarded. 40-page reports don&apos;t get read. And that Canva doc you made at 11pm doesn&apos;t make anyone feel the weight of what you do. The gap isn&apos;t your impact — it&apos;s how you package it.
               </p>
             </div>
 
             <div className="flex flex-col gap-12">
               <div className="border-l border-cream/20 pl-8">
-                <h3 className="text-3xl serif mb-3">Here&apos;s what happens next: Nothing.</h3>
-                <p className="opacity-60">Because websites don&apos;t get forwarded. 40-page reports don&apos;t get read. And that Canva doc you made at 11pm doesn&apos;t make anyone feel the weight of what you do.</p>
+                <h3 className="text-3xl serif mb-3">If you can&apos;t connect with donors in under 60 seconds, they&apos;re gone.</h3>
+                <p className="opacity-60">Attention spans are shorter today than ever. TikTok, Instagram, and Facebook have trained your audiences to consume content in bite-sized pieces. Nobody is reading through your website or your 20-page impact report.</p>
               </div>
               <div className="border-l border-cream/20 pl-8">
-                <h3 className="text-3xl serif mb-3">The gap isn&apos;t your impact.</h3>
-                <p className="opacity-60">It&apos;s how you package it. Donors don&apos;t give to missions they don&apos;t understand. You need something scannable, shareable, and emotionally resonant.</p>
+                <h3 className="text-3xl serif mb-3">We tell your story so donors get it in an instant.</h3>
+                <p className="opacity-60">We make the story of your organization scannable, shareable, and emotionally resonant — so donors, volunteers, and staff feel more engaged and inspired.</p>
               </div>
             </div>
           </div>
