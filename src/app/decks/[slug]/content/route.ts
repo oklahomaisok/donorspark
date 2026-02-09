@@ -71,7 +71,8 @@ export async function GET(
  * Inject preview mode: full-width countdown banner on CTA slide (replaces share buttons)
  */
 function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): string {
-  const shareButtonsPattern = /<p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story<\/p>\s*<div class="flex items-center gap-3">[\s\S]*?<\/div>/;
+  // Pattern matches the share buttons section with outer mb-4 wrapper and justify-center class
+  const shareButtonsPattern = /<div class="mb-4"><p class="text-xs text-neutral-400 uppercase tracking-widest mb-3">Share This Story<\/p>\s*<div class="flex items-center justify-center gap-3">[\s\S]*?<\/div><\/div>/;
 
   const countdownBanner = `
                     <!-- Full-width countdown banner on CTA slide -->
