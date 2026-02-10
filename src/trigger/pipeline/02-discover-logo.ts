@@ -226,15 +226,18 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
           var imgSelectors = [
             'img[alt*="boys" i][alt*="girls" i], img[alt*="bgc" i]',
             'img.custom-logo, .custom-logo-link img, .site-branding img',
-            'img[src*="logo" i]',
-            'img[alt*="logo" i]',
-            'img[class*="logo" i]',
-            '#logo img, .logo img, [id*="logo" i] img',
             'a[href="/"] img, a[href*="home"] img',
             'header a img, .header a img, nav a:first-child img',
             '[class*="logo" i] img, .site-logo img, .navbar-brand img',
+            '#logo img, .logo img, [id*="logo" i] img',
+            'img[src*="logo" i]',
+            'img[alt*="logo" i]',
+            'img[class*="logo" i]',
             'header img, nav img, .header img, .navbar img'
           ];
+
+          // Get the current site's domain for validation
+          var siteDomain = window.location.hostname.replace(/^www\\./, '');
 
           // Helper to convert relative URL to absolute
           function toAbsoluteUrl(url) {
@@ -304,6 +307,21 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
               for (var w = 0; w < badges.length; w++) { if (altText.indexOf(badges[w]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
               if (img.naturalWidth > 0 && img.naturalWidth < 30) continue;
+
+              // Skip third-party logos (domain doesn't match site or common CDNs)
+              try {
+                var imgUrl = new URL(src);
+                var imgDomain = imgUrl.hostname.replace(/^www\\./, '');
+                var allowedCdns = ['cloudinary', 'imgix', 'cloudfront', 'amazonaws', 'squarespace', 'wixstatic', 'shopify', 'wordpress', 'wp.com', 'gravatar'];
+                var isOwnDomain = imgDomain.indexOf(siteDomain) !== -1 || siteDomain.indexOf(imgDomain.split('.').slice(-2).join('.')) !== -1;
+                var isCdn = allowedCdns.some(function(cdn) { return imgDomain.indexOf(cdn) !== -1; });
+                if (!isOwnDomain && !isCdn && imgDomain !== siteDomain) {
+                  continue; // Skip third-party logos
+                }
+              } catch (e) {
+                // If URL parsing fails, allow it (might be relative URL)
+              }
+
               return { logoUrl: src, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
             }
           }
