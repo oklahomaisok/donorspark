@@ -224,8 +224,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     <link href="https://fonts.googleapis.com/css2?family=${headingFont.replace(/ /g, '+')}:wght@400;500;700;900&family=${bodyFont.replace(/ /g, '+')}:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: ${primary}; --secondary: ${secondary}; --accent: ${accent}; --text: ${textColor}; --header-bg: ${headerBgColor || primary}; --header-text: ${headerTextDark ? '#1a1a1a' : '#ffffff'}; }
-        body { font-family: '${bodyFont}', sans-serif; background-color: color-mix(in srgb, var(--primary) 85%, black); color: var(--text); }
-        h1, h2, h3, .font-display { font-family: '${headingFont}', sans-serif; }
+        body { font-family: '${bodyFont}', sans-serif !important; background-color: color-mix(in srgb, var(--primary) 85%, black); color: var(--text); }
+        h1, h2, h3, .font-display { font-family: '${headingFont}', sans-serif !important; }
         @keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }
         @keyframes grow-up { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
         .animate-bar { transform-origin: bottom; transform: scaleY(0); animation: grow-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-play-state: paused; }
