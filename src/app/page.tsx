@@ -233,12 +233,10 @@ export default function Home() {
               {/* Input Form */}
               {phase === 'idle' && (
                 <form onSubmit={handleSubmit} className="reveal-item bg-white p-2 rounded-2xl md:rounded-full shadow-md hover:shadow-lg transition-shadow duration-200 max-w-md flex flex-col md:flex-row items-stretch md:items-center gap-2 border border-ink/10 focus-within:ring-2 focus-within:ring-ink/20 mx-auto lg:mx-0">
-                  <input
-                    type="text"
+                  <TypewriterInput
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="yournonprofit.org"
-                    className="flex-grow bg-transparent px-5 py-3 outline-none text-ink placeholder:text-ink/40 w-full text-center md:text-left"
+                    placeholder="yourwebsite.org"
                   />
                   <button
                     type="submit"
@@ -451,6 +449,99 @@ const heroImages = [
   '/UW05.png',
   '/UW06.png',
 ];
+
+/* ─────────────────────────────────────────────
+   Typewriter Input — Animated placeholder
+───────────────────────────────────────────── */
+function TypewriterInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+}) {
+  const [displayedPlaceholder, setDisplayedPlaceholder] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const [hasTyped, setHasTyped] = useState(false);
+
+  // Typewriter animation effect
+  useEffect(() => {
+    // Don't animate if user has focused or typed
+    if (isFocused || hasTyped) return;
+
+    let charIndex = 0;
+    setDisplayedPlaceholder('');
+
+    const typeInterval = setInterval(() => {
+      if (charIndex < placeholder.length) {
+        setDisplayedPlaceholder(placeholder.slice(0, charIndex + 1));
+        charIndex++;
+      } else {
+        clearInterval(typeInterval);
+        // After completing, wait and restart
+        setTimeout(() => {
+          if (!isFocused && !hasTyped) {
+            setDisplayedPlaceholder('');
+            charIndex = 0;
+          }
+        }, 2000);
+      }
+    }, 100);
+
+    return () => clearInterval(typeInterval);
+  }, [placeholder, isFocused, hasTyped]);
+
+  // Restart animation periodically when idle
+  useEffect(() => {
+    if (isFocused || hasTyped) return;
+
+    const restartInterval = setInterval(() => {
+      setDisplayedPlaceholder('');
+    }, 5000);
+
+    return () => clearInterval(restartInterval);
+  }, [isFocused, hasTyped]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value !== 'www.') {
+      setHasTyped(true);
+    } else {
+      setHasTyped(false);
+    }
+    onChange(e);
+  };
+
+  const handleFocus = () => setIsFocused(true);
+  const handleBlur = () => {
+    setIsFocused(false);
+    if (value === 'www.') {
+      setHasTyped(false);
+    }
+  };
+
+  const showPlaceholder = !isFocused && !hasTyped && value === 'www.';
+
+  return (
+    <div className="relative flex-1">
+      <input
+        type="text"
+        value={value}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        className="w-full bg-transparent pl-4 pr-4 py-3 outline-none text-sm"
+      />
+      {showPlaceholder && (
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-ink/40 pointer-events-none" style={{ paddingLeft: '32px' }}>
+          {displayedPlaceholder}
+          <span className="inline-block w-0.5 h-4 bg-ink/40 ml-0.5 animate-pulse align-middle" />
+        </span>
+      )}
+    </div>
+  );
+}
 
 function HeroPhone() {
   const [currentIndex, setCurrentIndex] = useState(0);
