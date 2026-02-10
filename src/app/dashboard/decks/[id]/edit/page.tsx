@@ -374,6 +374,16 @@ export default function EditDeckPage() {
     return () => clearTimeout(timer);
   }, [activeSlideType, previewHtml]);
 
+  // Open live preview in new tab (shows unsaved changes)
+  const handlePreview = useCallback(() => {
+    if (!previewHtml) return;
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(previewHtml);
+      newWindow.document.close();
+    }
+  }, [previewHtml]);
+
   // Save changes
   const handleSave = async () => {
     if (!brandData) return;
@@ -465,15 +475,13 @@ export default function EditDeckPage() {
           {successMessage && <span className="text-xs text-green-400">{successMessage}</span>}
 
           {deckSlug && (
-            <a
-              href={`/decks/${deckSlug}?v=${saveTimestamp}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={handlePreview}
               className="h-8 px-3 rounded-md border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 transition-colors flex items-center gap-2"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               Preview
-            </a>
+            </button>
           )}
 
           <div className="relative group">
