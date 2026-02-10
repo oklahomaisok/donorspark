@@ -357,11 +357,13 @@ function HeroPhone() {
 
         {/* Screen */}
         <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19] relative bg-white">
-          {/* Image carousel container */}
+          {/* Image carousel container - shifted up to hide top nav bar */}
           <div
-            className="absolute inset-0 flex transition-transform duration-500 ease-out"
+            className="absolute flex transition-transform duration-500 ease-out"
             style={{
               width: '200%',
+              height: '115%',
+              top: '-8%',
               transform: isSliding ? 'translateX(-50%)' : 'translateX(0)',
             }}
           >
