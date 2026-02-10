@@ -37,6 +37,45 @@ async function resolveRedirects(url: string): Promise<string> {
   }
 }
 
+// Validate that a URL is likely an image (not a webpage)
+function isValidImageUrl(url: string): boolean {
+  if (!url) return false;
+
+  // Data URIs for images are always valid
+  if (url.startsWith('data:image/')) return true;
+
+  const urlLower = url.toLowerCase();
+
+  // Check for common image extensions
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.bmp', '.avif'];
+  if (imageExtensions.some(ext => urlLower.includes(ext))) return true;
+
+  // Check for image-related paths (CDNs, asset directories)
+  const imagePaths = ['/images/', '/img/', '/logo', '/assets/', '/static/', '/media/', '/uploads/',
+                      'cloudinary', 'imgix', 'cloudfront', 'wixstatic', 'squarespace', 'shopify'];
+  if (imagePaths.some(path => urlLower.includes(path))) return true;
+
+  // Check for common image CDN domains
+  const imageCdns = ['logos-api.apistemic.com', 'favicon', 'icon'];
+  if (imageCdns.some(cdn => urlLower.includes(cdn))) return true;
+
+  // If URL is just a domain/homepage (no path or just /), it's NOT an image
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname;
+    if (path === '/' || path === '') {
+      console.log('[Logo Discovery] Rejecting URL as homepage:', url.substring(0, 80));
+      return false;
+    }
+  } catch {
+    // If URL parsing fails, be conservative and reject
+    return false;
+  }
+
+  // For other URLs, accept them (might be API endpoints that serve images)
+  return true;
+}
+
 export async function discoverLogo(url: string, domain: string): Promise<LogoResult> {
   let logoUrl: string | null = null;
   let logoSource = 'none';
@@ -342,12 +381,24 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
       headerBgColor = result.headerBg;
       detectedFonts = { heading: result.headingFont, body: result.bodyFont };
 
-      // Prefer scraped logo over apistemic if found
+      // Prefer scraped logo over apistemic if found AND it's a valid image URL
       if (result.logoUrl) {
-        // Resolve any redirects to get the final URL
-        logoUrl = await resolveRedirects(result.logoUrl);
-        logoSource = 'scraper';
-        console.log('[Logo Discovery] Found via DOM scrape:', logoUrl?.substring(0, 100));
+        // Validate the URL is actually an image (not a webpage)
+        if (isValidImageUrl(result.logoUrl)) {
+          // Resolve any redirects to get the final URL
+          const resolvedUrl = await resolveRedirects(result.logoUrl);
+          // Re-validate after redirect resolution (might have redirected to homepage)
+          if (isValidImageUrl(resolvedUrl)) {
+            logoUrl = resolvedUrl;
+            logoSource = 'scraper';
+            console.log('[Logo Discovery] Found via DOM scrape:', logoUrl?.substring(0, 100));
+          } else {
+            console.log('[Logo Discovery] Scraped URL redirected to non-image, keeping Apistemic');
+          }
+        } else {
+          console.log('[Logo Discovery] Scraped URL is not a valid image URL:', result.logoUrl.substring(0, 80));
+          // Keep the Apistemic logo if we have one
+        }
       } else {
         console.log('[Logo Discovery] DOM scrape found no logo');
       }
