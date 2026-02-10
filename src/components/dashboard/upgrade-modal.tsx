@@ -1,154 +1,107 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface UpgradeModalProps {
-  isOpen: boolean;
   onClose: () => void;
-  feature: string;
-  requiredPlan: 'starter' | 'growth';
 }
 
-export function UpgradeModal({ isOpen, onClose, feature, requiredPlan }: UpgradeModalProps) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
-  if (!isOpen) return null;
-
-  const handleUpgrade = async () => {
-    // Track the edit attempt
-    setLoading(true);
-    try {
-      await fetch('/api/upgrade-events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'edit_attempt',
-          metadata: { feature, requiredPlan },
-        }),
-      });
-    } catch {
-      // Ignore tracking errors
-    }
-    router.push('/pricing');
-  };
-
-  const planName = requiredPlan === 'growth' ? 'Growth' : 'Starter';
-
+export function UpgradeModal({ onClose }: UpgradeModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+        {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+          className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" x2="6" y1="6" y2="18"/>
             <line x1="6" x2="18" y1="6" y2="18"/>
           </svg>
         </button>
 
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-[#C15A36]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
+        {/* Icon */}
+        <div className="w-20 h-20 bg-[#C15A36]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
+            <path d="M12 2v20"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+
+        <h2 className="text-2xl font-bold text-neutral-800 mb-2">
+          Upgrade to Create More Decks
+        </h2>
+
+        <p className="text-neutral-600 mb-6">
+          Free accounts are limited to 1 deck. Upgrade to create additional decks for your organization.
+        </p>
+
+        {/* Plan comparison */}
+        <div className="bg-neutral-50 rounded-xl p-4 text-left mb-6">
+          <div className="flex items-center justify-between mb-4 pb-4 border-b border-neutral-200">
+            <div>
+              <div className="font-semibold text-neutral-800">Starter Plan</div>
+              <div className="text-sm text-neutral-500">$29/month</div>
+            </div>
+            <div className="text-sm text-neutral-600">5 decks</div>
           </div>
-          <h2 className="text-2xl font-bold text-neutral-800 mb-2">
-            Unlock {feature}
-          </h2>
-          <p className="text-neutral-500">
-            This feature is available on the {planName} plan and above.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-semibold text-neutral-800">Growth Plan</div>
+              <div className="text-sm text-neutral-500">$79/month</div>
+            </div>
+            <div className="text-sm text-neutral-600">Unlimited decks</div>
+          </div>
         </div>
 
-        <div className="bg-neutral-50 rounded-xl p-4 mb-6">
-          <h3 className="font-semibold text-neutral-800 mb-2">
-            {planName} includes:
-          </h3>
-          <ul className="space-y-2 text-sm text-neutral-600">
-            {requiredPlan === 'starter' ? (
-              <>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Unlimited Impact Decks
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Custom colors & fonts
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Remove DonorSpark branding
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Thank-You & Event Decks
-                </li>
-              </>
-            ) : (
-              <>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Everything in Starter
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  CSV donor personalization
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Annual Report Decks
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  API access
-                </li>
-              </>
-            )}
-          </ul>
-        </div>
+        {/* Features */}
+        <ul className="text-sm text-neutral-600 space-y-2 mb-6 text-left">
+          <li className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            No DonorSpark branding on decks
+          </li>
+          <li className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Additional deck styles (thank you, onboarding, story)
+          </li>
+          <li className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Priority support
+          </li>
+        </ul>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-3 border border-neutral-200 rounded-lg font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
-          >
-            Maybe Later
-          </button>
-          <button
-            onClick={handleUpgrade}
-            disabled={loading}
-            className="flex-1 py-3 bg-[#C15A36] text-white rounded-lg font-medium hover:bg-[#a84d2e] transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Loading...' : 'View Plans'}
-          </button>
-        </div>
+        {/* Actions */}
+        <Link
+          href="/pricing"
+          className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#C15A36] text-white rounded-lg font-semibold hover:bg-[#a84d2e] transition-colors"
+        >
+          View Plans
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </Link>
+
+        <button
+          onClick={onClose}
+          className="w-full mt-3 text-sm text-neutral-500 hover:text-neutral-700"
+        >
+          Maybe later
+        </button>
       </div>
     </div>
   );

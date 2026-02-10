@@ -16,16 +16,17 @@ import { PrimaryDeckCard } from '@/components/dashboard/primary-deck-card';
 import { DeckTypeCards } from '@/components/dashboard/deck-type-cards';
 import { EditFeatures } from '@/components/dashboard/edit-features';
 import { AnalyticsSection } from '@/components/dashboard/analytics-section';
-import { PlanBadge } from '@/components/dashboard/plan-badge';
 import { VerificationWarning } from '@/components/dashboard/verification-warning';
 import { RefreshButton } from '@/components/dashboard/refresh-button';
 import { UpgradeBanner } from '@/components/dashboard/upgrade-banner';
+import { DashboardHeader } from '@/components/dashboard/dashboard-header';
+import { ClaimedModalWrapper } from '@/components/dashboard/claimed-modal-wrapper';
 import type { Plan } from '@/db/schema';
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; claimed?: string }>;
 }) {
   const { userId: clerkId } = await auth();
   if (!clerkId) redirect('/sign-in');
@@ -84,34 +85,20 @@ export default async function DashboardPage({
       {/* Upgrade Banner (for free users with 3+ dashboard visits) */}
       <UpgradeBanner user={user} />
 
+      {/* Claimed Modal (shows when redirected from claim flow) */}
+      {primaryOrg && (
+        <ClaimedModalWrapper
+          orgName={primaryOrg.name}
+          deckUrl={`${config.siteUrl}/s/${primaryOrg.slug}`}
+        />
+      )}
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl md:text-4xl font-bold text-neutral-800">Dashboard</h1>
-            <PlanBadge user={user} />
-          </div>
-          <p className="text-neutral-500">
-            {primaryOrg ? primaryOrg.name : 'Welcome to DonorSpark'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {user.plan === 'free' && (
-            <Link
-              href="/pricing"
-              className="px-4 py-2 text-sm font-medium text-[#C15A36] border border-[#C15A36] rounded-lg hover:bg-[#C15A36]/5 transition-colors"
-            >
-              Upgrade Plan
-            </Link>
-          )}
-          <Link
-            href="/"
-            className="px-4 py-2 text-sm font-medium bg-[#C15A36] text-white rounded-lg hover:bg-[#a84d2e] transition-colors"
-          >
-            New Deck
-          </Link>
-        </div>
-      </div>
+      <DashboardHeader
+        user={user}
+        orgName={primaryOrg?.name || null}
+        hasExistingDeck={!!primaryDeck}
+      />
 
       {/* Main Content */}
       {primaryDeck && primaryOrg ? (

@@ -79,8 +79,8 @@ export async function GET(req: NextRequest) {
       })
       .catch((err) => console.error('QR code generation failed:', err));
 
-    // Redirect to new deck URL
-    return NextResponse.redirect(`${config.siteUrl}/s/${orgSlug}?claimed=true`);
+    // Redirect to dashboard with claimed flag
+    return NextResponse.redirect(`${config.siteUrl}/dashboard?claimed=true`);
   } catch (error) {
     console.error('Claim error:', error);
     return NextResponse.redirect(`${config.siteUrl}/dashboard?error=claim_failed`);
