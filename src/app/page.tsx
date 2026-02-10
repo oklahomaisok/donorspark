@@ -312,7 +312,7 @@ export default function Home() {
                 You&apos;re doing the work. <span className="text-salmon italic">But your story isn&apos;t inspiring others.</span>
               </h2>
               <p className="reveal-item text-lg opacity-70 leading-relaxed max-w-md">
-                &ldquo;Build it and they will come&rdquo; doesn&apos;t apply to nonprofits attracting donors. Just because you&apos;re improving lives doesn&apos;t mean others get it. The problem isn&apos;t your impact — it&apos;s how you package it.
+                Just because you&apos;re improving lives doesn&apos;t mean others get it. The problem isn&apos;t your impact — it&apos;s how you package it.
               </p>
             </div>
 
@@ -534,7 +534,7 @@ function TypewriterInput({
         className="w-full bg-transparent pl-4 pr-4 py-3 outline-none text-sm"
       />
       {showPlaceholder && (
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-ink/40 pointer-events-none" style={{ paddingLeft: '32px' }}>
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-ink/40 pointer-events-none" style={{ paddingLeft: '29px' }}>
           {displayedPlaceholder}
           <span className="inline-block w-0.5 h-4 bg-ink/40 ml-0.5 animate-pulse align-middle" />
         </span>
