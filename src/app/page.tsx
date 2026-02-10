@@ -534,7 +534,7 @@ function TypewriterInput({
         className="w-full bg-transparent pl-4 pr-4 py-3 outline-none text-sm"
       />
       {showPlaceholder && (
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-ink/40 pointer-events-none" style={{ paddingLeft: '29px' }}>
+        <span className="absolute top-1/2 -translate-y-1/2 text-sm text-ink/40 pointer-events-none" style={{ left: 'calc(1rem + 9ch)' }}>
           {displayedPlaceholder}
           <span className="inline-block w-0.5 h-4 bg-ink/40 ml-0.5 animate-pulse align-middle" />
         </span>
