@@ -217,6 +217,12 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
                 var svgString = serializer.serializeToString(svgs[q]);
                 // Skip simple icon SVGs (real logos are typically 1KB+)
                 if (svgString.length < 1000) continue;
+                // Skip third-party SVG logos
+                var svgLower = svgString.toLowerCase();
+                var thirdPartySvg = ['superpath', 'hubspot', 'mailchimp', 'intercom', 'drift', 'crisp', 'zendesk', 'calendly', 'typeform'];
+                var skipSvg = false;
+                for (var tp = 0; tp < thirdPartySvg.length; tp++) { if (svgLower.indexOf(thirdPartySvg[tp]) !== -1) { skipSvg = true; break; } }
+                if (skipSvg) continue;
                 var encodedSvg = encodeURIComponent(svgString);
                 return { logoUrl: 'data:image/svg+xml,' + encodedSvg, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
               }
@@ -295,6 +301,7 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
               var skip = ['data:image/gif', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
               var banner = ['banner', 'alert', 'promo', 'hero', 'slide', 'carousel', 'background'];
               var badges = ['badge', 'award', 'usnews', 'ranking', 'seal', 'best-', 'top-', 'accredit', 'certif', 'rated', 'winner'];
+              var thirdParty = ['superpath', 'hubspot', 'mailchimp', 'constant-contact', 'salesforce', 'zendesk', 'intercom', 'drift', 'crisp', 'tawk', 'livechat', 'freshdesk', 'helpscout', 'calendly', 'typeform', 'jotform', 'formstack', 'wufoo', 'cognito', 'auth0', 'okta', 'stripe', 'paypal', 'square', 'classy', 'bloomerang', 'blackbaud', 'neon', 'givebutter', 'donorbox', 'networkforgood', 'double-the-donation', 'facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'snapchat'];
               var shouldSkip = false;
               for (var t = 0; t < skip.length; t++) { if (srcLower.indexOf(skip[t]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
@@ -305,6 +312,8 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
               // Also check alt text for badge-related keywords
               var altText = (img.alt || '').toLowerCase();
               for (var w = 0; w < badges.length; w++) { if (altText.indexOf(badges[w]) !== -1) { shouldSkip = true; break; } }
+              if (shouldSkip) continue;
+              for (var x = 0; x < thirdParty.length; x++) { if (srcLower.indexOf(thirdParty[x]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
               if (img.naturalWidth > 0 && img.naturalWidth < 30) continue;
 
