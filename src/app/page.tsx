@@ -1,11 +1,69 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Nav } from '@/components/nav';
 import { GenerationProgress } from '@/components/generation-progress';
 import { PricingSection } from '@/components/pricing-section';
 
 type Phase = 'idle' | 'generating' | 'complete' | 'error';
+
+/* ─────────────────────────────────────────────
+   Meng To-style Motion System
+   - Micro interactions: scale 1.03 + shadow, 200ms ease-out
+   - Entrances: fade + translateY 12px, stagger 60ms
+   - Spring for success states only
+───────────────────────────────────────────── */
+
+// Hook for scroll-triggered entrance animations
+function useScrollReveal(staggerDelay = 60) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, isVisible, staggerDelay };
+}
+
+// Animated container with staggered children
+function AnimatedSection({
+  children,
+  className = '',
+  stagger = 60,
+  as: Component = 'div'
+}: {
+  children: React.ReactNode;
+  className?: string;
+  stagger?: number;
+  as?: 'div' | 'section';
+}) {
+  const { ref, isVisible } = useScrollReveal(stagger);
+
+  return (
+    <Component
+      ref={ref}
+      className={className}
+      style={{
+        '--stagger': `${stagger}ms`,
+      } as React.CSSProperties}
+      data-visible={isVisible}
+    >
+      {children}
+    </Component>
+  );
+}
 
 export default function Home() {
   const [url, setUrl] = useState('www.');
@@ -76,29 +134,82 @@ export default function Home() {
     <>
       <Nav />
 
+      {/* Global motion styles */}
+      <style>{`
+        /* Micro interactions: scale 1.03 + shadow, 200ms ease-out */
+        .hover-lift {
+          transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+        }
+        .hover-lift:hover {
+          transform: scale(1.03);
+          box-shadow: 0 10px 40px -10px rgba(0,0,0,0.2);
+        }
+
+        /* Entrance animations: fade + translateY 12px */
+        .reveal-item {
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 350ms ease-out, transform 350ms ease-out;
+        }
+        [data-visible="true"] .reveal-item {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* Staggered children */
+        [data-visible="true"] .reveal-item:nth-child(1) { transition-delay: 0ms; }
+        [data-visible="true"] .reveal-item:nth-child(2) { transition-delay: 60ms; }
+        [data-visible="true"] .reveal-item:nth-child(3) { transition-delay: 120ms; }
+        [data-visible="true"] .reveal-item:nth-child(4) { transition-delay: 180ms; }
+        [data-visible="true"] .reveal-item:nth-child(5) { transition-delay: 240ms; }
+        [data-visible="true"] .reveal-item:nth-child(6) { transition-delay: 300ms; }
+
+        /* Success state spring animation */
+        @keyframes success-spring {
+          0% { transform: scale(0.9); opacity: 0; }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .success-spring {
+          animation: success-spring 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Button hover - subtle scale */
+        .btn-hover {
+          transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+        }
+        .btn-hover:hover {
+          transform: scale(1.03);
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.2);
+        }
+        .btn-hover:active {
+          transform: scale(0.98);
+        }
+      `}</style>
+
       <main className="w-full max-w-[1400px] mx-auto px-4 pt-20 pb-12 flex flex-col gap-4">
 
         {/* Hero Section — Side by side with animated phone */}
-        <section className="relative card bg-white/40 p-6 md:p-10 lg:p-12 border border-ink/5 overflow-hidden">
-          {/* Animated Blobs */}
-          <div className="absolute top-[10%] right-[10%] w-64 h-64 bg-salmon rounded-full blur-[80px] opacity-40 blob" />
-          <div className="absolute bottom-[10%] left-[10%] w-80 h-80 bg-sage rounded-full blur-[80px] opacity-40 blob" style={{ animationDelay: '-5s' }} />
+        <AnimatedSection as="section" className="relative card bg-white/40 p-6 md:p-10 lg:p-12 border border-ink/5 overflow-hidden">
+          {/* Subtle static gradient - no animation */}
+          <div className="absolute top-[10%] right-[10%] w-64 h-64 bg-salmon rounded-full blur-[100px] opacity-20" />
+          <div className="absolute bottom-[10%] left-[10%] w-80 h-80 bg-sage rounded-full blur-[100px] opacity-20" />
 
           <div className="relative z-10 w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-center justify-center py-8 md:py-12">
             {/* Left — Copy + CTA */}
             <div className="text-center lg:text-left flex-1 max-w-xl">
-              <p className="text-sm uppercase tracking-widest opacity-60 mb-4">Story Decks for Nonprofits</p>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl mb-5 leading-[0.95]">
+              <p className="reveal-item text-sm uppercase tracking-widest opacity-60 mb-4">Story Decks for Nonprofits</p>
+              <h1 className="reveal-item text-4xl md:text-5xl lg:text-6xl mb-5 leading-[0.95]">
                 Donors won&apos;t give to a mission <span className="italic">they don&apos;t understand.</span>
               </h1>
 
-              <p className="text-lg md:text-xl opacity-60 max-w-lg mb-6 leading-relaxed mx-auto lg:mx-0">
+              <p className="reveal-item text-lg md:text-xl opacity-60 max-w-lg mb-6 leading-relaxed mx-auto lg:mx-0">
                 We turn your nonprofit&apos;s story into a mobile slide deck that makes your impact instantly clear.
               </p>
 
               {/* Input Form */}
               {phase === 'idle' && (
-                <form onSubmit={handleSubmit} className="bg-white p-2 rounded-2xl md:rounded-full shadow-lg max-w-md flex flex-col md:flex-row items-stretch md:items-center gap-2 border border-ink/10 focus-within:ring-2 focus-within:ring-ink mx-auto lg:mx-0">
+                <form onSubmit={handleSubmit} className="reveal-item bg-white p-2 rounded-2xl md:rounded-full shadow-md hover:shadow-lg transition-shadow duration-200 max-w-md flex flex-col md:flex-row items-stretch md:items-center gap-2 border border-ink/10 focus-within:ring-2 focus-within:ring-ink/20 mx-auto lg:mx-0">
                   <input
                     type="text"
                     value={url}
@@ -108,7 +219,7 @@ export default function Home() {
                   />
                   <button
                     type="submit"
-                    className="bg-ink text-cream px-6 py-3 rounded-full font-medium hover:scale-105 transition-transform whitespace-nowrap cursor-pointer text-sm"
+                    className="btn-hover bg-ink text-cream px-6 py-3 rounded-full font-medium whitespace-nowrap cursor-pointer text-sm"
                   >
                     Get Free Deck &rarr;
                   </button>
@@ -116,14 +227,14 @@ export default function Home() {
               )}
 
               {phase === 'idle' && (
-                <p className="mt-4 text-xs uppercase tracking-widest opacity-40 text-center lg:text-left max-w-md mx-auto lg:mx-0">Enter your nonprofit&apos;s website.<br />Get a custom story deck instantly.</p>
+                <p className="reveal-item mt-4 text-xs uppercase tracking-widest opacity-40 text-center lg:text-left max-w-md mx-auto lg:mx-0">Enter your nonprofit&apos;s website.<br />Get a custom story deck instantly.</p>
               )}
 
               {/* Error State */}
               {phase === 'error' && (
                 <div className="mt-6 max-w-md mx-auto lg:mx-0">
                   <p className="text-red-500 text-sm mb-4">{error}</p>
-                  <button onClick={resetForm} className="text-xs uppercase tracking-widest opacity-40 hover:opacity-60 cursor-pointer">Try again</button>
+                  <button onClick={resetForm} className="text-xs uppercase tracking-widest opacity-40 hover:opacity-60 transition-opacity duration-200 cursor-pointer">Try again</button>
                 </div>
               )}
 
@@ -139,12 +250,12 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Result Preview */}
+              {/* Result Preview - with spring animation for success */}
               {phase === 'complete' && result && (
-                <div className="mt-6 max-w-md mx-auto lg:mx-0">
+                <div className="mt-6 max-w-md mx-auto lg:mx-0 success-spring">
                   <p className="text-sm opacity-60 mb-4">Your deck is ready!</p>
-                  <a href={`/decks/${result.slug}`} target="_blank" rel="noopener noreferrer" className="block group">
-                    <div className="relative rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-shadow bg-ink">
+                  <a href={`/decks/${result.slug}`} target="_blank" rel="noopener noreferrer" className="block">
+                    <div className="hover-lift relative rounded-2xl overflow-hidden shadow-lg bg-ink">
                       {!ogFailed && result.ogImageUrl ? (
                         <img
                           src={result.ogImageUrl}
@@ -158,119 +269,116 @@ export default function Home() {
                           <div className="text-sm opacity-60">Click to view</div>
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/10 transition-colors flex items-center justify-center">
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-ink px-4 py-2 rounded-full text-sm font-medium">View Deck &rarr;</span>
-                      </div>
                     </div>
                   </a>
-                  <button onClick={resetForm} className="mt-4 text-xs uppercase tracking-widest opacity-40 hover:opacity-60 cursor-pointer">Generate another deck</button>
+                  <button onClick={resetForm} className="mt-4 text-xs uppercase tracking-widest opacity-40 hover:opacity-60 transition-opacity duration-200 cursor-pointer">Generate another deck</button>
                 </div>
               )}
             </div>
 
             {/* Right — Animated deck phone */}
-            <div className="flex justify-center items-center flex-shrink-0 mt-4 lg:mt-0">
+            <div className="reveal-item flex justify-center items-center flex-shrink-0 mt-4 lg:mt-0">
               <HeroPhone />
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
         {/* Problem Section (Dark) */}
-        <section className="card bg-ink text-cream p-8 md:p-20 min-h-[70vh] flex flex-col justify-center relative">
+        <AnimatedSection as="section" className="card bg-ink text-cream p-8 md:p-20 min-h-[70vh] flex flex-col justify-center relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div>
-              <h2 className="text-5xl md:text-7xl mb-8">
+              <h2 className="reveal-item text-5xl md:text-7xl mb-8">
                 You&apos;re doing the work. <span className="text-salmon italic">But your story isn&apos;t inspiring others.</span>
               </h2>
-              <p className="text-lg opacity-70 leading-relaxed max-w-md">
+              <p className="reveal-item text-lg opacity-70 leading-relaxed max-w-md">
                 &ldquo;Build it and they will come&rdquo; doesn&apos;t apply to nonprofits attracting donors. Just because you&apos;re improving lives doesn&apos;t mean others get it. The problem isn&apos;t your impact — it&apos;s how you package it.
               </p>
             </div>
 
             <div className="flex flex-col gap-12">
-              <div className="border-l border-cream/20 pl-8">
+              <div className="reveal-item border-l border-cream/20 pl-8">
                 <h3 className="text-3xl serif mb-3">If you can&apos;t connect with donors in under 60 seconds, they&apos;re gone.</h3>
                 <p className="opacity-60">Attention spans are shorter today than ever. TikTok, Instagram, and Facebook have trained your audiences to consume content in bite-sized pieces. Nobody is reading through your website or your 20-page impact report.</p>
               </div>
-              <div className="border-l border-cream/20 pl-8">
+              <div className="reveal-item border-l border-cream/20 pl-8">
                 <h3 className="text-3xl serif mb-3">We tell your story so donors get it in an instant.</h3>
                 <p className="opacity-60">We make the story of your organization scannable, shareable, and emotionally resonant — so donors, volunteers, and staff feel more engaged and inspired.</p>
               </div>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
         {/* How It Works (Bento Grid) */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-12">
+        <AnimatedSection as="section" className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-12">
           <div className="col-span-1 md:col-span-3 text-center py-12">
-            <h2 className="text-5xl md:text-6xl">From Mission to Movement</h2>
+            <h2 className="reveal-item text-5xl md:text-6xl">From Mission to Movement</h2>
           </div>
 
-          <div className="card bg-white p-10 flex flex-col justify-between min-h-[320px] hover:shadow-lg border border-ink/5 group">
-            <div className="w-12 h-12 bg-salmon/20 rounded-full flex items-center justify-center mb-6 text-salmon font-serif text-xl italic group-hover:scale-110 transition-transform">1</div>
+          <div className="reveal-item hover-lift card bg-white p-10 flex flex-col justify-between min-h-[320px] border border-ink/5">
+            <div className="w-12 h-12 bg-salmon/20 rounded-full flex items-center justify-center mb-6 text-salmon font-serif text-xl italic">1</div>
             <div>
               <h3 className="text-3xl serif mb-4">Share Your Website</h3>
               <p className="text-sm opacity-60 leading-relaxed">Paste your URL. We extract your mission, impact data, beneficiary stories, and translate them into a narrative arc.</p>
             </div>
           </div>
 
-          <div className="card bg-sage p-10 flex flex-col justify-between min-h-[320px] hover:shadow-lg group">
-            <div className="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic group-hover:scale-110 transition-transform">2</div>
+          <div className="reveal-item hover-lift card bg-sage p-10 flex flex-col justify-between min-h-[320px]">
+            <div className="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic">2</div>
             <div>
               <h3 className="text-3xl serif mb-4">We Build Your Story</h3>
               <p className="text-sm opacity-80 leading-relaxed">A custom 10-slide deck that answers: Why does this org exist? Who do they serve? What changes because of them?</p>
             </div>
           </div>
 
-          <div className="card bg-white p-10 flex flex-col justify-between min-h-[320px] hover:shadow-lg border border-ink/5 group">
-            <div className="w-12 h-12 bg-periwinkle/40 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic group-hover:scale-110 transition-transform">3</div>
+          <div className="reveal-item hover-lift card bg-white p-10 flex flex-col justify-between min-h-[320px] border border-ink/5">
+            <div className="w-12 h-12 bg-periwinkle/40 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic">3</div>
             <div>
               <h3 className="text-3xl serif mb-4">Your Story Spreads</h3>
               <p className="text-sm opacity-60 leading-relaxed">Send it to donors. Hand it to volunteers. Attach it to grant applications. Use it free or unlock the full version.</p>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
         {/* Testimonials */}
-        <section className="card bg-periwinkle mt-4 p-8 md:p-20">
+        <AnimatedSection as="section" className="card bg-periwinkle mt-4 p-8 md:p-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 divide-y md:divide-y-0 md:divide-x divide-ink/10">
-            <div className="px-4">
+            <div className="reveal-item px-4">
               <p className="serif text-2xl md:text-3xl mb-6">&ldquo;We&apos;ve had a website for five years. This is the first time someone outside our org could explain what we do in under a minute.&rdquo;</p>
               <div className="text-xs uppercase tracking-widest opacity-60">
                 Sarah Chen<br />Executive Director, Youth Futures Fund
               </div>
             </div>
-            <div className="px-4 pt-8 md:pt-0">
+            <div className="reveal-item px-4 pt-8 md:pt-0">
               <p className="serif text-2xl md:text-3xl mb-6">&ldquo;I sent this to three board members asking for connections. All three forwarded it. That&apos;s never happened before.&rdquo;</p>
               <div className="text-xs uppercase tracking-widest opacity-60">
                 Marcus Johnson<br />Development Director, CHA
               </div>
             </div>
-            <div className="px-4 pt-8 md:pt-0">
+            <div className="reveal-item px-4 pt-8 md:pt-0">
               <p className="serif text-2xl md:text-3xl mb-6">&ldquo;Our volunteers used to stumble when recruiting. Now they just pull up the deck. Recruitment is up 40%.&rdquo;</p>
               <div className="text-xs uppercase tracking-widest opacity-60">
                 Jennifer Martinez<br />Founder, Arts Access Collective
               </div>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
         {/* Pricing */}
         <PricingSection onGetFreeClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
 
         {/* Final CTA */}
-        <section className="card bg-white p-8 md:p-32 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-salmon via-sage to-periwinkle" />
+        <AnimatedSection as="section" className="card bg-white p-8 md:p-32 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-salmon via-sage to-periwinkle" />
 
           <div className="relative z-10 max-w-3xl mx-auto">
-            <h2 className="text-5xl md:text-7xl mb-6">Ready to give your impact the story it deserves?</h2>
-            <p className="text-lg opacity-60 mb-12">Get your custom deck instantly. No credit card required.</p>
+            <h2 className="reveal-item text-5xl md:text-7xl mb-6">Ready to give your impact the story it deserves?</h2>
+            <p className="reveal-item text-lg opacity-60 mb-12">Get your custom deck instantly. No credit card required.</p>
 
-            <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+            <div className="reveal-item flex flex-col md:flex-row gap-4 justify-center items-center">
               <input
                 type="text"
                 placeholder="What's your nonprofit's website?"
-                className="bg-cream px-6 py-4 rounded-full w-full md:w-96 outline-none focus:ring-1 focus:ring-ink"
+                className="bg-cream px-6 py-4 rounded-full w-full md:w-96 outline-none focus:ring-2 focus:ring-ink/10 transition-shadow duration-200"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const val = (e.target as HTMLInputElement).value.trim();
@@ -286,7 +394,7 @@ export default function Home() {
                 }}
               />
               <button
-                className="bg-ink text-white px-8 py-4 rounded-full w-full md:w-auto hover:scale-105 transition-transform cursor-pointer"
+                className="btn-hover bg-ink text-white px-8 py-4 rounded-full w-full md:w-auto cursor-pointer"
                 onClick={() => {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
@@ -295,7 +403,7 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
       </main>
 
       <footer className="max-w-[1400px] mx-auto px-10 pb-10 flex justify-between items-end opacity-40 uppercase tracking-widest text-[10px]">
