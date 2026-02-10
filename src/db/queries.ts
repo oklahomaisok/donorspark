@@ -80,6 +80,23 @@ export async function updateUserStripeCustomerId(userId: number, stripeCustomerI
     .where(eq(users.id, userId));
 }
 
+export async function updateUserSubscriptionState(
+  userId: number,
+  data: {
+    cancelAtPeriodEnd?: boolean;
+    stripeCurrentPeriodEnd?: Date;
+  }
+) {
+  await db.update(users)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+}
+
+export async function getUserByStripeSubscriptionId(subscriptionId: string) {
+  const [user] = await db.select().from(users).where(eq(users.stripeSubscriptionId, subscriptionId)).limit(1);
+  return user ?? null;
+}
+
 // ============================================================================
 // Organization queries
 // ============================================================================

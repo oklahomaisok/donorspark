@@ -30,6 +30,7 @@ export const users = pgTable('users', {
   stripeSubscriptionId: text('stripe_subscription_id'),
   stripePriceId: text('stripe_price_id'),
   stripeCurrentPeriodEnd: timestamp('stripe_current_period_end'),
+  cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
   // Email verification (delayed)
   emailVerified: boolean('email_verified').default(false).notNull(),
   emailVerifiedAt: timestamp('email_verified_at'),

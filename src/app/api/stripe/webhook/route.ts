@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, getPlanFromPriceId } from '@/lib/stripe';
-import { getUserById, updateUserPlan, getUserDecks } from '@/db/queries';
+import { getUserById, updateUserPlan, getUserDecks, getUserByStripeSubscriptionId, updateUserSubscriptionState } from '@/db/queries';
 import { regenerateUserDecks } from '@/lib/deck-regeneration';
 import type { Plan, BillingCycle } from '@/db/schema';
 
@@ -137,27 +137,39 @@ async function handleCheckoutComplete(session: any) {
 }
 
 async function handleSubscriptionUpdate(subscription: any) {
-  const userId = parseInt(subscription.metadata?.userId);
-  if (!userId) {
-    // Try to find user by subscription ID
-    console.log('No userId in subscription metadata, skipping update');
-    return;
+  // Try to find user by metadata first, then by subscription ID
+  let userId = parseInt(subscription.metadata?.userId);
+  if (!userId || isNaN(userId)) {
+    const user = await getUserByStripeSubscriptionId(subscription.id);
+    if (!user) {
+      console.log('No user found for subscription, skipping update');
+      return;
+    }
+    userId = user.id;
   }
 
-  const priceId = subscription.items.data[0]?.price.id;
-  if (!priceId) return;
-
-  const planInfo = getPlanFromPriceId(priceId);
-  if (!planInfo) return;
-
-  await updateUserPlan(userId, {
-    plan: planInfo.plan as Plan,
-    planBillingCycle: planInfo.cycle as BillingCycle,
-    stripePriceId: priceId,
+  // Always update cancel_at_period_end state
+  await updateUserSubscriptionState(userId, {
+    cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
     stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
   });
 
-  console.log(`User ${userId} subscription updated to ${planInfo.plan}`);
+  // Handle plan changes
+  const priceId = subscription.items.data[0]?.price.id;
+  if (priceId) {
+    const planInfo = getPlanFromPriceId(priceId);
+    if (planInfo) {
+      await updateUserPlan(userId, {
+        plan: planInfo.plan as Plan,
+        planBillingCycle: planInfo.cycle as BillingCycle,
+        stripePriceId: priceId,
+        stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      });
+      console.log(`User ${userId} subscription updated to ${planInfo.plan}`);
+    }
+  }
+
+  console.log(`User ${userId} cancel_at_period_end: ${subscription.cancel_at_period_end}`);
 }
 
 async function handleSubscriptionCanceled(subscription: any) {
