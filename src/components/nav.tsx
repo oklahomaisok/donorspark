@@ -19,6 +19,12 @@ export function Nav() {
         <img src="/donorsparklogo.png" alt="DonorSpark" className="h-8" />
       </Link>
       <div className="flex items-center gap-4">
+        <a
+          href="/#pricing"
+          className="text-sm text-ink/60 hover:text-ink transition-colors"
+        >
+          Pricing
+        </a>
         <SignedOut>
           <Link
             href="/sign-in"

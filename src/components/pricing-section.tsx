@@ -109,7 +109,7 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
   };
 
   return (
-    <section className="card bg-cream p-8 md:p-20 mt-4">
+    <section id="pricing" className="card bg-cream p-8 md:p-20 mt-4 scroll-mt-20">
       <div className="text-center mb-12">
         <h2 className="text-5xl md:text-6xl mb-4">Simple, Transparent Pricing</h2>
         <p className="text-lg opacity-60 max-w-2xl mx-auto">

@@ -247,7 +247,16 @@ export default function Home() {
               )}
 
               {phase === 'idle' && (
-                <p className="reveal-item mt-4 text-xs uppercase tracking-widest opacity-40 text-center lg:text-left max-w-md mx-auto lg:mx-0">Enter your nonprofit&apos;s website.<br />Get a custom story deck instantly.</p>
+                <>
+                  <p className="reveal-item mt-3 text-sm text-ink/50 flex items-center gap-1.5 justify-center lg:justify-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    No credit card required
+                  </p>
+                  <p className="reveal-item mt-3 text-xs uppercase tracking-widest opacity-40 text-center lg:text-left max-w-md mx-auto lg:mx-0">Enter your nonprofit&apos;s website.<br />Get a custom story deck instantly.</p>
+                </>
               )}
 
               {/* Error State */}
@@ -347,7 +356,7 @@ export default function Home() {
               <div className="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center text-ink font-serif text-xl italic flex-shrink-0">2</div>
               <h3 className="text-3xl serif">We Build Your Story</h3>
             </div>
-            <p className="text-sm opacity-80 leading-relaxed">A custom 10-slide deck that answers: Why does this org exist? Who do they serve? What changes because of them?</p>
+            <p className="text-sm opacity-80 leading-relaxed">A custom 10-slide deck that answers: Why does this organization exist? Who do they serve? What changes because of them?</p>
           </div>
 
           <div className="reveal-item hover-lift card bg-white p-10 flex flex-col justify-between min-h-[320px] border border-ink/5">
@@ -363,7 +372,7 @@ export default function Home() {
         <AnimatedSection as="section" className="card bg-periwinkle mt-4 p-8 md:p-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 divide-y md:divide-y-0 md:divide-x divide-ink/10">
             <div className="reveal-item px-4">
-              <p className="serif text-2xl md:text-3xl mb-6">&ldquo;We&apos;ve had a website for five years. This is the first time someone outside our org could explain what we do in under a minute.&rdquo;</p>
+              <p className="serif text-2xl md:text-3xl mb-6">&ldquo;We&apos;ve had a website for five years. This is the first time someone outside our organization could explain what we do in under a minute.&rdquo;</p>
               <div className="text-xs uppercase tracking-widest opacity-60">
                 Sarah Chen<br />Executive Director, Youth Futures Fund
               </div>
@@ -385,6 +394,33 @@ export default function Home() {
 
         {/* Pricing */}
         <PricingSection onGetFreeClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+
+        {/* Stats / Social Proof Section */}
+        <AnimatedSection as="section" className="card bg-white border border-ink/5 p-8 md:p-16 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            <div className="reveal-item text-center">
+              <div className="text-5xl md:text-6xl font-bold text-salmon mb-3">8 seconds</div>
+              <p className="text-sm opacity-60 max-w-xs mx-auto">
+                is all you have to capture a donor&apos;s attention online
+              </p>
+              <p className="text-xs opacity-40 mt-2 italic">Source: Microsoft Research</p>
+            </div>
+            <div className="reveal-item text-center">
+              <div className="text-5xl md:text-6xl font-bold text-sage mb-3">60,000x</div>
+              <p className="text-sm opacity-60 max-w-xs mx-auto">
+                faster for people to process visuals than text
+              </p>
+              <p className="text-xs opacity-40 mt-2 italic">Source: 3M Corporation</p>
+            </div>
+            <div className="reveal-item text-center">
+              <div className="text-5xl md:text-6xl font-bold text-periwinkle mb-3">2x</div>
+              <p className="text-sm opacity-60 max-w-xs mx-auto">
+                more likely donors give when hearing stories vs. statistics
+              </p>
+              <p className="text-xs opacity-40 mt-2 italic">Source: Stanford/Carnegie Mellon</p>
+            </div>
+          </div>
+        </AnimatedSection>
 
         {/* Final CTA */}
         <AnimatedSection as="section" className="card bg-white p-8 md:p-32 text-center relative overflow-hidden">
