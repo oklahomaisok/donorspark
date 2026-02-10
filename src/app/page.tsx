@@ -185,15 +185,38 @@ export default function Home() {
         .btn-hover:active {
           transform: scale(0.98);
         }
+
+        /* Animated blobs */
+        @keyframes blob-float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(10px, -15px) scale(1.05); }
+          50% { transform: translate(-5px, 10px) scale(0.95); }
+          75% { transform: translate(-15px, -5px) scale(1.02); }
+        }
+        .blob {
+          animation: blob-float 20s ease-in-out infinite;
+        }
+
+        /* Scroll-triggered parallax sections */
+        .parallax-section {
+          opacity: 0;
+          transform: translateY(40px);
+          transition: opacity 600ms ease-out, transform 600ms ease-out;
+        }
+        .parallax-section.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
       `}</style>
 
       <main className="w-full max-w-[1400px] mx-auto px-4 pt-20 pb-12 flex flex-col gap-4">
 
         {/* Hero Section — Side by side with animated phone */}
         <AnimatedSection as="section" className="relative card bg-white/40 p-6 md:p-10 lg:p-12 border border-ink/5 overflow-hidden">
-          {/* Subtle static gradient - no animation */}
-          <div className="absolute top-[10%] right-[10%] w-64 h-64 bg-salmon rounded-full blur-[100px] opacity-20" />
-          <div className="absolute bottom-[10%] left-[10%] w-80 h-80 bg-sage rounded-full blur-[100px] opacity-20" />
+          {/* Animated Blobs */}
+          <div className="absolute top-[10%] right-[10%] w-64 h-64 bg-salmon rounded-full blur-[80px] opacity-40 blob" />
+          <div className="absolute bottom-[10%] left-[10%] w-80 h-80 bg-sage rounded-full blur-[80px] opacity-40 blob" style={{ animationDelay: '-7s' }} />
+          <div className="absolute top-[50%] left-[30%] w-48 h-48 bg-periwinkle rounded-full blur-[80px] opacity-30 blob" style={{ animationDelay: '-14s' }} />
 
           <div className="relative z-10 w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-center justify-center py-8 md:py-12">
             {/* Left — Copy + CTA */}
@@ -432,6 +455,8 @@ const heroImages = [
 function HeroPhone() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
+  const [rotation, setRotation] = useState(-8); // Start slightly askew (tilted right)
+  const phoneRef = useRef<HTMLDivElement>(null);
 
   const nextIndex = (currentIndex + 1) % heroImages.length;
 
@@ -444,6 +469,24 @@ function HeroPhone() {
     return () => clearInterval(interval);
   }, []);
 
+  // Scroll-based rotation: rotate from -8deg to -25deg as you scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const maxScroll = 800; // How much scroll to complete the rotation
+      const startRotation = -8; // Initial tilt
+      const endRotation = -25; // Final rotation (toward text on left)
+
+      // Calculate rotation based on scroll progress
+      const progress = Math.min(scrollY / maxScroll, 1);
+      const newRotation = startRotation + (endRotation - startRotation) * progress;
+      setRotation(newRotation);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Handle transition end - update index and reset position instantly
   const handleTransitionEnd = () => {
     if (isSliding) {
@@ -453,7 +496,11 @@ function HeroPhone() {
   };
 
   return (
-    <div className="relative">
+    <div
+      ref={phoneRef}
+      className="relative transition-transform duration-100 ease-out"
+      style={{ transform: `rotate(${rotation}deg)` }}
+    >
       {/* Subtle glow behind phone */}
       <div className="absolute -inset-6 rounded-full blur-[60px] opacity-30 bg-sage" />
 
