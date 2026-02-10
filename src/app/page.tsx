@@ -300,7 +300,7 @@ export default function Home() {
             </div>
 
             {/* Right — Animated deck phone */}
-            <div className="reveal-item flex justify-center items-center flex-shrink-0 mt-4 lg:mt-0">
+            <div className="reveal-item flex justify-center items-center flex-shrink-0 mt-4 lg:mt-0" style={{ perspective: '1000px' }}>
               <HeroPhone />
             </div>
           </div>
@@ -455,7 +455,7 @@ const heroImages = [
 function HeroPhone() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
-  const [rotation, setRotation] = useState(-8); // Start slightly askew (tilted right)
+  const [rotateY, setRotateY] = useState(0); // Y-axis rotation (swivel toward text)
   const phoneRef = useRef<HTMLDivElement>(null);
 
   const nextIndex = (currentIndex + 1) % heroImages.length;
@@ -469,18 +469,16 @@ function HeroPhone() {
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll-based rotation: rotate from -8deg to -25deg as you scroll
+  // Scroll-based Y rotation: swivel the phone to face the text on the left
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const maxScroll = 800; // How much scroll to complete the rotation
-      const startRotation = -8; // Initial tilt
-      const endRotation = -25; // Final rotation (toward text on left)
+      const maxRotateY = 25; // Max Y rotation (turning toward text)
 
-      // Calculate rotation based on scroll progress
+      // Calculate Y rotation based on scroll progress
       const progress = Math.min(scrollY / maxScroll, 1);
-      const newRotation = startRotation + (endRotation - startRotation) * progress;
-      setRotation(newRotation);
+      setRotateY(progress * maxRotateY);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -499,7 +497,10 @@ function HeroPhone() {
     <div
       ref={phoneRef}
       className="relative transition-transform duration-100 ease-out"
-      style={{ transform: `rotate(${rotation}deg)` }}
+      style={{
+        transform: `rotate(8deg) rotateY(${rotateY}deg)`,
+        transformStyle: 'preserve-3d',
+      }}
     >
       {/* Subtle glow behind phone */}
       <div className="absolute -inset-6 rounded-full blur-[60px] opacity-30 bg-sage" />
