@@ -236,7 +236,6 @@ export default function Home() {
                   <TypewriterInput
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="yourwebsite.org"
                   />
                   <button
                     type="submit"
@@ -453,55 +452,62 @@ const heroImages = [
 /* ─────────────────────────────────────────────
    Typewriter Input — Animated placeholder
 ───────────────────────────────────────────── */
+const TYPEWRITER_URLS = ['unitedway.org', 'stjude.org', 'habitat.org', 'aspca.org'];
+
 function TypewriterInput({
   value,
   onChange,
-  placeholder,
 }: {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder: string;
 }) {
   const [displayedPlaceholder, setDisplayedPlaceholder] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [hasTyped, setHasTyped] = useState(false);
 
-  // Typewriter animation effect
+  // Typewriter animation effect with typing and backspacing
   useEffect(() => {
-    // Don't animate if user has focused or typed
     if (isFocused || hasTyped) return;
 
+    let urlIndex = 0;
     let charIndex = 0;
-    setDisplayedPlaceholder('');
+    let isDeleting = false;
+    let timeoutId: NodeJS.Timeout;
 
-    const typeInterval = setInterval(() => {
-      if (charIndex < placeholder.length) {
-        setDisplayedPlaceholder(placeholder.slice(0, charIndex + 1));
-        charIndex++;
+    const animate = () => {
+      const currentUrl = TYPEWRITER_URLS[urlIndex];
+
+      if (!isDeleting) {
+        // Typing forward
+        if (charIndex < currentUrl.length) {
+          setDisplayedPlaceholder(currentUrl.slice(0, charIndex + 1));
+          charIndex++;
+          timeoutId = setTimeout(animate, 100);
+        } else {
+          // Finished typing, pause then start deleting
+          timeoutId = setTimeout(() => {
+            isDeleting = true;
+            animate();
+          }, 2000);
+        }
       } else {
-        clearInterval(typeInterval);
-        // After completing, wait and restart
-        setTimeout(() => {
-          if (!isFocused && !hasTyped) {
-            setDisplayedPlaceholder('');
-            charIndex = 0;
-          }
-        }, 2000);
+        // Backspacing
+        if (charIndex > 0) {
+          charIndex--;
+          setDisplayedPlaceholder(currentUrl.slice(0, charIndex));
+          timeoutId = setTimeout(animate, 60);
+        } else {
+          // Finished deleting, move to next URL
+          isDeleting = false;
+          urlIndex = (urlIndex + 1) % TYPEWRITER_URLS.length;
+          timeoutId = setTimeout(animate, 300);
+        }
       }
-    }, 100);
+    };
 
-    return () => clearInterval(typeInterval);
-  }, [placeholder, isFocused, hasTyped]);
+    animate();
 
-  // Restart animation periodically when idle
-  useEffect(() => {
-    if (isFocused || hasTyped) return;
-
-    const restartInterval = setInterval(() => {
-      setDisplayedPlaceholder('');
-    }, 5000);
-
-    return () => clearInterval(restartInterval);
+    return () => clearTimeout(timeoutId);
   }, [isFocused, hasTyped]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -534,7 +540,7 @@ function TypewriterInput({
         className="w-full bg-transparent pl-4 pr-4 py-3 outline-none text-sm"
       />
       {showPlaceholder && (
-        <span className="absolute top-1/2 -translate-y-1/2 text-sm text-ink/40 pointer-events-none" style={{ left: 'calc(1rem + 4ch)' }}>
+        <span className="absolute top-1/2 -translate-y-1/2 text-sm text-ink/40 pointer-events-none" style={{ left: 'calc(1rem + 5ch)' }}>
           {displayedPlaceholder}
           <span className="inline-block w-0.5 h-4 bg-ink/40 ml-0.5 animate-pulse align-middle" />
         </span>
