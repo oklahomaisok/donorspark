@@ -355,7 +355,7 @@ function HeroPhone() {
         <div className="absolute top-2 md:top-2.5 left-1/2 -translate-x-1/2 w-20 md:w-24 h-5 md:h-6 bg-ink rounded-full z-20" />
 
         {/* Screen */}
-        <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19.5] relative bg-black">
+        <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/16] relative bg-black">
           {/* Image carousel container */}
           <div
             className="absolute inset-0 flex"
