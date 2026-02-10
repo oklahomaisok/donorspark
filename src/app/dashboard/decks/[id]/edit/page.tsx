@@ -7,6 +7,7 @@ import {
   Palette, Type, Image as ImageIcon, Layers, ChevronRight, ExternalLink
 } from 'lucide-react';
 import { SlideImageUploader } from '@/components/editor/slide-image-uploader';
+import { LockedFeature, LockedBadge } from '@/components/editor/locked-feature';
 import { generateDeckHtml } from '@/lib/templates/deck-template';
 import { HEADING_FONTS, BODY_FONTS } from '@/lib/editor-utils';
 import type { BrandData, Testimonial, SocialLink, CustomImages, FocalPoint } from '@/lib/types';
@@ -538,47 +539,57 @@ export default function EditDeckPage() {
 
             {activeTool === 'design' && (
               <div className="p-4 space-y-6">
-                {/* Colors */}
-                <div>
-                  <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-3">Colors</label>
-                  <div className="space-y-3">
-                    <ColorInput label="Background" value={brandData.colors.primary} onChange={(v) => handleColorChange('primary', v)} />
-                    <ColorInput label="Text" value={brandData.colors.text || '#ffffff'} onChange={(v) => handleColorChange('text', v)} />
-                    <ColorInput label="Accent" value={brandData.colors.accent} onChange={(v) => handleColorChange('accent', v)} />
-                    <ColorInput label="Button" value={brandData.colors.secondary} onChange={(v) => handleColorChange('secondary', v)} />
+                {/* Colors - Locked for free users */}
+                <LockedFeature isLocked={userPlan === 'free'} featureName="Colors">
+                  <div>
+                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-3">
+                      Colors
+                      {userPlan === 'free' && <LockedBadge />}
+                    </label>
+                    <div className="space-y-3">
+                      <ColorInput label="Background" value={brandData.colors.primary} onChange={(v) => handleColorChange('primary', v)} />
+                      <ColorInput label="Text" value={brandData.colors.text || '#ffffff'} onChange={(v) => handleColorChange('text', v)} />
+                      <ColorInput label="Accent" value={brandData.colors.accent} onChange={(v) => handleColorChange('accent', v)} />
+                      <ColorInput label="Button" value={brandData.colors.secondary} onChange={(v) => handleColorChange('secondary', v)} />
+                    </div>
                   </div>
-                </div>
+                </LockedFeature>
 
-                {/* Typography */}
-                <div>
-                  <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-3">Typography</label>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-xs text-zinc-400 block mb-1">Heading Font</span>
-                      <select
-                        value={brandData.fonts.headingFont}
-                        onChange={(e) => handleFontChange('headingFont', e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
-                      >
-                        {HEADING_FONTS.map((font) => (
-                          <option key={font} value={font}>{font}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <span className="text-xs text-zinc-400 block mb-1">Body Font</span>
-                      <select
-                        value={brandData.fonts.bodyFont}
-                        onChange={(e) => handleFontChange('bodyFont', e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
-                      >
-                        {BODY_FONTS.map((font) => (
-                          <option key={font} value={font}>{font}</option>
-                        ))}
-                      </select>
+                {/* Typography - Locked for free users */}
+                <LockedFeature isLocked={userPlan === 'free'} featureName="Fonts">
+                  <div>
+                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-3">
+                      Typography
+                      {userPlan === 'free' && <LockedBadge />}
+                    </label>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-xs text-zinc-400 block mb-1">Heading Font</span>
+                        <select
+                          value={brandData.fonts.headingFont}
+                          onChange={(e) => handleFontChange('headingFont', e.target.value)}
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
+                        >
+                          {HEADING_FONTS.map((font) => (
+                            <option key={font} value={font}>{font}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <span className="text-xs text-zinc-400 block mb-1">Body Font</span>
+                        <select
+                          value={brandData.fonts.bodyFont}
+                          onChange={(e) => handleFontChange('bodyFont', e.target.value)}
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
+                        >
+                          {BODY_FONTS.map((font) => (
+                            <option key={font} value={font}>{font}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </LockedFeature>
 
                 {/* Logo */}
                 <div>
@@ -614,7 +625,11 @@ export default function EditDeckPage() {
 
             {activeTool === 'slides' && brandData && (
               <div className="p-4">
-                <p className="text-xs text-zinc-500 mb-3">Drag to reorder, click eye to show/hide</p>
+                <LockedFeature isLocked={userPlan === 'free'} featureName="Slide Order">
+                  <p className="text-xs text-zinc-500 mb-3">
+                    Drag to reorder, click eye to show/hide
+                    {userPlan === 'free' && <LockedBadge />}
+                  </p>
                 <div className="space-y-1">
                   {/* Hero - always first, not draggable */}
                   <div className="flex items-center justify-between p-2 bg-zinc-900 rounded border border-zinc-800 text-sm opacity-60">
@@ -668,6 +683,7 @@ export default function EditDeckPage() {
                     );
                   })}
                 </div>
+                </LockedFeature>
               </div>
             )}
           </aside>
