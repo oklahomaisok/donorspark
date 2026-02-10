@@ -21,7 +21,9 @@ import { RefreshButton } from '@/components/dashboard/refresh-button';
 import { UpgradeBanner } from '@/components/dashboard/upgrade-banner';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { ClaimedModalWrapper } from '@/components/dashboard/claimed-modal-wrapper';
+import { DeckCounter } from '@/components/dashboard/deck-counter';
 import type { Plan } from '@/db/schema';
+import type { PlanType } from '@/lib/stripe';
 
 export default async function DashboardPage({
   searchParams,
@@ -54,6 +56,9 @@ export default async function DashboardPage({
   const primaryDeck = decks.find(
     (d) => d.organizationId === primaryOrg?.id && d.deckType === 'impact' && d.status === 'complete'
   ) || decks.find((d) => d.status === 'complete');
+
+  // Count parent decks (not personalized donor decks) for the deck counter
+  const parentDeckCount = decks.filter((d) => !d.parentDeckId && d.status === 'complete').length;
 
   // Handle query params errors
   const params = await searchParams;
@@ -99,6 +104,16 @@ export default async function DashboardPage({
         orgName={primaryOrg?.name || null}
         hasExistingDeck={!!primaryDeck}
       />
+
+      {/* Deck Counter */}
+      {primaryDeck && (
+        <div className="mb-6">
+          <DeckCounter
+            currentCount={parentDeckCount}
+            plan={user.plan as PlanType}
+          />
+        </div>
+      )}
 
       {/* Main Content */}
       {primaryDeck && primaryOrg ? (

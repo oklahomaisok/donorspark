@@ -41,6 +41,8 @@ export const PLAN_DETAILS = {
     description: 'Get started with impact decks',
     monthlyPrice: 0,
     annualPrice: 0,
+    deckLimit: 1,
+    donorDeckLimit: 0,
     features: [
       '1 Impact Deck',
       'Basic analytics',
@@ -55,6 +57,8 @@ export const PLAN_DETAILS = {
     description: 'For growing nonprofits',
     monthlyPrice: 49,
     annualPrice: 468,
+    deckLimit: 5,
+    donorDeckLimit: 0,
     features: [
       '5 Customizable Slide Decks',
       'Edit colors & fonts',
@@ -69,6 +73,8 @@ export const PLAN_DETAILS = {
     description: 'For fundraising teams',
     monthlyPrice: 99,
     annualPrice: 948,
+    deckLimit: 10,
+    donorDeckLimit: 50,
     features: [
       'Everything in Starter',
       '10 Customizable Slide Decks',
@@ -82,6 +88,20 @@ export const PLAN_DETAILS = {
     ],
   },
 } as const;
+
+/**
+ * Get deck limit for a plan
+ */
+export function getDeckLimit(plan: PlanType): number {
+  return PLAN_DETAILS[plan].deckLimit;
+}
+
+/**
+ * Get donor deck limit for a plan
+ */
+export function getDonorDeckLimit(plan: PlanType): number {
+  return PLAN_DETAILS[plan].donorDeckLimit;
+}
 
 export type PlanType = keyof typeof PLAN_DETAILS;
 export type BillingCycle = 'monthly' | 'annual';
