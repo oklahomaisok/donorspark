@@ -552,8 +552,6 @@ function TypewriterInput({
 function HeroPhone() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
-  const [rotateY, setRotateY] = useState(0); // Y-axis rotation (swivel toward text)
-  const phoneRef = useRef<HTMLDivElement>(null);
 
   const nextIndex = (currentIndex + 1) % heroImages.length;
 
@@ -566,22 +564,6 @@ function HeroPhone() {
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll-based Y rotation: swivel the phone to face the text on the left
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const maxScroll = 800; // How much scroll to complete the rotation
-      const maxRotateY = 25; // Max Y rotation (turning toward text)
-
-      // Calculate Y rotation based on scroll progress
-      const progress = Math.min(scrollY / maxScroll, 1);
-      setRotateY(progress * maxRotateY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   // Handle transition end - update index and reset position instantly
   const handleTransitionEnd = () => {
     if (isSliding) {
@@ -591,14 +573,7 @@ function HeroPhone() {
   };
 
   return (
-    <div
-      ref={phoneRef}
-      className="relative transition-transform duration-100 ease-out"
-      style={{
-        transform: `rotate(8deg) rotateY(${rotateY}deg)`,
-        transformStyle: 'preserve-3d',
-      }}
-    >
+    <div className="relative">
       {/* Subtle glow behind phone */}
       <div className="absolute -inset-6 rounded-full blur-[60px] opacity-30 bg-sage" />
 
