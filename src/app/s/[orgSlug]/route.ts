@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrganizationBySlug, getOrganizationDecks, incrementDeckViews } from '@/db/queries';
+import { auth } from '@clerk/nextjs/server';
+import { getOrganizationBySlug, getOrganizationDecks, incrementDeckViews, getUserByClerkId } from '@/db/queries';
 import { config } from '@/lib/config';
 import { generateDeckToken } from '@/lib/deck-token';
 
@@ -35,8 +36,17 @@ export async function GET(
     }, { status: 404 });
   }
 
-  // Track view
-  await incrementDeckViews(primaryDeck.slug);
+  // Track view - exclude owner views
+  const { userId: clerkId } = await auth();
+  let isOwner = false;
+  if (clerkId) {
+    const user = await getUserByClerkId(clerkId);
+    isOwner = user?.id === org.userId;
+  }
+
+  if (!isOwner) {
+    await incrementDeckViews(primaryDeck.slug);
+  }
 
   if (debug) {
     return NextResponse.json({
