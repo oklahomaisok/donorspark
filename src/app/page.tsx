@@ -356,14 +356,12 @@ function HeroPhone() {
         <div className="absolute top-2 md:top-2.5 left-1/2 -translate-x-1/2 w-20 md:w-24 h-5 md:h-6 bg-ink rounded-full z-20" />
 
         {/* Screen */}
-        <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19] relative bg-white">
-          {/* Image carousel container - shifted up to hide top nav bar */}
+        <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19.5] relative bg-black">
+          {/* Image carousel container */}
           <div
-            className="absolute flex transition-transform duration-500 ease-out"
+            className="absolute inset-0 flex transition-transform duration-500 ease-out"
             style={{
               width: '200%',
-              height: '115%',
-              top: '-8%',
               transform: isSliding ? 'translateX(-50%)' : 'translateX(0)',
             }}
           >
@@ -372,7 +370,7 @@ function HeroPhone() {
               <img
                 src={heroImages[currentIndex]}
                 alt="Impact Deck Preview"
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full object-contain"
               />
             </div>
             {/* Next image */}
@@ -380,7 +378,7 @@ function HeroPhone() {
               <img
                 src={heroImages[nextIndex]}
                 alt="Impact Deck Preview"
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full object-contain"
               />
             </div>
           </div>
