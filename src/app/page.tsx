@@ -335,27 +335,27 @@ export default function Home() {
           </div>
 
           <div className="reveal-item hover-lift card bg-white p-10 flex flex-col justify-between min-h-[320px] border border-ink/5">
-            <div className="w-12 h-12 bg-salmon/20 rounded-full flex items-center justify-center mb-6 text-salmon font-serif text-xl italic">1</div>
-            <div>
-              <h3 className="text-3xl serif mb-4">Share Your Website</h3>
-              <p className="text-sm opacity-60 leading-relaxed">Paste your URL. We extract your mission, impact data, beneficiary stories, and translate them into a narrative arc.</p>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-salmon/20 rounded-full flex items-center justify-center text-salmon font-serif text-xl italic flex-shrink-0">1</div>
+              <h3 className="text-3xl serif">Share Your Website</h3>
             </div>
+            <p className="text-sm opacity-60 leading-relaxed">Paste your URL. We extract your mission, impact data, beneficiary stories, and translate them into a narrative arc.</p>
           </div>
 
           <div className="reveal-item hover-lift card bg-sage p-10 flex flex-col justify-between min-h-[320px]">
-            <div className="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic">2</div>
-            <div>
-              <h3 className="text-3xl serif mb-4">We Build Your Story</h3>
-              <p className="text-sm opacity-80 leading-relaxed">A custom 10-slide deck that answers: Why does this org exist? Who do they serve? What changes because of them?</p>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-ink/10 rounded-full flex items-center justify-center text-ink font-serif text-xl italic flex-shrink-0">2</div>
+              <h3 className="text-3xl serif">We Build Your Story</h3>
             </div>
+            <p className="text-sm opacity-80 leading-relaxed">A custom 10-slide deck that answers: Why does this org exist? Who do they serve? What changes because of them?</p>
           </div>
 
           <div className="reveal-item hover-lift card bg-white p-10 flex flex-col justify-between min-h-[320px] border border-ink/5">
-            <div className="w-12 h-12 bg-periwinkle/40 rounded-full flex items-center justify-center mb-6 text-ink font-serif text-xl italic">3</div>
-            <div>
-              <h3 className="text-3xl serif mb-4">Your Story Spreads</h3>
-              <p className="text-sm opacity-60 leading-relaxed">Send it to donors. Hand it to volunteers. Attach it to grant applications. Use it free or unlock the full version.</p>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-periwinkle/40 rounded-full flex items-center justify-center text-ink font-serif text-xl italic flex-shrink-0">3</div>
+              <h3 className="text-3xl serif">Your Story Spreads</h3>
             </div>
+            <p className="text-sm opacity-60 leading-relaxed">Send it to donors. Hand it to volunteers. Attach it to grant applications. Use it free or unlock the full version.</p>
           </div>
         </AnimatedSection>
 
