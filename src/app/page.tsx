@@ -310,72 +310,45 @@ export default function Home() {
 }
 
 /* ─────────────────────────────────────────────
-   Hero Phone — Real deck slides with video backgrounds
+   Hero Phone — Showcase images with swipe animation
 ───────────────────────────────────────────── */
-const IMAGE_BASE = 'https://oklahomaisok.github.io/nonprofit-decks/images';
-const VIDEO_BASE = 'https://donorspark-videos.vercel.app';
-
-const heroSlides = [
-  {
-    sector: 'veterans',
-    primary: '#1D2350',
-    accent: '#FFC303',
-    orgName: 'Veterans Alliance',
-    headline: 'Honoring Those Who Served',
-    badge: 'Impact Deck',
-  },
-  {
-    sector: 'youth-development',
-    primary: '#0C2340',
-    accent: '#C8102E',
-    orgName: 'Sea Cadets',
-    headline: 'Building Tomorrow\'s Leaders',
-    badge: 'Impact Deck',
-  },
-  {
-    sector: 'food-bank',
-    primary: '#2D5A27',
-    accent: '#F7941D',
-    orgName: 'Community Food Bank',
-    headline: 'No One Goes Hungry',
-    badge: 'Impact Deck',
-  },
-  {
-    sector: 'animal-welfare',
-    primary: '#1E3A5F',
-    accent: '#E85D04',
-    orgName: 'Rescue League',
-    headline: 'Every Life Matters',
-    badge: 'Impact Deck',
-  },
+const heroImages = [
+  '/UW01.png',
+  '/UW02.png',
+  '/UW03.png',
+  '/UW04.png',
+  '/UW05.png',
+  '/UW06.png',
 ];
 
 function HeroPhone() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [nextIndex, setNextIndex] = useState(1);
+  const [isSliding, setIsSliding] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setActiveIndex(prev => (prev + 1) % heroSlides.length);
-        setIsTransitioning(false);
-      }, 400);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+      // Prepare the next image
+      const upcoming = (currentIndex + 1) % heroImages.length;
+      setNextIndex(upcoming);
 
-  const slide = heroSlides[activeIndex];
-  const videoSrc = `${VIDEO_BASE}/${slide.sector}-hero-leader.mp4`;
-  const posterSrc = `${IMAGE_BASE}/${slide.sector}-hero-leader.jpg`;
+      // Trigger slide animation
+      setIsSliding(true);
+
+      // After animation completes, update current and reset
+      setTimeout(() => {
+        setCurrentIndex(upcoming);
+        setIsSliding(false);
+      }, 500);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [currentIndex]);
 
   return (
     <div className="relative">
-      {/* Glow behind phone */}
-      <div
-        className="absolute -inset-6 rounded-full blur-[60px] opacity-40 transition-all duration-700"
-        style={{ backgroundColor: slide.primary }}
-      />
+      {/* Subtle glow behind phone */}
+      <div className="absolute -inset-6 rounded-full blur-[60px] opacity-30 bg-sage" />
 
       {/* Phone frame */}
       <div className="relative w-[220px] md:w-[260px] rounded-[36px] md:rounded-[42px] bg-ink p-2 md:p-2.5 shadow-2xl">
@@ -383,67 +356,30 @@ function HeroPhone() {
         <div className="absolute top-2 md:top-2.5 left-1/2 -translate-x-1/2 w-20 md:w-24 h-5 md:h-6 bg-ink rounded-full z-20" />
 
         {/* Screen */}
-        <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19] relative">
-          {/* Video/Image background */}
-          <video
-            key={slide.sector}
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={posterSrc}
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
-            style={{ opacity: isTransitioning ? 0 : 1 }}
-          >
-            <source src={videoSrc} type="video/mp4" />
-          </video>
-
-          {/* Dark overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80" />
-
-          {/* Slide content */}
+        <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19] relative bg-white">
+          {/* Image carousel container */}
           <div
-            className="absolute inset-0 flex flex-col justify-between p-5 md:p-6 pt-12 md:pt-14 text-white transition-opacity duration-400"
-            style={{ opacity: isTransitioning ? 0 : 1 }}
+            className="absolute inset-0 flex transition-transform duration-500 ease-out"
+            style={{
+              width: '200%',
+              transform: isSliding ? 'translateX(-50%)' : 'translateX(0)',
+            }}
           >
-            {/* Top — badge + logo area */}
-            <div>
-              <span
-                className="inline-block px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-bold uppercase tracking-wider"
-                style={{ backgroundColor: slide.accent, color: slide.primary }}
-              >
-                {slide.badge}
-              </span>
+            {/* Current image */}
+            <div className="w-1/2 h-full flex-shrink-0">
+              <img
+                src={heroImages[currentIndex]}
+                alt="Impact Deck Preview"
+                className="w-full h-full object-cover object-top"
+              />
             </div>
-
-            {/* Center — headline */}
-            <div className="text-center py-4">
-              <h4
-                className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-tight mb-2"
-                style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
-              >
-                {slide.headline}
-              </h4>
-              <p className="text-xs opacity-70 italic">{slide.orgName}</p>
-            </div>
-
-            {/* Bottom — nav dots */}
-            <div>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-1.5">
-                  {heroSlides.map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-1.5 rounded-full transition-all duration-300"
-                      style={{
-                        width: i === activeIndex ? '16px' : '6px',
-                        backgroundColor: i === activeIndex ? slide.accent : 'rgba(255,255,255,0.3)',
-                      }}
-                    />
-                  ))}
-                </div>
-                <span className="text-[8px] uppercase tracking-widest opacity-40">Swipe &rarr;</span>
-              </div>
+            {/* Next image */}
+            <div className="w-1/2 h-full flex-shrink-0">
+              <img
+                src={heroImages[nextIndex]}
+                alt="Impact Deck Preview"
+                className="w-full h-full object-cover object-top"
+              />
             </div>
           </div>
         </div>
