@@ -323,27 +323,26 @@ const heroImages = [
 
 function HeroPhone() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [nextIndex, setNextIndex] = useState(1);
   const [isSliding, setIsSliding] = useState(false);
+
+  const nextIndex = (currentIndex + 1) % heroImages.length;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // Prepare the next image
-      const upcoming = (currentIndex + 1) % heroImages.length;
-      setNextIndex(upcoming);
-
-      // Trigger slide animation
+      // Start the slide animation
       setIsSliding(true);
-
-      // After animation completes, update current and reset
-      setTimeout(() => {
-        setCurrentIndex(upcoming);
-        setIsSliding(false);
-      }, 500);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, []);
+
+  // Handle transition end - update index and reset position instantly
+  const handleTransitionEnd = () => {
+    if (isSliding) {
+      setIsSliding(false);
+      setCurrentIndex(nextIndex);
+    }
+  };
 
   return (
     <div className="relative">
@@ -359,11 +358,13 @@ function HeroPhone() {
         <div className="rounded-[28px] md:rounded-[32px] overflow-hidden aspect-[9/19.5] relative bg-black">
           {/* Image carousel container */}
           <div
-            className="absolute inset-0 flex transition-transform duration-500 ease-out"
+            className="absolute inset-0 flex"
             style={{
               width: '200%',
               transform: isSliding ? 'translateX(-50%)' : 'translateX(0)',
+              transition: isSliding ? 'transform 0.5s ease-out' : 'none',
             }}
+            onTransitionEnd={handleTransitionEnd}
           >
             {/* Current image */}
             <div className="w-1/2 h-full flex-shrink-0">
