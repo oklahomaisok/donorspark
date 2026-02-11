@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Save, Loader2, Plus, X, Eye, EyeOff, GripVertical, Upload,
-  Palette, Type, Image as ImageIcon, Layers, ChevronRight, ExternalLink
+  Palette, Type, Image as ImageIcon, Layers, ChevronRight, ExternalLink, Lock
 } from 'lucide-react';
 import { SlideImageUploader } from '@/components/editor/slide-image-uploader';
 import { LockedFeature, LockedBadge } from '@/components/editor/locked-feature';
@@ -596,7 +596,15 @@ export default function EditDeckPage() {
                   <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-3">Logo</label>
                   {brandData.logoUrl ? (
                     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
-                      <div className="w-full h-16 bg-white rounded flex items-center justify-center p-2 mb-2">
+                      <div
+                        className="w-full h-16 rounded flex items-center justify-center p-2 mb-2"
+                        style={{
+                          backgroundImage: 'linear-gradient(45deg, #e5e5e5 25%, transparent 25%), linear-gradient(-45deg, #e5e5e5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e5e5 75%), linear-gradient(-45deg, transparent 75%, #e5e5e5 75%)',
+                          backgroundSize: '16px 16px',
+                          backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+                          backgroundColor: '#ffffff'
+                        }}
+                      >
                         <img src={brandData.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
                       </div>
                       <div className="flex gap-2">
@@ -722,10 +730,10 @@ export default function EditDeckPage() {
               className="relative w-[320px] h-[640px] bg-zinc-950 rounded-[2.5rem] overflow-hidden ring-1 ring-white/10"
               style={{ boxShadow: '0 0 0 8px #18181b, 0 20px 50px -10px rgba(0,0,0,0.5)' }}
             >
-              {/* Dynamic Notch */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-zinc-900 rounded-b-2xl z-50 flex items-center justify-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
-                <div className="w-8 h-1.5 rounded-full bg-zinc-800/50" />
+              {/* Dynamic Notch - Semi-transparent to show header behind */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-zinc-900/70 backdrop-blur-sm rounded-b-2xl z-50 flex items-center justify-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-zinc-800/80" />
+                <div className="w-8 h-1.5 rounded-full bg-zinc-800/40" />
               </div>
 
               {/* Iframe */}
@@ -764,6 +772,14 @@ export default function EditDeckPage() {
                 <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="text-[10px] font-semibold text-white">{SLIDE_NAMES[type]}</span>
                 </div>
+                {/* Lock overlay for free users on locked slides */}
+                {userPlan === 'free' && !['metrics', 'testimonials'].includes(type) && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none">
+                    <div className="bg-black/70 rounded-full p-1.5">
+                      <Lock className="w-3 h-3 text-white/80" />
+                    </div>
+                  </div>
+                )}
               </button>
             ))}
           </div>
