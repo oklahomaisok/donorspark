@@ -31,6 +31,9 @@ AI-powered impact deck generator for nonprofits.
 | Locked feature component | `src/components/editor/locked-feature.tsx` |
 | Stripe config | `src/lib/stripe.ts` |
 | Email client | `src/lib/resend.ts` |
+| Welcome/onboarding page | `src/app/welcome/page.tsx` |
+| Delete deck modal | `src/components/dashboard/delete-deck-modal.tsx` |
+| Onboarding API | `src/app/api/onboarding/route.ts` |
 
 ## URL Structure
 
@@ -39,6 +42,8 @@ AI-powered impact deck generator for nonprofits.
 - `/s/[orgSlug]/thankyou/[donorSlug]` - Personalized donor thank-you
 - `/decks/[slug]` - Legacy URLs (redirect to `/s/`)
 - `/dashboard` - Authenticated user dashboard
+- `/dashboard/account` - Subscription management
+- `/welcome` - Post-signup celebration + onboarding form
 - `/claim/[tempToken]` - Anonymous deck claim flow
 - `/pricing` - Subscription plans
 
@@ -112,6 +117,38 @@ Anonymous decks get preview mode injected at serve-time (`/decks/[slug]/route.ts
 | Starter ($29/mo) | 5 decks, no branding, priority support |
 | Growth ($79/mo) | 10 decks, 50 donor personalization decks (CSV upload) |
 
+### Rate Limits
+- **Per-request**: 10 requests/hour per user ID (or IP for anonymous)
+- **Weekly generation**: Max 5 deck generations per 7-day rolling window (prevents delete/regenerate abuse)
+
+### Deck Deletion
+Users can delete decks from their dashboard. Deletion is permanent:
+- Removes deck HTML and OG image from Vercel Blob
+- Removes database record
+- Breaks all shared links to that deck
+- Frees up slot for free users to generate a new deck (subject to weekly limit)
+
+## Onboarding & User Data
+
+New users complete an onboarding form at `/welcome` before accessing the dashboard.
+
+### Required Fields
+- First Name, Last Name
+- Role (dropdown: Executive Director, Development Director, Marketing, Fundraising, Board Member, Volunteer, Other)
+- Organization Name (pre-filled from claimed deck)
+
+### Optional Fields
+- Organization Size (1-5, 6-20, 21-50, 51-200, 200+)
+- Primary Goal (Raising money, Recruiting volunteers, Recruiting members, Building awareness, Engaging supporters, Other)
+
+### Flow
+1. User signs up (enable email verification in Clerk dashboard)
+2. After email verification, claim flow redirects to `/welcome`
+3. `/welcome` shows celebration confetti + onboarding form
+4. On submit, user goes to `/dashboard`
+
+For direct signups (no deck claim), `/welcome` shows just the onboarding form without celebration.
+
 ## Deck Editor & Freemium Access
 
 All users can access the deck editor at `/dashboard/decks/[id]/edit`. Free users have limited editing capabilities.
@@ -144,9 +181,11 @@ All users can access the deck editor at `/dashboard/decks/[id]/edit`. Free users
 ## Security Notes
 
 - Rate limiting: 10 req/hour per user ID (or IP for anonymous)
+- Weekly generation limit: 5 decks per 7 days (prevents abuse)
 - CSV injection prevention on donor uploads
 - Cron endpoints require `CRON_SECRET` Bearer token
 - Stripe webhooks verified with signature
+- Deck deletion validates ownership before removing
 
 ## Common Issues & Fixes
 
@@ -197,19 +236,40 @@ All users can access the deck editor at `/dashboard/decks/[id]/edit`. Free users
 2. View generated deck at `/decks/[slug]`
 3. Verify preview banner shows for anonymous users
 
+### Deck Claim Flow
+1. Generate deck while anonymous
+2. Click "Get Started Free" on claim page
+3. Complete sign-up (verify email if enabled in Clerk)
+4. Redirects to `/welcome` with confetti + onboarding form
+5. Complete onboarding → redirects to `/dashboard`
+6. Deck shows in dashboard
+
+### Direct Sign-up Flow
+1. Visit `/sign-up` directly (no deck generated)
+2. Complete sign-up
+3. Redirects to `/welcome` (no confetti, just onboarding)
+4. Complete onboarding → redirects to `/dashboard`
+5. Empty state prompts to generate first deck
+
 ### Sign-up + Checkout Flow
-1. Visit `/pricing` → Click "Start Free Trial"
+1. Visit `/pricing` → Click "Upgrade to Starter/Growth"
 2. Redirects to `/sign-up` with checkout intent preserved
 3. Complete Google OAuth sign-up
 4. Auto-redirects to Stripe checkout
 5. Complete payment (test card: `4242 4242 4242 4242`)
 6. Redirects to `/dashboard?upgraded=true`
-7. Dashboard shows correct plan (not "Free Plan")
+7. Dashboard shows correct plan
 
-### Deck Claim Flow
-1. Generate deck while anonymous
-2. Sign up for account
-3. Deck should auto-claim to new account
+### Deck Deletion Flow
+1. Go to dashboard with existing deck
+2. Click "Delete Deck" button
+3. Confirm in modal (shows warning about broken links)
+4. Deck removed, slot freed for new generation
+
+### Weekly Generation Limit
+1. Generate 5 decks within 7 days
+2. Try to generate 6th deck
+3. Should see "Weekly Generation Limit" error with days until reset
 
 ---
 
