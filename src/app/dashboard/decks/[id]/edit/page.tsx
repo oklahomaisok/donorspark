@@ -625,64 +625,86 @@ export default function EditDeckPage() {
 
             {activeTool === 'slides' && brandData && (
               <div className="p-4">
-                <LockedFeature isLocked={userPlan === 'free'} featureName="Slide Order">
+                {/* Slide Visibility - Always accessible */}
+                <div className="mb-6">
                   <p className="text-xs text-zinc-500 mb-3">
-                    Drag to reorder, click eye to show/hide
-                    {userPlan === 'free' && <LockedBadge />}
+                    Click eye icon to show/hide slides
                   </p>
-                <div className="space-y-1">
-                  {/* Hero - always first, not draggable */}
-                  <div className="flex items-center justify-between p-2 bg-zinc-900 rounded border border-zinc-800 text-sm opacity-60">
-                    <span className="text-zinc-400">Hero</span>
-                    <Eye className="w-4 h-4 text-green-500" />
-                  </div>
-                  {/* Other slides - in order from slideOrder */}
-                  {(brandData.slideOrder || ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta']).map((slideId) => {
-                    if (slideId === 'metrics' && !hasMetricsSlide) return null;
+                  <div className="space-y-1">
+                    {/* Hero - always visible */}
+                    <div className="flex items-center justify-between p-2 bg-zinc-900 rounded border border-zinc-800 text-sm opacity-60">
+                      <span className="text-zinc-400">Hero</span>
+                      <Eye className="w-4 h-4 text-green-500" />
+                    </div>
+                    {/* Other slides */}
+                    {(brandData.slideOrder || ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta']).map((slideId) => {
+                      if (slideId === 'metrics' && !hasMetricsSlide) return null;
 
-                    const visibilityKeyMap: Record<string, 'showMissionSlide' | 'showChallengeSlide' | 'showProgramsSlide' | 'showTestimonialsSlide' | 'showCtaSlide'> = {
-                      mission: 'showMissionSlide',
-                      challenge: 'showChallengeSlide',
-                      programs: 'showProgramsSlide',
-                      testimonials: 'showTestimonialsSlide',
-                      cta: 'showCtaSlide',
-                    };
-                    const visibilityKey = slideId !== 'metrics' ? visibilityKeyMap[slideId] : undefined;
-                    const isVisible = slideId === 'metrics' ? true : brandData[visibilityKey!] !== false;
-                    const isDragging = draggedSlide === slideId;
-                    const isDragOver = dragOverSlide === slideId;
+                      const visibilityKeyMap: Record<string, 'showMissionSlide' | 'showChallengeSlide' | 'showProgramsSlide' | 'showTestimonialsSlide' | 'showCtaSlide'> = {
+                        mission: 'showMissionSlide',
+                        challenge: 'showChallengeSlide',
+                        programs: 'showProgramsSlide',
+                        testimonials: 'showTestimonialsSlide',
+                        cta: 'showCtaSlide',
+                      };
+                      const visibilityKey = slideId !== 'metrics' ? visibilityKeyMap[slideId] : undefined;
+                      const isVisible = slideId === 'metrics' ? true : brandData[visibilityKey!] !== false;
 
-                    return (
-                      <div
-                        key={slideId}
-                        draggable
-                        onDragStart={() => handleDragStart(slideId)}
-                        onDragOver={(e) => handleDragOver(e, slideId)}
-                        onDragLeave={handleDragLeave}
-                        onDrop={() => handleDrop(slideId)}
-                        onDragEnd={handleDragEnd}
-                        className={`flex items-center justify-between p-2 rounded border text-sm transition-all cursor-grab active:cursor-grabbing ${
-                          isDragging ? 'opacity-50 bg-zinc-800 border-zinc-600' :
-                          isDragOver ? 'bg-zinc-700 border-[#C15A36] border-2' :
-                          'bg-zinc-900 border-zinc-800 hover:bg-zinc-800/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <GripVertical className="w-4 h-4 text-zinc-600" />
+                      return (
+                        <div
+                          key={slideId}
+                          className="flex items-center justify-between p-2 bg-zinc-900 rounded border border-zinc-800 text-sm"
+                        >
                           <span className="text-zinc-300">{SLIDE_NAMES[slideId as SlideType]}</span>
+                          {visibilityKey && (
+                            <button
+                              onClick={() => toggleSlideVisibility(visibilityKey)}
+                              className={isVisible ? 'text-green-500 hover:text-green-400' : 'text-zinc-600 hover:text-zinc-500'}
+                            >
+                              {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                            </button>
+                          )}
                         </div>
-                        {visibilityKey && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleSlideVisibility(visibilityKey); }}
-                            className={isVisible ? 'text-green-500 hover:text-green-400' : 'text-zinc-600 hover:text-zinc-500'}
-                          >
-                            {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {/* Slide Reordering - Locked for free users */}
+                <LockedFeature isLocked={userPlan === 'free'} featureName="Slide Order">
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-3">
+                      Drag to reorder slides
+                      {userPlan === 'free' && <LockedBadge />}
+                    </p>
+                    <div className="space-y-1">
+                      {(brandData.slideOrder || ['mission', 'challenge', 'programs', 'metrics', 'testimonials', 'cta']).map((slideId) => {
+                        if (slideId === 'metrics' && !hasMetricsSlide) return null;
+                        const isDragging = draggedSlide === slideId;
+                        const isDragOver = dragOverSlide === slideId;
+
+                        return (
+                          <div
+                            key={slideId}
+                            draggable
+                            onDragStart={() => handleDragStart(slideId)}
+                            onDragOver={(e) => handleDragOver(e, slideId)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={() => handleDrop(slideId)}
+                            onDragEnd={handleDragEnd}
+                            className={`flex items-center gap-2 p-2 rounded border text-sm transition-all cursor-grab active:cursor-grabbing ${
+                              isDragging ? 'opacity-50 bg-zinc-800 border-zinc-600' :
+                              isDragOver ? 'bg-zinc-700 border-[#C15A36] border-2' :
+                              'bg-zinc-900 border-zinc-800 hover:bg-zinc-800/50'
+                            }`}
+                          >
+                            <GripVertical className="w-4 h-4 text-zinc-600" />
+                            <span className="text-zinc-300">{SLIDE_NAMES[slideId as SlideType]}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </LockedFeature>
               </div>
             )}
@@ -759,6 +781,7 @@ export default function EditDeckPage() {
               <SlideProperties
                 slideType={activeSlideType}
                 brandData={brandData}
+                userPlan={userPlan}
                 updateBrandData={updateBrandData}
                 handleFieldChange={handleFieldChange}
                 handleArrayItemChange={handleArrayItemChange}
@@ -951,6 +974,7 @@ function SlideThumbnail({ type, brandData }: { type: SlideType; brandData: Brand
 function SlideProperties({
   slideType,
   brandData,
+  userPlan,
   updateBrandData,
   handleFieldChange,
   handleArrayItemChange,
@@ -968,6 +992,7 @@ function SlideProperties({
 }: {
   slideType: SlideType;
   brandData: BrandData;
+  userPlan: string;
   updateBrandData: (updates: Partial<BrandData>) => void;
   handleFieldChange: (field: string, value: string | string[] | boolean) => void;
   handleArrayItemChange: (field: string, index: number, value: string, arr: string[]) => void;
@@ -983,51 +1008,70 @@ function SlideProperties({
   handleAddSocialLink: () => void;
   handleRemoveSocialLink: (index: number) => void;
 }) {
+  const isFreeUser = userPlan === 'free';
+
+  // Slides that are locked for free users (metrics and testimonials are unlocked)
+  const isLockedSlide = isFreeUser && !['metrics', 'testimonials'].includes(slideType);
+
   return (
     <div className="space-y-4">
-      {/* Hero */}
+      {/* Hero - Locked for free users */}
       {slideType === 'hero' && (
-        <>
-          <FieldInput label="Badge Text" value={brandData.badgeText ?? 'Impact Deck'} onChange={(v) => updateBrandData({ badgeText: v })} />
-          <FieldInput label="Headline" value={brandData.donorHeadline} onChange={(v) => handleFieldChange('donorHeadline', v)} />
-          <FieldTextarea label="Hook" value={brandData.heroHook} onChange={(v) => handleFieldChange('heroHook', v)} rows={2} />
-          <ImageSection slideType="hero" brandData={brandData} handleCustomImageChange={handleCustomImageChange} handleFocalPointChange={handleFocalPointChange} />
-        </>
+        <LockedFeature isLocked={isLockedSlide} featureName="Hero Content">
+          <div className="space-y-4">
+            <FieldInput label="Badge Text" value={brandData.badgeText ?? 'Impact Deck'} onChange={(v) => updateBrandData({ badgeText: v })} />
+            <FieldInput label="Headline" value={brandData.donorHeadline} onChange={(v) => handleFieldChange('donorHeadline', v)} />
+            <FieldTextarea label="Hook" value={brandData.heroHook} onChange={(v) => handleFieldChange('heroHook', v)} rows={2} />
+            <LockedFeature isLocked={isFreeUser} featureName="Background Image">
+              <ImageSection slideType="hero" brandData={brandData} handleCustomImageChange={handleCustomImageChange} handleFocalPointChange={handleFocalPointChange} />
+            </LockedFeature>
+          </div>
+        </LockedFeature>
       )}
 
-      {/* Mission */}
+      {/* Mission - Locked for free users */}
       {slideType === 'mission' && (
-        <>
-          <FieldInput label="Slide Title" value={brandData.missionSlideTitle ?? 'Our Mission'} onChange={(v) => updateBrandData({ missionSlideTitle: v })} />
-          <FieldInput label="Headline" value={brandData.missionHeadline ?? 'Building A Better Future'} onChange={(v) => updateBrandData({ missionHeadline: v })} />
-          <FieldTextarea label="Mission Statement" value={brandData.mission} onChange={(v) => handleFieldChange('mission', v)} rows={3} />
-          <ArrayFieldDark label="Core Values" values={brandData.coreValues || []} onItemChange={(idx, val) => handleArrayItemChange('coreValues', idx, val, brandData.coreValues || [])} onAdd={() => handleAddArrayItem('coreValues', brandData.coreValues || [])} onRemove={(idx) => handleRemoveArrayItem('coreValues', idx, brandData.coreValues || [])} maxItems={4} />
-          <ImageSection slideType="mission" brandData={brandData} handleCustomImageChange={handleCustomImageChange} handleFocalPointChange={handleFocalPointChange} />
-        </>
+        <LockedFeature isLocked={isLockedSlide} featureName="Mission Content">
+          <div className="space-y-4">
+            <FieldInput label="Slide Title" value={brandData.missionSlideTitle ?? 'Our Mission'} onChange={(v) => updateBrandData({ missionSlideTitle: v })} />
+            <FieldInput label="Headline" value={brandData.missionHeadline ?? 'Building A Better Future'} onChange={(v) => updateBrandData({ missionHeadline: v })} />
+            <FieldTextarea label="Mission Statement" value={brandData.mission} onChange={(v) => handleFieldChange('mission', v)} rows={3} />
+            <ArrayFieldDark label="Core Values" values={brandData.coreValues || []} onItemChange={(idx, val) => handleArrayItemChange('coreValues', idx, val, brandData.coreValues || [])} onAdd={() => handleAddArrayItem('coreValues', brandData.coreValues || [])} onRemove={(idx) => handleRemoveArrayItem('coreValues', idx, brandData.coreValues || [])} maxItems={4} />
+            <LockedFeature isLocked={isFreeUser} featureName="Background Image">
+              <ImageSection slideType="mission" brandData={brandData} handleCustomImageChange={handleCustomImageChange} handleFocalPointChange={handleFocalPointChange} />
+            </LockedFeature>
+          </div>
+        </LockedFeature>
       )}
 
-      {/* Challenge */}
+      {/* Challenge - Locked for free users */}
       {slideType === 'challenge' && (
-        <>
-          <FieldInput label="Slide Title" value={brandData.challengeSlideTitle ?? 'The Challenge'} onChange={(v) => updateBrandData({ challengeSlideTitle: v })} />
-          <FieldInput label="Challenge Headline" value={brandData.need.headline} onChange={(v) => handleFieldChange('needHeadline', v)} />
-          <FieldTextarea label="Challenge Description" value={brandData.need.description} onChange={(v) => handleFieldChange('needDescription', v)} rows={2} />
-          <FieldInput label="Solution Headline" value={brandData.solutionHeadline ?? 'Our Solution'} onChange={(v) => updateBrandData({ solutionHeadline: v })} />
-          <FieldTextarea label="Solution Description" value={brandData.solution} onChange={(v) => handleFieldChange('solution', v)} rows={2} />
-        </>
+        <LockedFeature isLocked={isLockedSlide} featureName="Challenge Content">
+          <div className="space-y-4">
+            <FieldInput label="Slide Title" value={brandData.challengeSlideTitle ?? 'The Challenge'} onChange={(v) => updateBrandData({ challengeSlideTitle: v })} />
+            <FieldInput label="Challenge Headline" value={brandData.need.headline} onChange={(v) => handleFieldChange('needHeadline', v)} />
+            <FieldTextarea label="Challenge Description" value={brandData.need.description} onChange={(v) => handleFieldChange('needDescription', v)} rows={2} />
+            <FieldInput label="Solution Headline" value={brandData.solutionHeadline ?? 'Our Solution'} onChange={(v) => updateBrandData({ solutionHeadline: v })} />
+            <FieldTextarea label="Solution Description" value={brandData.solution} onChange={(v) => handleFieldChange('solution', v)} rows={2} />
+          </div>
+        </LockedFeature>
       )}
 
-      {/* Programs */}
+      {/* Programs - Locked for free users */}
       {slideType === 'programs' && (
-        <>
-          <FieldInput label="Headline" value={brandData.programsHeadline ?? 'What We Offer'} onChange={(v) => updateBrandData({ programsHeadline: v })} />
-          <FieldTextarea label="Description" value={brandData.programsBody ?? ''} onChange={(v) => updateBrandData({ programsBody: v })} rows={2} />
-          <ArrayFieldDark label="Programs" values={brandData.programs || []} onItemChange={(idx, val) => handleArrayItemChange('programs', idx, val, brandData.programs || [])} onAdd={() => handleAddArrayItem('programs', brandData.programs || [])} onRemove={(idx) => handleRemoveArrayItem('programs', idx, brandData.programs || [])} maxItems={6} />
-          <ImageSection slideType="programs" brandData={brandData} handleCustomImageChange={handleCustomImageChange} handleFocalPointChange={handleFocalPointChange} />
-        </>
+        <LockedFeature isLocked={isLockedSlide} featureName="Programs Content">
+          <div className="space-y-4">
+            <FieldInput label="Headline" value={brandData.programsHeadline ?? 'What We Offer'} onChange={(v) => updateBrandData({ programsHeadline: v })} />
+            <FieldTextarea label="Description" value={brandData.programsBody ?? ''} onChange={(v) => updateBrandData({ programsBody: v })} rows={2} />
+            <ArrayFieldDark label="Programs" values={brandData.programs || []} onItemChange={(idx, val) => handleArrayItemChange('programs', idx, val, brandData.programs || [])} onAdd={() => handleAddArrayItem('programs', brandData.programs || [])} onRemove={(idx) => handleRemoveArrayItem('programs', idx, brandData.programs || [])} maxItems={6} />
+            <LockedFeature isLocked={isFreeUser} featureName="Background Image">
+              <ImageSection slideType="programs" brandData={brandData} handleCustomImageChange={handleCustomImageChange} handleFocalPointChange={handleFocalPointChange} />
+            </LockedFeature>
+          </div>
+        </LockedFeature>
       )}
 
-      {/* Metrics */}
+      {/* Metrics - UNLOCKED for free users */}
       {slideType === 'metrics' && (
         <>
           <div className="flex items-center justify-between">
@@ -1070,7 +1114,7 @@ function SlideProperties({
         </>
       )}
 
-      {/* Testimonials */}
+      {/* Testimonials - UNLOCKED for free users */}
       {slideType === 'testimonials' && (
         <>
           <FieldInput label="Slide Title" value={brandData.testimonialsSlideTitle ?? 'Success Stories'} onChange={(v) => updateBrandData({ testimonialsSlideTitle: v })} />
@@ -1110,46 +1154,51 @@ function SlideProperties({
               </div>
             </div>
           ))}
-          <ImageSection slideType="testimonials" brandData={brandData} handleCustomImageChange={handleCustomImageChange} handleFocalPointChange={handleFocalPointChange} />
+          {/* Background image locked for free users */}
+          <LockedFeature isLocked={isFreeUser} featureName="Background Image">
+            <ImageSection slideType="testimonials" brandData={brandData} handleCustomImageChange={handleCustomImageChange} handleFocalPointChange={handleFocalPointChange} />
+          </LockedFeature>
         </>
       )}
 
-      {/* CTA */}
+      {/* CTA - Locked for free users */}
       {slideType === 'cta' && (
-        <>
-          <FieldInput label="Headline" value={brandData.ctaHeadline ?? 'Join Our Mission'} onChange={(v) => updateBrandData({ ctaHeadline: v })} />
-          <FieldTextarea label="Subheadline" value={brandData.ctaSubhead ?? ''} onChange={(v) => updateBrandData({ ctaSubhead: v })} rows={2} />
-          <FieldInput label="Button Text" value={brandData.ctaButtonText ?? 'Donate Today'} onChange={(v) => updateBrandData({ ctaButtonText: v })} />
-          <FieldInput label="Button URL" value={brandData.finalDonateUrl} onChange={(v) => updateBrandData({ finalDonateUrl: v })} />
+        <LockedFeature isLocked={isLockedSlide} featureName="CTA Content">
+          <div className="space-y-4">
+            <FieldInput label="Headline" value={brandData.ctaHeadline ?? 'Join Our Mission'} onChange={(v) => updateBrandData({ ctaHeadline: v })} />
+            <FieldTextarea label="Subheadline" value={brandData.ctaSubhead ?? ''} onChange={(v) => updateBrandData({ ctaSubhead: v })} rows={2} />
+            <FieldInput label="Button Text" value={brandData.ctaButtonText ?? 'Donate Today'} onChange={(v) => updateBrandData({ ctaButtonText: v })} />
+            <FieldInput label="Button URL" value={brandData.finalDonateUrl} onChange={(v) => updateBrandData({ finalDonateUrl: v })} />
 
-          <div className="pt-3 border-t border-zinc-800 space-y-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={brandData.showShareButtons !== false} onChange={(e) => updateBrandData({ showShareButtons: e.target.checked })} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-[#C15A36] focus:ring-[#C15A36]" />
-              <span className="text-sm text-zinc-300">Show share buttons</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={brandData.showSocialLinks === true} onChange={(e) => updateBrandData({ showSocialLinks: e.target.checked })} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-[#C15A36] focus:ring-[#C15A36]" />
-              <span className="text-sm text-zinc-300">Show social links</span>
-            </label>
+            <div className="pt-3 border-t border-zinc-800 space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={brandData.showShareButtons !== false} onChange={(e) => updateBrandData({ showShareButtons: e.target.checked })} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-[#C15A36] focus:ring-[#C15A36]" />
+                <span className="text-sm text-zinc-300">Show share buttons</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={brandData.showSocialLinks === true} onChange={(e) => updateBrandData({ showSocialLinks: e.target.checked })} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-[#C15A36] focus:ring-[#C15A36]" />
+                <span className="text-sm text-zinc-300">Show social links</span>
+              </label>
 
-            {brandData.showSocialLinks && (
-              <div className="space-y-2 pt-2">
-                {(brandData.socialLinks || []).map((link, index) => (
-                  <div key={index} className="flex gap-2">
-                    <select value={link.platform} onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)} className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-white">
-                      {SOCIAL_PLATFORMS.map(p => (<option key={p.value} value={p.value}>{p.label}</option>))}
-                    </select>
-                    <input type="url" value={link.url} onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)} placeholder="https://..." className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-white" />
-                    <button onClick={() => handleRemoveSocialLink(index)} className="p-1.5 text-zinc-600 hover:text-red-400"><X className="w-4 h-4" /></button>
-                  </div>
-                ))}
-                {(brandData.socialLinks?.length || 0) < 6 && (
-                  <button onClick={handleAddSocialLink} className="text-xs text-[#C15A36] hover:text-[#e07050] flex items-center gap-1"><Plus className="w-3 h-3" /> Add Link</button>
-                )}
-              </div>
-            )}
+              {brandData.showSocialLinks && (
+                <div className="space-y-2 pt-2">
+                  {(brandData.socialLinks || []).map((link, index) => (
+                    <div key={index} className="flex gap-2">
+                      <select value={link.platform} onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)} className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-white">
+                        {SOCIAL_PLATFORMS.map(p => (<option key={p.value} value={p.value}>{p.label}</option>))}
+                      </select>
+                      <input type="url" value={link.url} onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)} placeholder="https://..." className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-sm text-white" />
+                      <button onClick={() => handleRemoveSocialLink(index)} className="p-1.5 text-zinc-600 hover:text-red-400"><X className="w-4 h-4" /></button>
+                    </div>
+                  ))}
+                  {(brandData.socialLinks?.length || 0) < 6 && (
+                    <button onClick={handleAddSocialLink} className="text-xs text-[#C15A36] hover:text-[#e07050] flex items-center gap-1"><Plus className="w-3 h-3" /> Add Link</button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </>
+        </LockedFeature>
       )}
     </div>
   );

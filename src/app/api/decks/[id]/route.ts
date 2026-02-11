@@ -38,7 +38,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Deck not found' }, { status: 404 });
     }
 
-    // Return deck data with plan info (free users can view but not save)
+    // Return deck data with plan info
+    // Free users can save limited changes (logo, metrics, testimonials, visibility)
     return NextResponse.json({
       id: deck.id,
       slug: deck.slug,
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       isCustomized: deck.isCustomized,
       customizedAt: deck.customizedAt,
       userPlan: user.plan, // Include plan so UI can show upgrade prompts
-      canSave: user.plan !== 'free',
+      canSave: true, // All users can save (free users have restricted fields)
     });
   } catch (error) {
     console.error('GET /api/decks/[id] error:', error);
@@ -82,12 +83,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (user.plan === 'free') {
-      return NextResponse.json(
-        { error: 'Deck editing requires a Starter or Growth plan' },
-        { status: 403 }
-      );
-    }
+    const isFreeUser = user.plan === 'free';
 
     // Get deck (with ownership check)
     const deck = await getDeckForEdit(deckId, user.id);
@@ -101,7 +97,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     // Parse request body
     const body = await req.json();
-    const updates = body.brandData as Partial<BrandData>;
+    let updates = body.brandData as Partial<BrandData>;
 
     if (!updates || typeof updates !== 'object') {
       return NextResponse.json({ error: 'Invalid brandData' }, { status: 400 });
@@ -110,35 +106,60 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     // Cast existing brandData for validation and merging
     const existingBrandData = deck.brandData as BrandData;
 
-    // Validate colors if provided
-    if (updates.colors) {
-      const { primary, secondary, accent } = updates.colors;
-      if (primary && !isValidHexColor(primary)) {
-        return NextResponse.json({ error: 'Invalid primary color format' }, { status: 400 });
-      }
-      if (secondary && !isValidHexColor(secondary)) {
-        return NextResponse.json({ error: 'Invalid secondary color format' }, { status: 400 });
-      }
-      if (accent && !isValidHexColor(accent)) {
-        return NextResponse.json({ error: 'Invalid accent color format' }, { status: 400 });
-      }
-    }
+    // For free users, only allow specific field updates
+    if (isFreeUser) {
+      const allowedUpdates: Partial<BrandData> = {};
 
-    // Validate fonts if provided - only reject if changing to an unknown font
-    // (existing fonts from AI generation are allowed even if not in curated list)
-    if (updates.fonts) {
-      const { headingFont, bodyFont } = updates.fonts;
-      const existingHeading = existingBrandData.fonts?.headingFont;
-      const existingBody = existingBrandData.fonts?.bodyFont;
+      // Logo changes allowed
+      if (updates.logoUrl !== undefined) allowedUpdates.logoUrl = updates.logoUrl;
+      if (updates.logoSource !== undefined) allowedUpdates.logoSource = updates.logoSource;
 
-      // Only validate if the font is different from existing AND not in our list
-      if (headingFont && headingFont !== existingHeading &&
-          !HEADING_FONTS.includes(headingFont as typeof HEADING_FONTS[number])) {
-        return NextResponse.json({ error: 'Invalid heading font' }, { status: 400 });
+      // Metrics changes allowed
+      if (updates.metrics !== undefined) allowedUpdates.metrics = updates.metrics;
+      if (updates.hasValidMetrics !== undefined) allowedUpdates.hasValidMetrics = updates.hasValidMetrics;
+
+      // Testimonials changes allowed
+      if (updates.testimonials !== undefined) allowedUpdates.testimonials = updates.testimonials;
+      if (updates.testimonialsSlideTitle !== undefined) allowedUpdates.testimonialsSlideTitle = updates.testimonialsSlideTitle;
+
+      // Slide visibility changes allowed
+      if (updates.showMissionSlide !== undefined) allowedUpdates.showMissionSlide = updates.showMissionSlide;
+      if (updates.showChallengeSlide !== undefined) allowedUpdates.showChallengeSlide = updates.showChallengeSlide;
+      if (updates.showProgramsSlide !== undefined) allowedUpdates.showProgramsSlide = updates.showProgramsSlide;
+      if (updates.showTestimonialsSlide !== undefined) allowedUpdates.showTestimonialsSlide = updates.showTestimonialsSlide;
+      if (updates.showCtaSlide !== undefined) allowedUpdates.showCtaSlide = updates.showCtaSlide;
+
+      // Replace updates with only allowed fields
+      updates = allowedUpdates;
+    } else {
+      // Paid users: Validate colors if provided
+      if (updates.colors) {
+        const { primary, secondary, accent } = updates.colors;
+        if (primary && !isValidHexColor(primary)) {
+          return NextResponse.json({ error: 'Invalid primary color format' }, { status: 400 });
+        }
+        if (secondary && !isValidHexColor(secondary)) {
+          return NextResponse.json({ error: 'Invalid secondary color format' }, { status: 400 });
+        }
+        if (accent && !isValidHexColor(accent)) {
+          return NextResponse.json({ error: 'Invalid accent color format' }, { status: 400 });
+        }
       }
-      if (bodyFont && bodyFont !== existingBody &&
-          !BODY_FONTS.includes(bodyFont as typeof BODY_FONTS[number])) {
-        return NextResponse.json({ error: 'Invalid body font' }, { status: 400 });
+
+      // Paid users: Validate fonts if provided
+      if (updates.fonts) {
+        const { headingFont, bodyFont } = updates.fonts;
+        const existingHeading = existingBrandData.fonts?.headingFont;
+        const existingBody = existingBrandData.fonts?.bodyFont;
+
+        if (headingFont && headingFont !== existingHeading &&
+            !HEADING_FONTS.includes(headingFont as typeof HEADING_FONTS[number])) {
+          return NextResponse.json({ error: 'Invalid heading font' }, { status: 400 });
+        }
+        if (bodyFont && bodyFont !== existingBody &&
+            !BODY_FONTS.includes(bodyFont as typeof BODY_FONTS[number])) {
+          return NextResponse.json({ error: 'Invalid body font' }, { status: 400 });
+        }
       }
     }
 
@@ -160,11 +181,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       },
     };
 
-    // Regenerate deck HTML (hide DonorSpark slide for paid users - we know user is paid since we checked above)
+    // Regenerate deck HTML (hide DonorSpark slide for paid users only)
     let deckUrl: string;
     try {
       deckUrl = await regenerateDeckHtml(deck.slug, updatedBrandData, {
-        hideDonorSparkSlide: true, // Paid users don't see DonorSpark branding
+        hideDonorSparkSlide: !isFreeUser, // Free users see DonorSpark branding
       });
     } catch (blobError) {
       console.error('Failed to regenerate deck HTML:', blobError);
