@@ -27,6 +27,8 @@ AI-powered impact deck generator for nonprofits.
 | Deck HTML template | `src/lib/templates/deck-template.ts` |
 | OG image template | `src/lib/templates/og-template.ts` |
 | Deck route (preview injection) | `src/app/decks/[slug]/route.ts` |
+| Deck editor | `src/app/dashboard/decks/[id]/edit/page.tsx` |
+| Locked feature component | `src/components/editor/locked-feature.tsx` |
 | Stripe config | `src/lib/stripe.ts` |
 | Email client | `src/lib/resend.ts` |
 
@@ -92,7 +94,8 @@ Colors are selected in this priority order:
 
 ### Logo Handling
 - Logos display directly on header background (no forced white wrapper)
-- Logo sources tried in order: Apistemic API → DOM scrape → Google favicon
+- Logo sources tried in order: Apistemic API → DOM scrape → apple-touch-icon → Google favicon
+- DOM scrape validates URLs are actual images (rejects homepage URLs from text-based CSS logos)
 - Favicon uses extracted logo when available, falls back to generated initial
 
 ### Anonymous Preview Mode
@@ -107,7 +110,28 @@ Anonymous decks get preview mode injected at serve-time (`/decks/[slug]/route.ts
 |------|----------|
 | Free | 1 deck, DonorSpark branding, basic analytics |
 | Starter ($29/mo) | 5 decks, no branding, priority support |
-| Growth ($79/mo) | Unlimited decks, donor personalization (CSV upload) |
+| Growth ($79/mo) | 10 decks, 50 donor personalization decks (CSV upload) |
+
+## Deck Editor & Freemium Access
+
+All users can access the deck editor at `/dashboard/decks/[id]/edit`. Free users have limited editing capabilities.
+
+### Free Users Can Edit:
+- **Logo** - Upload, replace, or remove
+- **Metrics** - Add/edit numbers and descriptions
+- **Testimonials** - Edit quotes, author names, titles, upload photos
+- **Slide visibility** - Show/hide any slide
+
+### Locked for Free Users (requires upgrade):
+- Colors and fonts
+- Slide reordering (drag-and-drop)
+- Hero, Mission, Challenge, Programs, CTA slide content
+- Background images for all slides
+
+### Implementation
+- UI uses `<LockedFeature>` component to overlay locked sections with upgrade prompt
+- API (`/api/decks/[id]`) filters incoming updates - only allowed fields are saved for free users
+- `canSave: true` for all users, but free users' changes are restricted server-side
 
 ## Database Tables
 
@@ -150,6 +174,11 @@ Anonymous decks get preview mode injected at serve-time (`/decks/[slug]/route.ts
 - **Cause**: Apistemic API returned small image, DOM scrape didn't find logo
 - **Debug**: Check Trigger.dev logs for `[Logo Discovery]` entries
 - **Common issues**: JS-heavy sites, lazy-loaded images, non-standard selectors
+
+### Logo shows as broken image
+- **Cause**: Site uses text-based CSS logo (no actual `<img>` element), scraper returned homepage URL
+- **Fix**: `isValidImageUrl()` validation rejects non-image URLs, falls back to Apistemic
+- **Example**: ASPCA.org uses `<a class='footer-logo'>ASPCA</a>` instead of an image
 
 ### Wrong accent color (too dark/light)
 - **Cause**: Color contrast function adjusted or fell back
