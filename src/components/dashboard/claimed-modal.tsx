@@ -81,15 +81,28 @@ export function ClaimedModal({ orgName, deckUrl }: ClaimedModalProps) {
           Your deck for <span className="font-semibold">{orgName}</span> is now saved to your account forever.
         </p>
 
-        {/* View Deck Button */}
-        <Link
-          href={deckUrl}
-          className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#C15A36] text-white rounded-lg font-semibold hover:bg-[#a84d2e] transition-colors mb-4"
+        {/* Continue Button */}
+        <button
+          onClick={handleClose}
+          className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#C15A36] text-white rounded-lg font-semibold hover:bg-[#a84d2e] transition-colors mb-3"
         >
-          View Your Deck
+          Continue to Dashboard
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M5 12h14"/>
             <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </button>
+
+        {/* View Deck Link */}
+        <Link
+          href={deckUrl}
+          className="inline-flex items-center justify-center gap-2 w-full px-6 py-2 text-[#C15A36] font-medium hover:bg-neutral-50 rounded-lg transition-colors mb-4"
+        >
+          Or view your deck now
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" x2="21" y1="14" y2="3"/>
           </svg>
         </Link>
 
