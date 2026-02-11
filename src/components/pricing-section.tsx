@@ -259,12 +259,9 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
       </div>
 
       {/* Notes */}
-      <div className="mt-12 max-w-2xl mx-auto text-center space-y-4">
+      <div className="mt-12 max-w-2xl mx-auto text-center">
         <p className="text-sm opacity-60">
           All plans include a shareable link, mobile-optimized design, and a donate button linked to your organization&apos;s giving page.
-        </p>
-        <p className="text-sm opacity-60 italic">
-          We never generate fake testimonials. Every quote comes directly from your community.
         </p>
       </div>
     </section>

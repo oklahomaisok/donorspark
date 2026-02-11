@@ -45,6 +45,15 @@ export default async function DashboardPage({
     user = await upsertUser(clerkId, email, name);
   }
 
+  // Redirect to onboarding if not completed
+  if (!user.onboardingCompletedAt) {
+    // Get org name to pre-fill the form
+    const orgs = await getUserOrganizations(user.id);
+    const orgName = orgs[0]?.name;
+    const onboardingUrl = orgName ? `/onboarding?org=${encodeURIComponent(orgName)}` : '/onboarding';
+    redirect(onboardingUrl);
+  }
+
   // Track dashboard visit
   await incrementDashboardVisits(user.id);
 

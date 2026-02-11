@@ -92,6 +92,33 @@ export async function updateUserSubscriptionState(
     .where(eq(users.id, userId));
 }
 
+export async function completeOnboarding(
+  userId: number,
+  data: {
+    firstName: string;
+    lastName: string;
+    role: string;
+    organizationName: string;
+    organizationSize?: string;
+    primaryGoal?: string;
+    primaryGoalOther?: string;
+  }
+) {
+  await db.update(users)
+    .set({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      role: data.role,
+      organizationName: data.organizationName,
+      organizationSize: data.organizationSize,
+      primaryGoal: data.primaryGoal,
+      primaryGoalOther: data.primaryGoalOther,
+      onboardingCompletedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+}
+
 export async function getUserByStripeSubscriptionId(subscriptionId: string) {
   const [user] = await db.select().from(users).where(eq(users.stripeSubscriptionId, subscriptionId)).limit(1);
   return user ?? null;

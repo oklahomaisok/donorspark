@@ -38,6 +38,15 @@ export const users = pgTable('users', {
   // Behavior tracking for upgrade triggers
   dashboardVisitCount: integer('dashboard_visit_count').default(0).notNull(),
   decksGenerated: integer('decks_generated').default(0).notNull(),
+  // Onboarding data (for CRM/segmentation)
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  role: text('role'),
+  organizationName: text('organization_name'),
+  organizationSize: text('organization_size'),
+  primaryGoal: text('primary_goal'),
+  primaryGoalOther: text('primary_goal_other'),
+  onboardingCompletedAt: timestamp('onboarding_completed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
