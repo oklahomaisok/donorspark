@@ -20,7 +20,6 @@ import { VerificationWarning } from '@/components/dashboard/verification-warning
 import { RefreshButton } from '@/components/dashboard/refresh-button';
 import { UpgradeBanner } from '@/components/dashboard/upgrade-banner';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
-import { ClaimedModalWrapper } from '@/components/dashboard/claimed-modal-wrapper';
 import { DeckCounter } from '@/components/dashboard/deck-counter';
 import type { Plan } from '@/db/schema';
 import type { PlanType } from '@/lib/stripe';
@@ -45,13 +44,13 @@ export default async function DashboardPage({
     user = await upsertUser(clerkId, email, name);
   }
 
-  // Redirect to onboarding if not completed
+  // Redirect to welcome/onboarding if not completed
   if (!user.onboardingCompletedAt) {
     // Get org name to pre-fill the form
     const orgs = await getUserOrganizations(user.id);
     const orgName = orgs[0]?.name;
-    const onboardingUrl = orgName ? `/onboarding?org=${encodeURIComponent(orgName)}` : '/onboarding';
-    redirect(onboardingUrl);
+    const welcomeUrl = orgName ? `/welcome?org=${encodeURIComponent(orgName)}` : '/welcome';
+    redirect(welcomeUrl);
   }
 
   // Track dashboard visit
@@ -98,14 +97,6 @@ export default async function DashboardPage({
 
       {/* Upgrade Banner (for free users with 3+ dashboard visits) */}
       <UpgradeBanner user={user} />
-
-      {/* Claimed Modal (shows when redirected from claim flow) */}
-      {primaryOrg && (
-        <ClaimedModalWrapper
-          orgName={primaryOrg.name}
-          deckUrl={`${config.siteUrl}/s/${primaryOrg.slug}`}
-        />
-      )}
 
       {/* Header */}
       <DashboardHeader

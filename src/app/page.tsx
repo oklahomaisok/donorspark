@@ -102,6 +102,10 @@ export default function Home() {
         if (err.error === 'deck_limit_reached') {
           throw new Error(`LIMIT_REACHED:${err.message}`);
         }
+        // Handle weekly generation limit
+        if (err.error === 'weekly_limit_reached') {
+          throw new Error(`WEEKLY_LIMIT:${err.message}`);
+        }
         throw new Error(err.error || err.message || 'Failed to start generation');
       }
 
@@ -289,6 +293,22 @@ export default function Home() {
                           Go to Dashboard
                         </a>
                       </div>
+                    </>
+                  ) : error.startsWith('WEEKLY_LIMIT:') ? (
+                    <>
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                        <p className="text-amber-800 text-sm font-medium mb-2">Weekly Generation Limit</p>
+                        <p className="text-amber-700 text-sm">{error.replace('WEEKLY_LIMIT:', '')}</p>
+                      </div>
+                      <a
+                        href="/dashboard"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-ink text-white text-sm font-medium rounded-lg hover:bg-ink/90 transition-colors"
+                      >
+                        Go to Dashboard
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                        </svg>
+                      </a>
                     </>
                   ) : (
                     <>

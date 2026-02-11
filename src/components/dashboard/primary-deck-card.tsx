@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 import type { Deck, Organization } from '@/db/schema';
+import { DeleteDeckModal } from './delete-deck-modal';
 
 interface PrimaryDeckCardProps {
   deck: Deck;
@@ -15,6 +16,7 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const deckUrl = `${siteUrl}/s/${organization.slug}`;
 
@@ -274,10 +276,32 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
                 <line x1="10" x2="21" y1="14" y2="3"/>
               </svg>
             </a>
+
+            {/* Delete Deck Button */}
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="w-full py-3 text-center rounded-lg font-medium transition-colors flex items-center justify-center gap-2 border border-neutral-200 text-neutral-500 hover:border-red-200 hover:text-red-600 hover:bg-red-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+              </svg>
+              Delete Deck
+            </button>
           </div>
         </div>
       </div>
 
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <DeleteDeckModal
+          deckId={deck.id}
+          deckName={deck.orgName}
+          deckUrl={deckUrl}
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   );
 }

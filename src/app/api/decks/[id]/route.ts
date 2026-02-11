@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { getUserByClerkId, getDeckForEdit, updateDeckBrandData } from '@/db/queries';
+import { getUserByClerkId, getDeckForEdit, updateDeckBrandData, deleteDeckById, getOrganizationById } from '@/db/queries';
+import { del } from '@vercel/blob';
 import { regenerateDeckHtml, regenerateOgHtml, isValidHexColor, HEADING_FONTS, BODY_FONTS } from '@/lib/deck-regeneration';
 import type { BrandData } from '@/lib/types';
 
@@ -215,6 +216,67 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error('PATCH /api/decks/[id] error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/decks/[id]
+ * Delete a deck and its associated blob files
+ */
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const deckId = parseInt(id, 10);
+    if (isNaN(deckId)) {
+      return NextResponse.json({ error: 'Invalid deck ID' }, { status: 400 });
+    }
+
+    // Verify auth
+    const { userId: clerkId } = await auth();
+    if (!clerkId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user
+    const user = await getUserByClerkId(clerkId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Get deck (with ownership check)
+    const deck = await getDeckForEdit(deckId, user.id);
+    if (!deck) {
+      return NextResponse.json({ error: 'Deck not found' }, { status: 404 });
+    }
+
+    // Delete blob files (deck HTML and OG image)
+    const blobUrlsToDelete: string[] = [];
+    if (deck.deckUrl) blobUrlsToDelete.push(deck.deckUrl);
+    if (deck.ogImageUrl) blobUrlsToDelete.push(deck.ogImageUrl);
+
+    // Also try to delete the OG HTML file
+    const ogHtmlUrl = deck.deckUrl?.replace('/decks/', '/og/').replace('.html', '.html');
+    if (ogHtmlUrl && ogHtmlUrl !== deck.deckUrl) {
+      blobUrlsToDelete.push(ogHtmlUrl);
+    }
+
+    // Delete blobs (don't fail if blob delete fails)
+    for (const url of blobUrlsToDelete) {
+      try {
+        await del(url);
+      } catch (blobError) {
+        console.error('Failed to delete blob:', url, blobError);
+        // Continue anyway
+      }
+    }
+
+    // Delete from database
+    await deleteDeckById(deckId);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('DELETE /api/decks/[id] error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

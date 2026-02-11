@@ -3,7 +3,7 @@ import { tasks } from '@trigger.dev/sdk/v3';
 import { nanoid } from 'nanoid';
 import { auth } from '@clerk/nextjs/server';
 import { slugify } from '@/lib/slugify';
-import { createDeck, getUserByClerkId, createOrganization, getUserOrganizations, getUserDecks } from '@/db/queries';
+import { createDeck, getUserByClerkId, createOrganization, getUserOrganizations, getUserDecks, countRecentDeckGenerations } from '@/db/queries';
 import { generateOrgSlug } from '@/lib/utils/slug';
 import { getDeckLimit, type PlanType } from '@/lib/stripe';
 import type { generateDeckTask } from '@/trigger/tasks/generate-deck';
@@ -110,6 +110,41 @@ export async function POST(req: NextRequest) {
               plan: dbUser.plan,
             },
             { status: 403 }
+          );
+        }
+
+        // Check weekly generation limit (5 decks per 7 days)
+        const WEEKLY_GENERATION_LIMIT = 5;
+        const recentGenerations = await countRecentDeckGenerations(dbUser.id, 7);
+
+        if (recentGenerations >= WEEKLY_GENERATION_LIMIT) {
+          // Calculate when they can generate again
+          // Find the oldest deck in the 7-day window
+          const oldestInWindow = userDecks
+            .filter(d => !d.parentDeckId)
+            .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+            .find(d => {
+              const sevenDaysAgo = new Date();
+              sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+              return d.createdAt > sevenDaysAgo;
+            });
+
+          const resetDate = oldestInWindow
+            ? new Date(oldestInWindow.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+            : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+          const daysUntilReset = Math.ceil((resetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+
+          return NextResponse.json(
+            {
+              error: 'weekly_limit_reached',
+              message: `You've reached the limit of ${WEEKLY_GENERATION_LIMIT} deck generations per week. You can generate a new deck in ${daysUntilReset} day${daysUntilReset === 1 ? '' : 's'}.`,
+              recentGenerations,
+              limit: WEEKLY_GENERATION_LIMIT,
+              resetDate: resetDate.toISOString(),
+              daysUntilReset,
+            },
+            { status: 429 }
           );
         }
       }

@@ -269,6 +269,26 @@ export async function getUserDecks(userId: number) {
   return db.select().from(decks).where(eq(decks.userId, userId)).orderBy(desc(decks.createdAt));
 }
 
+// Count decks created in the last N days (for weekly generation limit)
+export async function countRecentDeckGenerations(userId: number, days: number = 7) {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+
+  const result = await db.select()
+    .from(decks)
+    .where(
+      and(
+        eq(decks.userId, userId),
+        isNull(decks.parentDeckId), // Only count parent decks
+        // createdAt > cutoffDate
+        // Using raw SQL for date comparison
+      )
+    );
+
+  // Filter in JS since drizzle date comparisons can be tricky
+  return result.filter(d => d.createdAt > cutoffDate).length;
+}
+
 export async function getOrganizationDecks(organizationId: number) {
   return db.select().from(decks).where(eq(decks.organizationId, organizationId)).orderBy(desc(decks.createdAt));
 }
