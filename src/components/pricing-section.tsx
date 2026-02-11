@@ -86,7 +86,7 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
       annualPrice: PLAN_DETAILS.starter.annualPrice,
       description: PLAN_DETAILS.starter.description,
       features: PLAN_DETAILS.starter.features,
-      cta: currentPlan === 'starter' ? 'Current Plan' : 'Start Free Trial',
+      cta: currentPlan === 'starter' ? 'Current Plan' : 'Upgrade to Starter',
       featured: false,
     },
     {
@@ -96,7 +96,7 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
       annualPrice: PLAN_DETAILS.growth.annualPrice,
       description: PLAN_DETAILS.growth.description,
       features: PLAN_DETAILS.growth.features,
-      cta: currentPlan === 'growth' ? 'Current Plan' : 'Start Free Trial',
+      cta: currentPlan === 'growth' ? 'Current Plan' : 'Upgrade to Growth',
       featured: true,
     },
   ];
