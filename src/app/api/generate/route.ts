@@ -3,8 +3,9 @@ import { tasks } from '@trigger.dev/sdk/v3';
 import { nanoid } from 'nanoid';
 import { auth } from '@clerk/nextjs/server';
 import { slugify } from '@/lib/slugify';
-import { createDeck, getUserByClerkId, createOrganization, getUserOrganizations } from '@/db/queries';
+import { createDeck, getUserByClerkId, createOrganization, getUserOrganizations, getUserDecks } from '@/db/queries';
 import { generateOrgSlug } from '@/lib/utils/slug';
+import { getDeckLimit, type PlanType } from '@/lib/stripe';
 import type { generateDeckTask } from '@/trigger/tasks/generate-deck';
 
 // Simple in-memory rate limiter (10 requests per hour per IP)
@@ -92,6 +93,25 @@ export async function POST(req: NextRequest) {
       dbUser = await getUserByClerkId(clerkId);
       if (dbUser) {
         dbUserId = dbUser.id;
+
+        // Check deck limit for authenticated users
+        const userDecks = await getUserDecks(dbUser.id);
+        // Count parent decks only (not personalized donor decks)
+        const parentDeckCount = userDecks.filter(d => !d.parentDeckId && d.status === 'complete').length;
+        const deckLimit = getDeckLimit(dbUser.plan as PlanType);
+
+        if (parentDeckCount >= deckLimit) {
+          return NextResponse.json(
+            {
+              error: 'deck_limit_reached',
+              message: `You've reached your limit of ${deckLimit} deck${deckLimit === 1 ? '' : 's'}. Upgrade your plan to create more.`,
+              currentCount: parentDeckCount,
+              limit: deckLimit,
+              plan: dbUser.plan,
+            },
+            { status: 403 }
+          );
+        }
       }
     }
 

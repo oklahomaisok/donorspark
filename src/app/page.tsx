@@ -98,7 +98,11 @@ export default function Home() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to start generation');
+        // Handle deck limit error specially
+        if (err.error === 'deck_limit_reached') {
+          throw new Error(`LIMIT_REACHED:${err.message}`);
+        }
+        throw new Error(err.error || err.message || 'Failed to start generation');
       }
 
       const data = await res.json();
@@ -262,8 +266,36 @@ export default function Home() {
               {/* Error State */}
               {phase === 'error' && (
                 <div className="mt-6 max-w-md mx-auto lg:mx-0">
-                  <p className="text-red-500 text-sm mb-4">{error}</p>
-                  <button onClick={resetForm} className="text-xs uppercase tracking-widest opacity-40 hover:opacity-60 transition-opacity duration-200 cursor-pointer">Try again</button>
+                  {error.startsWith('LIMIT_REACHED:') ? (
+                    <>
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                        <p className="text-amber-800 text-sm font-medium mb-2">Deck Limit Reached</p>
+                        <p className="text-amber-700 text-sm">{error.replace('LIMIT_REACHED:', '')}</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <a
+                          href="/pricing"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-salmon text-white text-sm font-medium rounded-lg hover:bg-salmon/90 transition-colors"
+                        >
+                          View Upgrade Options
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                          </svg>
+                        </a>
+                        <a
+                          href="/dashboard"
+                          className="inline-flex items-center px-4 py-2 text-ink/60 text-sm font-medium hover:text-ink transition-colors"
+                        >
+                          Go to Dashboard
+                        </a>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-red-500 text-sm mb-4">{error}</p>
+                      <button onClick={resetForm} className="text-xs uppercase tracking-widest opacity-40 hover:opacity-60 transition-opacity duration-200 cursor-pointer">Try again</button>
+                    </>
+                  )}
                 </div>
               )}
 
