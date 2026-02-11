@@ -123,7 +123,6 @@ export default async function DashboardPage({
             deck={primaryDeck}
             organization={primaryOrg}
             siteUrl={config.siteUrl}
-            userPlan={user.plan as Plan}
           />
 
           {/* Deck Type Cards with Preview Modal */}
