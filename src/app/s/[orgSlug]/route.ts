@@ -64,8 +64,16 @@ export async function GET(
   const token = generateDeckToken(orgSlug);
   const contentUrl = `${config.siteUrl}/s/${orgSlug}/content?token=${token}`;
 
+  // Get nonprofit's favicon from their website
+  const faviconUrl = org.websiteUrl
+    ? `https://www.google.com/s2/favicons?domain=${new URL(org.websiteUrl).hostname}&sz=32`
+    : '';
+
+  // Get OG image URL for meta tags
+  const ogImageUrl = primaryDeck.ogImageUrl || '';
+
   // Serve iframe wrapper page
-  const wrapperHtml = generateIframeWrapper(org.name, contentUrl, claimed);
+  const wrapperHtml = generateIframeWrapper(org.name, contentUrl, claimed, faviconUrl, ogImageUrl, orgSlug);
 
   return new NextResponse(wrapperHtml, {
     headers: {
@@ -78,7 +86,14 @@ export async function GET(
 /**
  * Generate iframe wrapper page that loads deck content
  */
-function generateIframeWrapper(orgName: string, contentUrl: string, showClaimToast: boolean): string {
+function generateIframeWrapper(
+  orgName: string,
+  contentUrl: string,
+  showClaimToast: boolean,
+  faviconUrl: string,
+  ogImageUrl: string,
+  orgSlug: string
+): string {
   const claimToast = showClaimToast ? `
     <div id="claim-toast" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 60; background: #16A34A; color: white; padding: 12px 24px; border-radius: 9999px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-out 3.7s forwards;">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -94,13 +109,27 @@ function generateIframeWrapper(orgName: string, contentUrl: string, showClaimToa
     <script>setTimeout(() => document.getElementById('claim-toast')?.remove(), 4000);</script>
   ` : '';
 
+  const deckUrl = `${config.siteUrl}/s/${orgSlug}`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${escapeHtml(orgName)} | Impact Deck</title>
+    <meta name="description" content="Discover ${escapeHtml(orgName)}'s impact story and see how your support makes a difference.">
     <meta name="robots" content="noindex, nofollow">
+    ${faviconUrl ? `<link rel="icon" href="${faviconUrl}">` : ''}
+    ${ogImageUrl ? `
+    <meta property="og:title" content="${escapeHtml(orgName)} | Impact Deck">
+    <meta property="og:description" content="Discover ${escapeHtml(orgName)}'s impact story.">
+    <meta property="og:image" content="${ogImageUrl}">
+    <meta property="og:url" content="${deckUrl}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${escapeHtml(orgName)} | Impact Deck">
+    <meta name="twitter:description" content="Discover ${escapeHtml(orgName)}'s impact story.">
+    <meta name="twitter:image" content="${ogImageUrl}">` : ''}
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
