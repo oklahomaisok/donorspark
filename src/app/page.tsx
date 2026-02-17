@@ -271,7 +271,6 @@ export default function Home() {
                       </svg>
                       Takes ~90 seconds
                     </p>
-                    <p className="text-xs text-ink/40 mt-1">Free to start. Plans from $39/mo.</p>
                   </div>
                 </>
               )}
