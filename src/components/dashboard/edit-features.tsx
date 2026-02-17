@@ -100,7 +100,7 @@ export function EditFeatures({ currentPlan }: EditFeaturesProps) {
             onClick={handleUpgradeClick}
             className="text-sm font-medium text-[#C15A36] hover:underline"
           >
-            Upgrade to unlock
+            Upgrade
           </button>
         )}
       </div>

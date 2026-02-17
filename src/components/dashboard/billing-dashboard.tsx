@@ -80,7 +80,7 @@ export function BillingDashboard({ user, subscription }: BillingDashboardProps) 
             href="/pricing"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#C15A36] text-white rounded-lg font-medium hover:bg-[#a84d2e] transition-colors"
           >
-            View Plans
+            Upgrade
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 12h14"/>
               <path d="m12 5 7 7-7 7"/>

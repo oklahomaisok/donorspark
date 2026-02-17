@@ -6,6 +6,7 @@ import { slugify } from '@/lib/slugify';
 import { createDeck, getUserByClerkId, createOrganization, getUserOrganizations, getUserDecks, countRecentDeckGenerations } from '@/db/queries';
 import { generateOrgSlug } from '@/lib/utils/slug';
 import { getDeckLimit, type PlanType } from '@/lib/stripe';
+import { isPrivateUrl } from '@/lib/sanitize-url';
 import type { generateDeckTask } from '@/trigger/tasks/generate-deck';
 
 // Simple in-memory rate limiter (10 requests per hour per IP)
@@ -13,8 +14,8 @@ const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
-// Anonymous deck TTL: 48 hours
-const ANONYMOUS_TTL_MS = 48 * 60 * 60 * 1000;
+// Anonymous deck TTL: 24 hours
+const ANONYMOUS_TTL_MS = 24 * 60 * 60 * 1000;
 
 function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number } {
   const now = Date.now();
@@ -190,6 +191,11 @@ export async function POST(req: NextRequest) {
       new URL(url);
     } catch {
       return NextResponse.json({ error: 'Invalid URL format. Please enter a valid website URL.' }, { status: 400 });
+    }
+
+    // Block private/internal URLs to prevent SSRF
+    if (isPrivateUrl(url)) {
+      return NextResponse.json({ error: 'Invalid URL. Please enter a public website URL.' }, { status: 400 });
     }
 
     // Continue with user/org setup if authenticated

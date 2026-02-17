@@ -258,11 +258,24 @@ export function PricingSection({ onGetFreeClick, currentPlan = 'free' }: Pricing
         })}
       </div>
 
+      {/* Social Proof */}
+      <div className="mt-10 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white/60 rounded-xl p-5 border border-ink/5">
+          <p className="text-sm italic opacity-70 mb-2">&ldquo;I sent this to three board members asking for connections. All three forwarded it. That&apos;s never happened before.&rdquo;</p>
+          <p className="text-xs opacity-50">Marcus Johnson, Development Director, CHA</p>
+        </div>
+        <div className="bg-white/60 rounded-xl p-5 border border-ink/5">
+          <p className="text-sm italic opacity-70 mb-2">&ldquo;Our volunteers used to stumble when recruiting. Now they just pull up the deck. Recruitment is up 40%.&rdquo;</p>
+          <p className="text-xs opacity-50">Jennifer Martinez, Founder, Arts Access Collective</p>
+        </div>
+      </div>
+
       {/* Notes */}
-      <div className="mt-12 max-w-2xl mx-auto text-center">
+      <div className="mt-6 max-w-2xl mx-auto text-center">
         <p className="text-sm opacity-60">
           All plans include a shareable link, mobile-optimized design, and a donate button linked to your organization&apos;s giving page.
         </p>
+        <p className="text-xs opacity-40 mt-2">Less than a single direct mail piece.</p>
       </div>
     </section>
   );

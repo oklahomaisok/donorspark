@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDeckBySlug } from '@/db/queries';
 import { validateDeckToken } from '@/lib/deck-token';
 import { config } from '@/lib/config';
+import { sanitizeUrl } from '@/lib/sanitize-url';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -50,7 +51,10 @@ export async function GET(
 
     // Inject preview mode for anonymous decks
     if (isPreview && claimUrl && expiresAt) {
-      html = injectPreviewMode(html, decodeURIComponent(claimUrl), expiresAt);
+      const safeClaimUrl = sanitizeUrl(decodeURIComponent(claimUrl));
+      if (safeClaimUrl) {
+        html = injectPreviewMode(html, safeClaimUrl, expiresAt);
+      }
     }
 
     return new NextResponse(html, {
@@ -70,7 +74,13 @@ export async function GET(
 /**
  * Inject preview mode: popup modal that appears when user reaches the last slide
  */
+function escAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
+}
+
 function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): string {
+  const safeClaimUrl = escAttr(claimUrl);
+  const safeExpiresAt = escAttr(expiresAt);
   const popupHtml = `
     <!-- Preview Mode Popup -->
     <div id="preview-popup" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
@@ -81,11 +91,11 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
         <div style="width:64px;height:64px;background:linear-gradient(135deg,#C15A36,#E07A50);border-radius:50%;margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <h2 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin-bottom:0.5rem;font-family:system-ui,sans-serif;">Love Your Deck?</h2>
-        <p style="color:#666;margin-bottom:1rem;font-size:0.95rem;font-family:system-ui,sans-serif;">This preview expires in:</p>
-        <div id="countdown-timer" data-expires="${expiresAt}" style="font-size:2.5rem;font-weight:700;font-family:ui-monospace,monospace;background:linear-gradient(135deg,#C15A36,#E07A50);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem;">--:--:--</div>
-        <p style="color:#888;font-size:0.875rem;margin-bottom:1.5rem;font-family:system-ui,sans-serif;">Save it forever with one click</p>
-        <a href="${claimUrl}" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 1.75rem;background:linear-gradient(135deg,#C15A36,#E07A50);color:white;border-radius:9999px;font-weight:600;font-size:0.95rem;text-decoration:none;box-shadow:0 4px 14px rgba(193,90,54,0.4);transition:transform 0.2s,box-shadow 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(193,90,54,0.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 14px rgba(193,90,54,0.4)'">
+        <h2 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin-bottom:0.5rem;font-family:system-ui,sans-serif;">Keep Your Deck</h2>
+        <p style="color:#666;margin-bottom:0.75rem;font-size:0.95rem;font-family:system-ui,sans-serif;">This preview expires tomorrow.</p>
+        <div id="countdown-timer" data-expires="${safeExpiresAt}" style="font-size:1rem;font-weight:500;color:#888;font-family:system-ui,sans-serif;margin-bottom:1.25rem;"></div>
+        <p style="color:#888;font-size:0.875rem;margin-bottom:1.5rem;font-family:system-ui,sans-serif;">Create a free account to save it permanently.</p>
+        <a href="${safeClaimUrl}" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 1.75rem;background:linear-gradient(135deg,#C15A36,#E07A50);color:white;border-radius:9999px;font-weight:600;font-size:0.95rem;text-decoration:none;box-shadow:0 4px 14px rgba(193,90,54,0.4);transition:transform 0.2s,box-shadow 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(193,90,54,0.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 14px rgba(193,90,54,0.4)'">
           Save My Deck
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </a>
@@ -113,20 +123,23 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
         function updateTimers() {
           var now = Date.now();
           var diff = expiryTime - now;
-          var text = '00:00:00';
+          var text = 'Expired';
           if (diff > 0) {
             var hours = Math.floor(diff / (1000 * 60 * 60));
             var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            var seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            text = hours.toString().padStart(2, '0') + ':' +
-                   minutes.toString().padStart(2, '0') + ':' +
-                   seconds.toString().padStart(2, '0');
+            if (hours > 1) {
+              text = hours + ' hours remaining';
+            } else if (hours === 1) {
+              text = '1 hour ' + minutes + ' min remaining';
+            } else {
+              text = minutes + ' minutes remaining';
+            }
           }
           if (timer) timer.textContent = text;
           if (bannerTimer) bannerTimer.textContent = text;
         }
         updateTimers();
-        setInterval(updateTimers, 1000);
+        setInterval(updateTimers, 60000);
       }
 
       // Inject banner on CTA slide
@@ -139,10 +152,10 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
             <div style="margin-top:1.5rem;padding:1rem 1.25rem;background:linear-gradient(135deg,#C15A36,#E07A50);border-radius:0.75rem;text-align:center;">
               <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-bottom:0.5rem;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span style="color:rgba(255,255,255,0.9);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;font-family:system-ui,sans-serif;">Preview expires in</span>
-                <span id="banner-countdown" data-expires="${expiresAt}" style="color:white;font-weight:700;font-family:ui-monospace,monospace;font-size:0.875rem;">--:--:--</span>
+                <span style="color:rgba(255,255,255,0.9);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;font-family:system-ui,sans-serif;">Preview expires tomorrow</span>
+                <span id="banner-countdown" data-expires="${safeExpiresAt}" style="display:none;"></span>
               </div>
-              <a href="${claimUrl}" style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 1rem;background:white;color:#C15A36;border-radius:9999px;font-weight:600;font-size:0.8rem;text-decoration:none;transition:transform 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+              <a href="${safeClaimUrl}" style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 1rem;background:white;color:#C15A36;border-radius:9999px;font-weight:600;font-size:0.8rem;text-decoration:none;transition:transform 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 Save My Deck
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
@@ -164,8 +177,8 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
         if (!container) return;
         var scrollLeft = container.scrollLeft;
         var maxScroll = container.scrollWidth - container.clientWidth;
-        // Show when scrolled 85% or more to the end
-        if (scrollLeft >= maxScroll * 0.85 && maxScroll > 0) {
+        // Show when scrolled 95% or more to the end (last slide)
+        if (scrollLeft >= maxScroll * 0.95 && maxScroll > 0) {
           shown = true;
           popup.style.display = 'flex';
         }

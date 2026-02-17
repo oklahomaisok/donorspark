@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { getUserByClerkId, getDeckForEdit, updateDeckBrandData, deleteDeckById, getOrganizationById } from '@/db/queries';
 import { del } from '@vercel/blob';
 import { regenerateDeckHtml, regenerateOgHtml, isValidHexColor, HEADING_FONTS, BODY_FONTS } from '@/lib/deck-regeneration';
+import { sanitizeUrl } from '@/lib/sanitize-url';
 import type { BrandData } from '@/lib/types';
 
 interface RouteParams {
@@ -162,6 +163,17 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
           return NextResponse.json({ error: 'Invalid body font' }, { status: 400 });
         }
       }
+    }
+
+    // Sanitize any URL fields to prevent javascript:/data: injection
+    if (updates.logoUrl !== undefined) {
+      updates.logoUrl = sanitizeUrl(updates.logoUrl) || '';
+    }
+    if (updates.finalDonateUrl !== undefined) {
+      updates.finalDonateUrl = sanitizeUrl(updates.finalDonateUrl) || '';
+    }
+    if (updates.originalUrl !== undefined) {
+      updates.originalUrl = sanitizeUrl(updates.originalUrl) || '';
     }
 
     // Merge updates with existing brandData

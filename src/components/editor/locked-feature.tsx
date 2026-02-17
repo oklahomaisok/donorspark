@@ -59,18 +59,31 @@ export function LockedFeature({ children, isLocked, featureName }: LockedFeature
             </div>
 
             <h2 className="text-lg font-bold text-white mb-2">
-              Upgrade to Customize {featureName}
+              Unlock {featureName}
             </h2>
-            <p className="text-sm text-zinc-400 mb-6">
-              Free accounts can edit content and testimonials. Upgrade to unlock full design customization.
+            <p className="text-sm text-zinc-400 mb-4">
+              Make this deck truly yours. Starter plans include:
             </p>
+
+            <div className="text-left space-y-2 mb-6 px-2">
+              {['Custom colors & fonts', 'Replace images', 'Edit all slide content', 'Remove DonorSpark branding'].map((item) => (
+                <div key={item} className="flex items-center gap-2 text-sm text-zinc-300">
+                  <svg className="w-4 h-4 text-[#C15A36] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  {item}
+                </div>
+              ))}
+            </div>
+
+            <p className="text-xs text-zinc-500 mb-4">Less than a single direct mail piece.</p>
 
             <div className="space-y-3">
               <Link
                 href="/pricing"
                 className="block w-full px-4 py-2.5 bg-[#C15A36] text-white rounded-lg font-medium hover:bg-[#a84d2e] transition-colors text-sm"
               >
-                View Upgrade Options
+                Upgrade
               </Link>
               <button
                 onClick={() => setShowModal(false)}

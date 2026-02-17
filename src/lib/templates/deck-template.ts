@@ -1,5 +1,6 @@
 import type { BrandData } from '../types';
 import { config } from '../config';
+import { sanitizeUrl } from '../sanitize-url';
 
 export interface DeckOptions {
   isPreviewMode?: boolean;
@@ -109,7 +110,11 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
 
   // Show logo if we have one, fall back to text if not
   const useTextLogo = !logoUrl || logoSource === 'none';
-  const effectiveLogoUrl = useTextLogo ? '' : logoUrl;
+  const effectiveLogoUrl = useTextLogo ? '' : sanitizeUrl(logoUrl);
+
+  // Sanitize user-controlled URLs for safe href insertion
+  const safeDonateUrl = sanitizeUrl(finalDonateUrl) || sanitizeUrl(originalUrl);
+  const safeClaimUrl = sanitizeUrl(claimUrl);
 
   const valuesHtml = coreValues.slice(0, 4).map(v =>
     `<div class="bg-white/10 border border-white/10 p-3 rounded text-center backdrop-blur-sm"><div class="text-[var(--accent)] font-black uppercase text-xs tracking-wider">${escHtml(v)}</div></div>`
@@ -311,13 +316,13 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section id="slide-cta" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-[var(--accent)]/50 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
             <div class="flex flex-col h-full z-10 p-6 md:p-10 justify-center">
-                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-[var(--text)]">${formatHeadline(ctaHeadline, headlineCase)}</h2><p class="leading-relaxed text-sm text-[var(--text)]/80 max-w-[90%] mx-auto mb-6">${escHtml(ctaSubhead)}</p><a href="${finalDonateUrl || originalUrl}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">${escHtml(ctaButtonText)}</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                <div class="animate-on-scroll text-center flex flex-col items-center">${effectiveLogoUrl ? `<img src="${effectiveLogoUrl}" alt="${escAttr(orgName)}" class="h-16 md:h-20 max-w-[280px] w-auto object-contain mb-6 opacity-90">` : ''}<h2 class="${headlineCase} leading-tight text-3xl md:text-4xl font-black font-display mb-4 text-[var(--text)]">${formatHeadline(ctaHeadline, headlineCase)}</h2><p class="leading-relaxed text-sm text-[var(--text)]/80 max-w-[90%] mx-auto mb-6">${escHtml(ctaSubhead)}</p><a href="${escAttr(safeDonateUrl)}" target="_blank" id="ds-donate-btn" class="inline-flex items-center justify-center px-8 py-4 font-black rounded hover:scale-105 transition-all shadow-lg mb-6" style="background-color: ${secondary}; color: ${ctaButtonColor};"><span class="font-display uppercase tracking-widest text-sm">${escHtml(ctaButtonText)}</span><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
                     ${isPreviewMode ? `
                     <!-- Love your deck banner - only on CTA slide -->
                     <div class="mt-6 p-4 rounded-xl bg-gradient-to-r from-[#C15A36] to-[#E07A50] text-white">
                         <p class="text-sm font-bold mb-1">Love your deck?</p>
                         <p class="text-xs opacity-90 mb-3">Create a free account to save & share it</p>
-                        <a href="${claimUrl}" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#C15A36] rounded-full text-sm font-bold hover:bg-neutral-100 transition-colors">
+                        <a href="${escAttr(safeClaimUrl)}" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#C15A36] rounded-full text-sm font-bold hover:bg-neutral-100 transition-colors">
                             Claim Deck
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                         </a>
@@ -357,7 +362,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
                     </div>
                     <h3 class="text-2xl font-bold text-neutral-800 mb-2" style="font-family: 'Outfit', sans-serif;">Keep This Deck Forever</h3>
                     <p class="text-neutral-500 text-sm mb-6 max-w-xs">Create a free account to save your deck, unlock sharing, and access your dashboard.</p>
-                    <a href="${claimUrl}" class="inline-flex items-center gap-2 px-8 py-4 bg-[#C15A36] text-white rounded-full hover:bg-[#a84d2e] transition-colors mb-4 shadow-lg" style="font-family: 'Outfit', sans-serif; font-weight: 600;">
+                    <a href="${escAttr(safeClaimUrl)}" class="inline-flex items-center gap-2 px-8 py-4 bg-[#C15A36] text-white rounded-full hover:bg-[#a84d2e] transition-colors mb-4 shadow-lg" style="font-family: 'Outfit', sans-serif; font-weight: 600;">
                         Create Free Account
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </a>

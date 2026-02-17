@@ -3,6 +3,7 @@ import { getDeckByTempToken } from '@/db/queries';
 import { auth } from '@clerk/nextjs/server';
 import Link from 'next/link';
 import { CountdownTimer } from './countdown-timer';
+import { ClaimSignUp } from './claim-signup';
 
 export default async function ClaimPage({
   params,
@@ -143,7 +144,7 @@ export default async function ClaimPage({
           </div>
         </div>
 
-        {/* Claim Form */}
+        {/* Claim Form with embedded signup */}
         <div className="w-full lg:w-[480px] bg-white p-8 lg:p-12 flex flex-col justify-center">
           <div className="max-w-sm mx-auto w-full">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium mb-4">
@@ -155,41 +156,13 @@ export default async function ClaimPage({
             <h1 className="text-3xl font-bold text-neutral-800 mb-2">
               Save Your Deck
             </h1>
-            <p className="text-neutral-500 mb-8">
-              One quick step to keep it forever and unlock sharing.
+            <p className="text-neutral-500 mb-6">
+              Sign up to keep it forever and unlock sharing.
             </p>
 
-            <div className="space-y-4">
-              <Link
-                href={`/sign-up?redirect_url=${encodeURIComponent(`/claim/${tempToken}`)}`}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#C15A36] text-white rounded-lg font-semibold hover:bg-[#a84d2e] transition-colors text-lg"
-              >
-                Get Started Free
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14"/>
-                  <path d="m12 5 7 7-7 7"/>
-                </svg>
-              </Link>
-              <p className="text-center text-xs text-neutral-400">Sign up with Google or email. No credit card required.</p>
+            <ClaimSignUp tempToken={tempToken} />
 
-              <div className="relative pt-2">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-neutral-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-4 text-neutral-400">already have an account?</span>
-                </div>
-              </div>
-
-              <Link
-                href={`/sign-in?redirect_url=${encodeURIComponent(`/claim/${tempToken}`)}`}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 text-[#C15A36] font-semibold hover:bg-neutral-50 transition-colors rounded-lg"
-              >
-                Sign in instead
-              </Link>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-neutral-100 space-y-3">
+            <div className="mt-6 pt-6 border-t border-neutral-100 space-y-3">
               <p className="text-xs font-medium text-neutral-400 uppercase tracking-wide mb-3">What you&apos;ll get</p>
               <div className="flex items-center gap-3 text-sm text-neutral-600">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">

@@ -163,7 +163,7 @@ function generateExpiredPage(orgName: string): string {
         </div>
         <h1 class="text-2xl font-bold text-neutral-800 mb-2">Deck Expired</h1>
         <p class="text-neutral-500 mb-6">
-            The preview deck for <strong>${orgName}</strong> has expired after 48 hours.
+            The preview deck for <strong>${orgName}</strong> has expired.
         </p>
         <a href="/" class="inline-flex items-center gap-2 px-6 py-3 bg-[#C15A36] text-white rounded-full font-semibold hover:bg-[#a84d2e] transition-colors">
             Generate a New Deck

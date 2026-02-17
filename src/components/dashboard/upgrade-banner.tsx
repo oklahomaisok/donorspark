@@ -37,7 +37,7 @@ export function UpgradeBanner({ user }: UpgradeBannerProps) {
             onClick={() => router.push('/pricing')}
             className="px-6 py-2.5 bg-white text-[#C15A36] rounded-lg font-semibold hover:bg-white/90 transition-colors"
           >
-            View Plans
+            Upgrade
           </button>
           <button
             onClick={() => setDismissed(true)}

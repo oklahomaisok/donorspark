@@ -70,7 +70,7 @@ export function DeckCounter({ currentCount, plan }: DeckCounterProps) {
             href="/pricing"
             className="text-xs font-medium text-[#C15A36] hover:underline"
           >
-            Upgrade for more
+            Upgrade
           </Link>
         </div>
       )}

@@ -23,12 +23,6 @@ export async function POST(req: NextRequest) {
     if (!firstName?.trim()) {
       return NextResponse.json({ error: 'First name is required' }, { status: 400 });
     }
-    if (!lastName?.trim()) {
-      return NextResponse.json({ error: 'Last name is required' }, { status: 400 });
-    }
-    if (!role) {
-      return NextResponse.json({ error: 'Role is required' }, { status: 400 });
-    }
     if (!organizationName?.trim()) {
       return NextResponse.json({ error: 'Organization name is required' }, { status: 400 });
     }
@@ -36,8 +30,8 @@ export async function POST(req: NextRequest) {
     // Save onboarding data
     await completeOnboarding(user.id, {
       firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      role,
+      lastName: lastName?.trim() || '',
+      role: role || '',
       organizationName: organizationName.trim(),
       organizationSize: organizationSize || undefined,
       primaryGoal: primaryGoal || undefined,

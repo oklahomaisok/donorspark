@@ -105,7 +105,7 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
   try {
     browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'],
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
     try {

@@ -3,36 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Role options
-const roleOptions = [
-  { value: 'executive_director', label: 'Executive Director' },
-  { value: 'development_director', label: 'Development Director' },
-  { value: 'marketing', label: 'Marketing/Communications' },
-  { value: 'fundraising', label: 'Fundraising' },
-  { value: 'board_member', label: 'Board Member' },
-  { value: 'volunteer', label: 'Volunteer' },
-  { value: 'other', label: 'Other' },
-];
-
-// Organization size options
-const sizeOptions = [
-  { value: '1-5', label: '1-5 employees' },
-  { value: '6-20', label: '6-20 employees' },
-  { value: '21-50', label: '21-50 employees' },
-  { value: '51-200', label: '51-200 employees' },
-  { value: '200+', label: '200+ employees' },
-];
-
-// Primary goal options
-const goalOptions = [
-  { value: 'raising_money', label: 'Raising more money from donors' },
-  { value: 'recruiting_volunteers', label: 'Recruiting volunteers' },
-  { value: 'recruiting_members', label: 'Recruiting members/clients' },
-  { value: 'building_awareness', label: 'Building general awareness' },
-  { value: 'engaging_supporters', label: 'Engaging existing supporters' },
-  { value: 'other', label: 'Other' },
-];
-
 interface WelcomeContentProps {
   orgName?: string;
 }
@@ -46,9 +16,6 @@ export function WelcomeContent({ orgName }: WelcomeContentProps) {
     lastName: '',
     role: '',
     organizationName: orgName || '',
-    organizationSize: '',
-    primaryGoal: '',
-    primaryGoalOther: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,12 +31,6 @@ export function WelcomeContent({ orgName }: WelcomeContentProps) {
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'First name is required';
-    }
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-    if (!formData.role) {
-      newErrors.role = 'Please select your role';
     }
     if (!formData.organizationName.trim()) {
       newErrors.organizationName = 'Organization name is required';
@@ -159,7 +120,7 @@ export function WelcomeContent({ orgName }: WelcomeContentProps) {
                   <div className="w-full border-t border-neutral-200"></div>
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-white px-4 text-sm text-neutral-500">Now, tell us a little about you</span>
+                  <span className="bg-white px-4 text-sm text-neutral-500">One last step</span>
                 </div>
               </div>
             </>
@@ -183,71 +144,24 @@ export function WelcomeContent({ orgName }: WelcomeContentProps) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name row */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
-                  First Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
-                  }
-                  className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] outline-none transition-colors ${
-                    errors.firstName ? 'border-red-300' : 'border-neutral-200'
-                  }`}
-                  placeholder="Jane"
-                />
-                {errors.firstName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
-                  Last Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
-                  }
-                  className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] outline-none transition-colors ${
-                    errors.lastName ? 'border-red-300' : 'border-neutral-200'
-                  }`}
-                  placeholder="Smith"
-                />
-                {errors.lastName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Role */}
+            {/* First Name */}
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Your Role <span className="text-red-500">*</span>
+                First Name <span className="text-red-500">*</span>
               </label>
-              <select
-                value={formData.role}
+              <input
+                type="text"
+                value={formData.firstName}
                 onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
+                  setFormData({ ...formData, firstName: e.target.value })
                 }
-                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] outline-none transition-colors appearance-none bg-white ${
-                  errors.role ? 'border-red-300' : 'border-neutral-200'
+                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] outline-none transition-colors ${
+                  errors.firstName ? 'border-red-300' : 'border-neutral-200'
                 }`}
-              >
-                <option value="">Select your role</option>
-                {roleOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.role && (
-                <p className="text-red-500 text-xs mt-1">{errors.role}</p>
+                placeholder="Jane"
+              />
+              {errors.firstName && (
+                <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
               )}
             </div>
 
@@ -269,64 +183,6 @@ export function WelcomeContent({ orgName }: WelcomeContentProps) {
               />
               {errors.organizationName && (
                 <p className="text-red-500 text-xs mt-1">{errors.organizationName}</p>
-              )}
-            </div>
-
-            {/* Organization Size (optional) */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Organization Size <span className="text-neutral-400 text-xs">(optional)</span>
-              </label>
-              <select
-                value={formData.organizationSize}
-                onChange={(e) =>
-                  setFormData({ ...formData, organizationSize: e.target.value })
-                }
-                className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] outline-none transition-colors appearance-none bg-white"
-              >
-                <option value="">Select size</option>
-                {sizeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Primary Goal (optional) */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Primary Goal <span className="text-neutral-400 text-xs">(optional)</span>
-              </label>
-              <select
-                value={formData.primaryGoal}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    primaryGoal: e.target.value,
-                    primaryGoalOther: e.target.value !== 'other' ? '' : formData.primaryGoalOther,
-                  })
-                }
-                className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] outline-none transition-colors appearance-none bg-white"
-              >
-                <option value="">Select goal</option>
-                {goalOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
-              {formData.primaryGoal === 'other' && (
-                <input
-                  type="text"
-                  value={formData.primaryGoalOther}
-                  onChange={(e) =>
-                    setFormData({ ...formData, primaryGoalOther: e.target.value })
-                  }
-                  className="w-full mt-2 px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-[#C15A36]/20 focus:border-[#C15A36] outline-none transition-colors"
-                  placeholder="Tell us about your goal"
-                />
               )}
             </div>
 

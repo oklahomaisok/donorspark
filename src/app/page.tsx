@@ -256,14 +256,23 @@ export default function Home() {
 
               {phase === 'idle' && (
                 <>
-                  <p className="reveal-item mt-3 text-sm text-ink/50 flex items-center gap-1.5 justify-center lg:justify-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                      <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                    No credit card required
-                  </p>
-                  <p className="reveal-item mt-3 text-xs uppercase tracking-widest opacity-40 text-center lg:text-left max-w-md mx-auto lg:mx-0">Enter your nonprofit&apos;s website.<br />Get a custom story deck instantly.</p>
+                  <div className="reveal-item mt-3 flex flex-col gap-1.5 items-center lg:items-start">
+                    <p className="text-sm text-ink/50 flex items-center gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                      </svg>
+                      No credit card required
+                    </p>
+                    <p className="text-sm text-ink/50 flex items-center gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      Takes ~90 seconds
+                    </p>
+                    <p className="text-xs text-ink/40 mt-1">Free to start. Plans from $39/mo.</p>
+                  </div>
                 </>
               )}
 
@@ -281,7 +290,7 @@ export default function Home() {
                           href="/pricing"
                           className="inline-flex items-center gap-2 px-4 py-2 bg-salmon text-white text-sm font-medium rounded-lg hover:bg-salmon/90 transition-colors"
                         >
-                          View Upgrade Options
+                          Upgrade
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
                           </svg>
@@ -352,7 +361,11 @@ export default function Home() {
                       )}
                     </div>
                   </a>
-                  <button onClick={resetForm} className="mt-4 text-xs uppercase tracking-widest opacity-40 hover:opacity-60 transition-opacity duration-200 cursor-pointer">Generate another deck</button>
+                  <p className="mt-3 text-sm text-ink/50">
+                    Want to customize colors, fonts, and remove branding?{' '}
+                    <a href="/pricing" className="text-salmon font-medium hover:underline">Upgrade</a>
+                  </p>
+                  <button onClick={resetForm} className="mt-2 text-xs uppercase tracking-widest opacity-40 hover:opacity-60 transition-opacity duration-200 cursor-pointer">Generate another deck</button>
                 </div>
               )}
             </div>
