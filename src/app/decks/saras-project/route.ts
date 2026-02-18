@@ -9,12 +9,12 @@ const DECK_HTML = `<!DOCTYPE html>
     <meta name="description" content="To provide education, collaboration and victim advocacy to assist children and adults experiencing crisis resulting from trauma, abuse or loss.">
     <meta property="og:title" content="Sara's Project | Impact Deck">
     <meta property="og:description" content="To provide education, collaboration and victim advocacy to assist children and adults experiencing crisis resulting from trauma, abuse or loss.">
-    <meta property="og:image" content="https://decks.donorspark.app/sara-s-project/og-image.png">
+    <meta property="og:image" content="https://donorspark.app/decks/saras-project/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://decks.donorspark.app/sara-s-project/og-image.png">
+    <meta name="twitter:image" content="https://donorspark.app/decks/saras-project/og-image.png">
     <link rel="icon" href="https://sarasprojectok.org/wp-content/themes/sara/img/saras-project-logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
