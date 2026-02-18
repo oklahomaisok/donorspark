@@ -1,9 +1,9 @@
 import { createHmac, randomBytes } from 'crypto';
 
 function getTokenSecret(): string {
-  const secret = process.env.DECK_getTokenSecret() || process.env.CRON_SECRET;
+  const secret = process.env.DECK_TOKEN_SECRET || process.env.CRON_SECRET;
   if (!secret) {
-    throw new Error('Missing DECK_getTokenSecret() or CRON_SECRET environment variable.');
+    throw new Error('Missing DECK_TOKEN_SECRET or CRON_SECRET environment variable.');
   }
   return secret;
 }
