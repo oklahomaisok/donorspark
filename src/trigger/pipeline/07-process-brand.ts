@@ -286,22 +286,36 @@ function resolveHeaderBg(claudeData: ClaudeAnalysis, scrapedBg: string | null, l
     return luminance > 0.85 && c.count > 100; // White/very light color that's significant
   });
 
-  const claudeHeaderBg = claudeData.colors?.headerBackground;
+  // Check if logo has any dark colors that would be visible on a light background
+  const logoHasDarkColors = logoColors.dominant?.some(c => {
+    if (!c.hex) return false;
+    const r = parseInt(c.hex.slice(1, 3), 16);
+    const g = parseInt(c.hex.slice(3, 5), 16);
+    const b = parseInt(c.hex.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.4 && c.count > 50; // Significant dark pixels
+  });
 
-  // If logo is light/white, we MUST use a dark background regardless of scraped bg
-  if (logoIsLight) {
+  console.log(`[Header] logoIsLight=${logoIsLight}, logoHasDarkColors=${logoHasDarkColors}, scrapedBg=${scrapedBg}, logoColors=${JSON.stringify(logoColors.dominant?.slice(0, 3).map(c => ({ hex: c.hex, count: c.count, lum: c.luminance?.toFixed(2) })))}`);
+
+  const claudeHeaderBg = claudeData.colors?.headerBackground;
+  const effectiveBg = scrapedBg || '#ffffff';
+  const headerIsLight = isLightHex(effectiveBg);
+
+  // If logo is light/white OR (header is light and logo has no dark colors), use dark bg
+  if (logoIsLight || (headerIsLight && !logoHasDarkColors)) {
     // If scraped bg is already dark enough, use it
     if (scrapedBg && !isLightHex(scrapedBg) && scrapedBg !== '#000000') {
-      console.log(`[Header] Logo is light, scraped bg ${scrapedBg} is dark enough — using it`);
+      console.log(`[Header] Logo needs dark bg, scraped bg ${scrapedBg} is dark enough — using it`);
       return scrapedBg;
     }
     // Otherwise use the primary brand color (usually dark)
     const primary = claudeData.colors?.primary;
     if (primary && !isLightHex(primary)) {
-      console.log(`[Header] Logo is light, using primary ${primary} as dark header bg`);
+      console.log(`[Header] Logo needs dark bg, using primary ${primary}`);
       return primary;
     }
-    console.log('[Header] Logo is light, falling back to safe dark color');
+    console.log('[Header] Logo needs dark bg, falling back to safe dark color');
     return '#2D3436';
   }
 

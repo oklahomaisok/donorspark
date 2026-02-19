@@ -73,6 +73,18 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
   const secondary = colors.secondary || '#FFC303';
   const accent = colors.accent || secondary;
   const textColor = colors.text || '#ffffff';
+  // Compute a light variant of accent for use on dark image backgrounds
+  const accentOnDark = (() => {
+    const r = parseInt(accent.slice(1, 3), 16);
+    const g = parseInt(accent.slice(3, 5), 16);
+    const b = parseInt(accent.slice(5, 7), 16);
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    // If accent is already light enough to read on dark bg, use it
+    if (lum > 0.45) return accent;
+    // Otherwise lighten it significantly
+    const lighten = (v: number) => Math.min(255, Math.round(v + (255 - v) * 0.6));
+    return '#' + [lighten(r), lighten(g), lighten(b)].map(v => v.toString(16).padStart(2, '0')).join('');
+  })();
   const headingFont = fonts.headingFont || 'Montserrat';
   const bodyFont = fonts.bodyFont || 'Roboto';
 
@@ -117,11 +129,11 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
   const safeClaimUrl = sanitizeUrl(claimUrl);
 
   const valuesHtml = coreValues.slice(0, 4).map(v =>
-    `<div class="bg-white/10 border border-white/10 p-3 rounded text-center backdrop-blur-sm"><div class="text-[var(--accent)] font-black uppercase text-xs tracking-wider">${escHtml(v)}</div></div>`
+    `<div class="bg-white/10 border border-white/10 p-3 rounded text-center backdrop-blur-sm"><div class="text-[var(--accent-on-dark)] font-black uppercase text-xs tracking-wider">${escHtml(v)}</div></div>`
   ).join('\n');
 
   const programsHtml = (programs || []).slice(0, 6).map(p =>
-    `<span class="px-2 py-1 bg-[var(--accent)]/20 border border-[var(--accent)] rounded text-[10px] uppercase font-bold text-[var(--accent)]">${escHtml(p)}</span>`
+    `<span class="px-2 py-1 bg-[var(--accent-on-dark)]/20 border border-[var(--accent-on-dark)]/50 rounded text-[10px] uppercase font-bold text-[var(--accent-on-dark)]">${escHtml(p)}</span>`
   ).join('\n');
 
   const metricsData = (metrics || []).slice(0, 5);
@@ -228,7 +240,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=${headingFont.replace(/ /g, '+')}:wght@400;500;700;900&family=${bodyFont.replace(/ /g, '+')}:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: ${primary}; --secondary: ${secondary}; --accent: ${accent}; --text: ${textColor}; --header-bg: ${headerBgColor || primary}; --header-text: ${headerTextDark ? '#1a1a1a' : '#ffffff'}; }
+        :root { --primary: ${primary}; --secondary: ${secondary}; --accent: ${accent}; --accent-on-dark: ${accentOnDark}; --text: ${textColor}; --header-bg: ${headerBgColor || primary}; --header-text: ${headerTextDark ? '#1a1a1a' : '#ffffff'}; }
         body { font-family: '${bodyFont}', sans-serif !important; background-color: color-mix(in srgb, var(--primary) 85%, black); color: var(--text); }
         h1, h2, h3, .font-display { font-family: '${headingFont}', sans-serif !important; }
         @keyframes animationIn { 0% { opacity: 0; transform: translateY(30px); filter: blur(8px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0px); } }
@@ -273,17 +285,17 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section id="slide-hero" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0">${heroMediaHtml}<div class="absolute inset-0 bg-black/40"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div></div>
             <div class="flex flex-col z-10 p-6 md:p-10 h-full justify-between">
-                <div class="flex animate-on-scroll items-start justify-between">${badgeText ? `<span class="text-[10px] text-[var(--accent)] uppercase tracking-widest font-bold border border-[var(--accent)]/30 px-2 py-1 rounded bg-[var(--primary)]/80 backdrop-blur-md">${escHtml(badgeText)}</span>` : '<span></span>'}</div>
-                <div class="mt-auto"><h1 class="leading-[0.9] animate-on-scroll text-4xl md:text-5xl tracking-wide font-display ${headlineCase} text-[var(--text)] mb-4 drop-shadow-lg">${escHtml(headlineTop)}<br><span class="text-[var(--accent)]">${escHtml(headlineBottom)}</span></h1><div class="animate-on-scroll"><p class="text-sm text-[var(--text)] max-w-[90%] border-l-4 border-[var(--accent)] pl-4 font-medium">${escHtml(heroHook)}</p></div></div>
-                <div class="pt-4 border-t border-white/10 flex justify-between items-end animate-on-scroll">${yearFounded ? `<div class="flex flex-col"><span class="text-[10px] text-[var(--text)]/70 uppercase mb-1 tracking-wider">Established</span><span class="font-display text-sm text-[var(--text)]">Since ${yearFounded}</span></div>` : '<div></div>'}<div class="text-[var(--accent)] flex items-center gap-2 text-xs uppercase tracking-widest font-bold">Scroll <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div></div>
+                <div class="flex animate-on-scroll items-start justify-between">${badgeText ? `<span class="text-[10px] text-[var(--accent-on-dark)] uppercase tracking-widest font-bold border border-[var(--accent-on-dark)]/30 px-2 py-1 rounded bg-[var(--primary)]/80 backdrop-blur-md">${escHtml(badgeText)}</span>` : '<span></span>'}</div>
+                <div class="mt-auto"><h1 class="leading-[0.9] animate-on-scroll text-4xl md:text-5xl tracking-wide font-display ${headlineCase} text-[var(--text)] mb-4 drop-shadow-lg">${escHtml(headlineTop)}<br><span class="text-[var(--accent-on-dark)]">${escHtml(headlineBottom)}</span></h1><div class="animate-on-scroll"><p class="text-sm text-[var(--text)] max-w-[90%] border-l-4 border-[var(--accent-on-dark)] pl-4 font-medium">${escHtml(heroHook)}</p></div></div>
+                <div class="pt-4 border-t border-white/10 flex justify-between items-end animate-on-scroll">${yearFounded ? `<div class="flex flex-col"><span class="text-[10px] text-[var(--text)]/70 uppercase mb-1 tracking-wider">Established</span><span class="font-display text-sm text-[var(--text)]">Since ${yearFounded}</span></div>` : '<div></div>'}<div class="text-[var(--accent-on-dark)] flex items-center gap-2 text-xs uppercase tracking-widest font-bold">Scroll <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div></div>
             </div>
         </section>
         ${showMissionSlide ? `<!-- Slide: Mission -->
         <section id="slide-mission" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${missionImg}" class="w-full h-full object-cover" style="object-position: ${missionFocal.x}% ${missionFocal.y}%;" alt="Action"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${missionSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(missionSlideTitle)}</span></header>
-                <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-[var(--text)] font-display font-black ${headlineCase} tracking-tight leading-none mb-3">${formatHeadline(missionHeadline, headlineCase)}</h2><div class="w-12 h-1 bg-[var(--accent)] mb-4"></div><p class="text-sm text-[var(--text)] leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
+                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent-on-dark)] font-bold">[${missionSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-white/70">${escHtml(missionSlideTitle)}</span></header>
+                <div class="flex-grow flex flex-col justify-center space-y-6"><div class="animate-on-scroll"><h2 class="text-2xl md:text-3xl text-[var(--text)] font-display font-black ${headlineCase} tracking-tight leading-none mb-3">${formatHeadline(missionHeadline, headlineCase)}</h2><div class="w-12 h-1 bg-[var(--accent-on-dark)] mb-4"></div><p class="text-sm text-[var(--text)] leading-relaxed font-medium">${escHtml(mission)}</p></div><div class="grid grid-cols-2 gap-3 animate-on-scroll">${valuesHtml}</div></div>
             </div>
         </section>` : ''}
         ${showChallengeSlide ? `<!-- Slide: Challenge & Solution -->
@@ -298,7 +310,7 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section id="slide-programs" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${programsImg}" class="w-full h-full object-cover" style="object-position: ${programsFocal.x}% ${programsFocal.y}%;" alt="Programs"><div class="absolute inset-0 bg-black/60"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${programsSlideNum}]</span><div class="p-2 bg-white/10 rounded-full backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></div></header>
+                <header class="flex animate-on-scroll items-center justify-between mb-6"><span class="font-mono text-xs text-[var(--accent-on-dark)] font-bold">[${programsSlideNum}]</span><div class="p-2 bg-white/10 rounded-full backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></div></header>
                 <div class="flex-grow flex flex-col justify-center"><div class="mb-6 animate-on-scroll"><h2 class="text-3xl md:text-4xl text-[var(--text)] font-display font-black tracking-tighter ${headlineCase} leading-none drop-shadow-xl">${formatHeadline(programsHeadline, headlineCase)}</h2></div><div class="animate-on-scroll bg-[var(--primary)]/70 p-4 rounded-lg backdrop-blur-md border border-white/10"><p class="leading-relaxed text-sm text-[var(--text)] mb-4 font-medium">${escHtml(programsBody)}</p>${programsHtml ? `<div class="flex flex-wrap gap-2">${programsHtml}</div>` : ''}</div></div>
             </div>
         </section>` : ''}
@@ -308,8 +320,8 @@ export function generateDeckHtml(slug: string, brandData: BrandData, options: De
         <section id="slide-testimonials" class="slide-container flex-shrink-0 flex flex-col overflow-hidden snap-center bg-[var(--primary)] border-white/10 border relative shadow-2xl rounded-xl">
             <div class="absolute inset-0 z-0"><img src="${testimonialsImg}" class="w-full h-full object-cover" style="object-position: ${testimonialsFocal.x}% ${testimonialsFocal.y}%;" alt="Background"><div class="absolute inset-0 bg-black/70"></div><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div></div>
             <div class="flex flex-col h-full p-6 md:p-10 z-10">
-                <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent)] font-bold">[${testimonialsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">${escHtml(testimonialsSlideTitle)}</span></header>
-                <div class="flex-grow flex flex-col animate-on-scroll items-center justify-center relative"><div class="absolute top-0 right-0 p-2 opacity-70 text-[10px] font-mono text-[var(--accent)] z-30 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.6 13a4 4 0 0 1-7.7 2.3l-2.6-7.5a1.7 1.7 0 0 0-3.3 1L9 18.2a5.3 5.3 0 0 0 2.2 4.1l6.3 3.6c2.4 1.4 5.3-.2 5.5-2.9l.6-9.1a4 4 0 0 0-5-4.1z"/></svg>TAP CARDS</div><div id="testimonial-stack" class="relative w-full max-w-[280px] md:max-w-[320px] aspect-square cursor-pointer">${testimonialCardsHtml}</div></div>
+                <header class="flex justify-between items-center mb-4 animate-on-scroll"><span class="font-mono text-xs text-[var(--accent-on-dark)] font-bold">[${testimonialsSlideNum}]</span><span class="font-display text-[10px] font-bold uppercase tracking-widest text-neutral-400">${escHtml(testimonialsSlideTitle)}</span></header>
+                <div class="flex-grow flex flex-col animate-on-scroll items-center justify-center relative"><div class="absolute top-0 right-0 p-2 opacity-70 text-[10px] font-mono text-[var(--accent-on-dark)] z-30 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.6 13a4 4 0 0 1-7.7 2.3l-2.6-7.5a1.7 1.7 0 0 0-3.3 1L9 18.2a5.3 5.3 0 0 0 2.2 4.1l6.3 3.6c2.4 1.4 5.3-.2 5.5-2.9l.6-9.1a4 4 0 0 0-5-4.1z"/></svg>TAP CARDS</div><div id="testimonial-stack" class="relative w-full max-w-[280px] md:max-w-[320px] aspect-square cursor-pointer">${testimonialCardsHtml}</div></div>
             </div>
         </section>` : ''}
         ${showCtaSlide ? `<!-- Slide: CTA -->
