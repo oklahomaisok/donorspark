@@ -424,6 +424,10 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
                 if (altText.indexOf(eventWords[ew]) !== -1 || srcLower.indexOf(eventWords[ew]) !== -1) { score -= 8; break; }
               }
 
+              // Penalty for images inside modals/popups (e.g. Hustle plugin event popups)
+              var inModal = !!img.closest('[class*="hustle"], [class*="modal"], [class*="popup"], [role="dialog"], .overlay, .lightbox');
+              if (inModal) score -= 15;
+
               candidates.push({ src: src, score: score, inHeader: inHeader });
             }
           }
@@ -446,7 +450,32 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
             }
           }
 
-          // Phase 4: Sort by score descending and return best
+          // Phase 4: Check JSON-LD schema for organization logo
+          var ldScripts = document.querySelectorAll('script[type="application/ld+json"]');
+          for (var ld = 0; ld < ldScripts.length; ld++) {
+            try {
+              var data = JSON.parse(ldScripts[ld].textContent || '');
+              var orgs = [];
+              if (data['@type'] === 'Organization') orgs.push(data);
+              if (data['@graph']) {
+                for (var gi = 0; gi < data['@graph'].length; gi++) {
+                  if (data['@graph'][gi]['@type'] === 'Organization') orgs.push(data['@graph'][gi]);
+                }
+              }
+              for (var oi = 0; oi < orgs.length; oi++) {
+                var orgLogo = orgs[oi].logo;
+                if (orgLogo) {
+                  var logoSrc = typeof orgLogo === 'string' ? orgLogo : (orgLogo.url || orgLogo.contentUrl);
+                  if (logoSrc && !seenSrcs[logoSrc]) {
+                    seenSrcs[logoSrc] = true;
+                    candidates.push({ src: logoSrc, score: 20, inHeader: false });
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+
+          // Phase 5: Sort by score descending and return best
           candidates.sort(function(a, b) { return b.score - a.score; });
           if (candidates.length > 0) {
             return { logoUrl: candidates[0].src, score: candidates[0].score, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
