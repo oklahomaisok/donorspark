@@ -276,7 +276,7 @@ function processMetrics(preExtracted: ExtractedMetric[], claudeData: ClaudeAnaly
 }
 
 function resolveHeaderBg(claudeData: ClaudeAnalysis, scrapedBg: string | null, logoColors: LogoColors): string {
-  // First, check if logo has predominantly light/white colors
+  // Check if logo has predominantly light/white colors
   const logoIsLight = logoColors.dominant?.some(c => {
     if (!c.hex) return false;
     const r = parseInt(c.hex.slice(1, 3), 16);
@@ -288,20 +288,26 @@ function resolveHeaderBg(claudeData: ClaudeAnalysis, scrapedBg: string | null, l
 
   const claudeHeaderBg = claudeData.colors?.headerBackground;
 
+  // If logo is light/white, we MUST use a dark background regardless of scraped bg
+  if (logoIsLight) {
+    // If scraped bg is already dark enough, use it
+    if (scrapedBg && !isLightHex(scrapedBg) && scrapedBg !== '#000000') {
+      console.log(`[Header] Logo is light, scraped bg ${scrapedBg} is dark enough — using it`);
+      return scrapedBg;
+    }
+    // Otherwise use the primary brand color (usually dark)
+    const primary = claudeData.colors?.primary;
+    if (primary && !isLightHex(primary)) {
+      console.log(`[Header] Logo is light, using primary ${primary} as dark header bg`);
+      return primary;
+    }
+    console.log('[Header] Logo is light, falling back to safe dark color');
+    return '#2D3436';
+  }
+
   // If we have a scraped background, use it (it's the actual website header color)
   if (scrapedBg && scrapedBg !== '#ffffff' && scrapedBg !== '#000000') {
     return scrapedBg;
-  }
-
-  // If logo is light/white and we'd default to white, use a dark background instead
-  if (logoIsLight) {
-    // Use the primary brand color (usually dark) as the header background
-    const primary = claudeData.colors?.primary;
-    if (primary && !isLightHex(primary)) {
-      return primary;
-    }
-    // Fallback to a safe dark color
-    return '#2D3436';
   }
 
   if (claudeHeaderBg) {

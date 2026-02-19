@@ -93,7 +93,7 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
         </div>
         <h2 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin-bottom:0.5rem;font-family:system-ui,sans-serif;">Keep Your Deck</h2>
         <p style="color:#666;margin-bottom:0.75rem;font-size:0.95rem;font-family:system-ui,sans-serif;">This preview expires tomorrow.</p>
-        <div id="countdown-timer" data-expires="${safeExpiresAt}" style="font-size:1rem;font-weight:500;color:#888;font-family:system-ui,sans-serif;margin-bottom:1.25rem;"></div>
+        <div id="countdown-timer" data-expires="${safeExpiresAt}" style="font-size:1.25rem;font-weight:600;color:#888;font-family:ui-monospace,SFMono-Regular,monospace;margin-bottom:1.25rem;letter-spacing:0.05em;"></div>
         <p style="color:#888;font-size:0.875rem;margin-bottom:1.5rem;font-family:system-ui,sans-serif;">Create a free account to save it permanently.</p>
         <a href="${safeClaimUrl}" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 1.75rem;background:linear-gradient(135deg,#C15A36,#E07A50);color:white;border-radius:9999px;font-weight:600;font-size:0.95rem;text-decoration:none;box-shadow:0 4px 14px rgba(193,90,54,0.4);transition:transform 0.2s,box-shadow 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(193,90,54,0.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 14px rgba(193,90,54,0.4)'">
           Save My Deck
@@ -123,23 +123,18 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
         function updateTimers() {
           var now = Date.now();
           var diff = expiryTime - now;
-          var text = 'Expired';
+          var text = '00:00:00';
           if (diff > 0) {
             var hours = Math.floor(diff / (1000 * 60 * 60));
             var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            if (hours > 1) {
-              text = hours + ' hours remaining';
-            } else if (hours === 1) {
-              text = '1 hour ' + minutes + ' min remaining';
-            } else {
-              text = minutes + ' minutes remaining';
-            }
+            var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            text = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
           }
           if (timer) timer.textContent = text;
           if (bannerTimer) bannerTimer.textContent = text;
         }
         updateTimers();
-        setInterval(updateTimers, 60000);
+        setInterval(updateTimers, 1000);
       }
 
       // Inject banner on CTA slide

@@ -39,6 +39,15 @@ export function extractMetrics(aboutPageContent: string): ExtractedMetric[] {
     { regex: /(\d[\d,]*k?)\+?\s*(?:people|individuals|clients|residents)\s*(?:served|helped|housed|assisted)?/gi, baseLabel: 'People Served' },
     { regex: /(\d[\d,]*k?)\+?\s*(?:beds?|nights?\s*of\s*shelter)/gi, baseLabel: 'Nights of Shelter' },
     { regex: /(\d[\d,]*k?)\+?\s*(?:acres?|animals?|pets?|adoptions?)/gi, baseLabel: 'Impact' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:visits?|appointments?|checkups?|screenings?|exams?)/gi, baseLabel: 'Visits' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:offices?|clinics?|centers?|facilities|hospitals?)/gi, baseLabel: 'Locations' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:providers?|doctors?|nurses?|physicians?|practitioners?|therapists?|counselors?)\s*(?:trained|certified|served|supported)?/gi, baseLabel: 'Providers' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:books?|titles?)\s*(?:distributed|donated|given|provided)?/gi, baseLabel: 'Books Distributed' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:patients?|members?|participants?|beneficiaries?|recipients?)\s*(?:served|helped|supported|reached)?/gi, baseLabel: 'People Served' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:donors?|supporters?|partners?)/gi, baseLabel: 'Supporters' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:events?|workshops?|sessions?|classes?|trainings?)/gi, baseLabel: 'Events' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:grants?|scholarships?|awards?)\s*(?:awarded|given|distributed)?/gi, baseLabel: 'Grants Awarded' },
+    { regex: /\$(\d[\d,]*(?:\.\d+)?)\s*(?:billion|million|k)?\s*(?:raised|donated|distributed|invested|awarded|given|granted)/gi, baseLabel: 'Funds Raised' },
   ];
 
   for (const p of simplePatterns) {
