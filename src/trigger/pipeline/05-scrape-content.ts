@@ -65,7 +65,7 @@ export function extractMetrics(aboutPageContent: string): ExtractedMetric[] {
       const value = match[1];
       const numVal = parseScaledValue(value);
 
-      if (numVal < 5 && !p.baseLabel.includes('Founded')) continue;
+      if (numVal < 2 && !p.baseLabel.includes('Founded')) continue;
       if (!p.baseLabel.includes('Founded') && numVal > 1900 && numVal < 2030) continue;
 
       const context = getContext(aboutPageContent, match[0]);
