@@ -9,8 +9,8 @@ interface ClaimSignUpProps {
 export function ClaimSignUp({ tempToken }: ClaimSignUpProps) {
   return (
     <SignIn
-      fallbackRedirectUrl={`/claim/${tempToken}`}
-      signUpUrl={`/sign-up?redirect_url=/claim/${tempToken}`}
+      forceRedirectUrl={`/claim/${tempToken}`}
+      signUpUrl={`/sign-up?redirect_url=${encodeURIComponent(`/claim/${tempToken}`)}`}
       appearance={{
         elements: {
           rootBox: 'w-full',
