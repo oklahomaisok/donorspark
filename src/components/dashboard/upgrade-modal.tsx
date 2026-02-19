@@ -41,7 +41,7 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
         </h2>
 
         <p className="text-neutral-600 mb-6">
-          Free accounts are limited to 1 deck. Upgrade to create additional decks for your organization.
+          Free accounts are limited to 1 deck. You can delete your current deck to make room for a new one, or upgrade to create additional decks.
         </p>
 
         {/* Plan comparison */}

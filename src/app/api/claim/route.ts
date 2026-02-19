@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { cookies } from 'next/headers';
 import QRCode from 'qrcode';
 import {
   getDeckByTempToken,
   getUserByClerkId,
+  getUserDecks,
+  upsertUser,
   claimDeck,
   createOrganization,
 } from '@/db/queries';
+import { getDeckLimit } from '@/lib/stripe';
+import type { PlanType } from '@/lib/stripe';
 import { generateOrgSlug } from '@/lib/utils/slug';
 import { config } from '@/lib/config';
 import { sendWelcomeEmail } from '@/lib/resend';
@@ -22,13 +26,21 @@ export async function GET(req: NextRequest) {
   // Verify user is authenticated
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return NextResponse.redirect(`${config.siteUrl}/sign-in?redirect_url=/api/claim?tempToken=${tempToken}`);
+    const redirectUrl = encodeURIComponent(`/api/claim?tempToken=${tempToken}`);
+    return NextResponse.redirect(`${config.siteUrl}/sign-in?redirect_url=${redirectUrl}`);
   }
 
-  // Get user from database
-  const user = await getUserByClerkId(clerkId);
+  // Get user from database (fallback: create from Clerk data if webhook hasn't fired yet)
+  let user = await getUserByClerkId(clerkId);
   if (!user) {
-    return NextResponse.redirect(`${config.siteUrl}/sign-in?redirect_url=/api/claim?tempToken=${tempToken}`);
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      const redirectUrl = encodeURIComponent(`/api/claim?tempToken=${tempToken}`);
+      return NextResponse.redirect(`${config.siteUrl}/sign-in?redirect_url=${redirectUrl}`);
+    }
+    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+    const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
+    user = await upsertUser(clerkId, email, name);
   }
 
   // Get deck by temp token
@@ -45,6 +57,14 @@ export async function GET(req: NextRequest) {
   // Check if deck is expired
   if (deck.isExpired || (deck.expiresAt && new Date(deck.expiresAt) < new Date())) {
     return NextResponse.redirect(`${config.siteUrl}/dashboard?error=expired`);
+  }
+
+  // Check if user has reached their plan's deck limit
+  const userDecks = await getUserDecks(user.id);
+  const parentDeckCount = userDecks.filter((d) => !d.parentDeckId && d.status === 'complete').length;
+  const deckLimit = getDeckLimit((user.plan || 'free') as PlanType);
+  if (parentDeckCount >= deckLimit) {
+    return NextResponse.redirect(`${config.siteUrl}/dashboard?error=deck_limit`);
   }
 
   try {
@@ -101,10 +121,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Get user from database
-  const user = await getUserByClerkId(clerkId);
+  // Get user from database (fallback: create from Clerk data if webhook hasn't fired yet)
+  let user = await getUserByClerkId(clerkId);
   if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+    const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
+    user = await upsertUser(clerkId, email, name);
   }
 
   // Get deck by temp token
@@ -121,6 +147,14 @@ export async function POST(req: NextRequest) {
   // Check if deck is expired
   if (deck.isExpired || (deck.expiresAt && new Date(deck.expiresAt) < new Date())) {
     return NextResponse.json({ error: 'Deck expired' }, { status: 410 });
+  }
+
+  // Check if user has reached their plan's deck limit
+  const userDecks = await getUserDecks(user.id);
+  const parentDeckCount = userDecks.filter((d) => !d.parentDeckId && d.status === 'complete').length;
+  const deckLimit = getDeckLimit((user.plan || 'free') as PlanType);
+  if (parentDeckCount >= deckLimit) {
+    return NextResponse.json({ error: 'Deck limit reached. Delete an existing deck or upgrade your plan.' }, { status: 403 });
   }
 
   try {

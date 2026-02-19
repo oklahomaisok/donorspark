@@ -75,6 +75,7 @@ export default async function DashboardPage({
     already_claimed: 'This deck has already been claimed.',
     expired: 'This deck has expired and can no longer be claimed.',
     claim_failed: 'Failed to claim deck. Please try again.',
+    deck_limit: 'You\u2019ve reached your free plan limit of 1 deck. Delete your current deck to make room, or upgrade for more.',
   };
   const errorMessage = params.error ? errorMessages[params.error] : null;
 
