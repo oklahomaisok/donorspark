@@ -320,7 +320,11 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      <p className="text-red-500 text-sm mb-4">{error}</p>
+                      <div className="bg-stone-50 border border-stone-200 rounded-xl p-5 mb-4 text-left">
+                        <p className="text-ink text-sm font-medium mb-3">Hmmm...that didn&apos;t work. Can you double-check that URL?</p>
+                        <p className="text-ink/50 text-sm font-mono break-all mb-3">{url}</p>
+                        <p className="text-ink/40 text-xs">If it still doesn&apos;t work, contact us: <a href="mailto:help@donorspark.app" className="underline hover:text-ink/60 transition-colors">help@donorspark.app</a></p>
+                      </div>
                       <button onClick={resetForm} className="text-xs uppercase tracking-widest opacity-40 hover:opacity-60 transition-opacity duration-200 cursor-pointer">Try again</button>
                     </>
                   )}

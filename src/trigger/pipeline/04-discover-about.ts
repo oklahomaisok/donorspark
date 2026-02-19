@@ -60,6 +60,9 @@ export async function discoverAboutPage(url: string, domain: string, origin: str
     const commonUrls = [
       `${origin}/about`, `${origin}/about/`, `${origin}/about-us`,
       `${origin}/about-us/`, `${origin}/who-we-are`, `${origin}/our-mission`,
+      `${origin}/what-we-do`, `${origin}/what-we-do/`,
+      `${origin}/our-work`, `${origin}/our-work/`,
+      `${origin}/our-impact`, `${origin}/our-impact/`,
     ];
 
     for (const tryUrl of commonUrls) {

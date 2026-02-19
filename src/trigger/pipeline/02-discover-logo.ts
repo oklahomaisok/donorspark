@@ -281,6 +281,9 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
             'header img, nav img, .header img, .navbar img'
           ];
 
+          // CMS logo selectors that earn a bonus score
+          var cmsLogoSelectors = ['custom-logo', 'site-branding', 'navbar-brand'];
+
           // Get the current site's domain for validation
           var siteDomain = window.location.hostname.replace(/^www\\./, '');
 
@@ -293,6 +296,17 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
             return a.href;
           }
 
+          // Skip filter arrays (defined once outside loop)
+          var skipWords = ['data:image/gif', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
+          var bannerWords = ['banner', 'alert', 'promo', 'hero', 'slide', 'carousel', 'background'];
+          var badgeWords = ['badge', 'award', 'usnews', 'ranking', 'seal', 'best-', 'top-', 'accredit', 'certif', 'rated', 'winner'];
+          var thirdPartyWords = ['superpath', 'hubspot', 'mailchimp', 'constant-contact', 'salesforce', 'zendesk', 'intercom', 'drift', 'crisp', 'tawk', 'livechat', 'freshdesk', 'helpscout', 'calendly', 'typeform', 'jotform', 'formstack', 'wufoo', 'cognito', 'auth0', 'okta', 'stripe', 'paypal', 'square', 'classy', 'bloomerang', 'blackbaud', 'neon', 'givebutter', 'donorbox', 'networkforgood', 'double-the-donation', 'facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'snapchat'];
+          var allowedCdns = ['cloudinary', 'imgix', 'cloudfront', 'amazonaws', 'squarespace', 'wixstatic', 'shopify', 'wordpress', 'wp.com', 'gravatar'];
+
+          // Phase 2: Collect ALL img candidates with scores
+          var candidates = [];
+          var seenSrcs = {};
+
           for (var r = 0; r < imgSelectors.length; r++) {
             var els = document.querySelectorAll(imgSelectors[r]);
             for (var s = 0; s < els.length; s++) {
@@ -302,9 +316,6 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
               var srcset = img.srcset || img.getAttribute('data-srcset');
               var src = null;
               if (srcset) {
-                // Parse srcset properly - URLs can contain commas (like Wix CDN URLs)
-                // Format: "url1 descriptor1, url2 descriptor2" where descriptor is like "1x" or "152w"
-                // Use regex to match: URL followed by whitespace and descriptor
                 var sources = [];
                 var srcsetRegex = /(https?:\\/\\/[^\\s]+)\\s+(\\d+(?:\\.\\d+)?[wx])/g;
                 var match;
@@ -322,82 +333,152 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
                     sources.push({ url: url, width: w });
                   }
                 }
-                // Sort by width descending and pick the best one under 1200px, or just the first
                 var best = sources.filter(function(x) { return x.width <= 1200; }).sort(function(a,b) { return b.width - a.width; })[0] || sources[0];
                 if (best) src = best.url;
               }
 
-              // Fall back to src or data attributes
               if (!src) {
                 src = img.src || img.dataset.src || img.dataset.lazySrc || img.getAttribute('data-lazy-src');
               }
               if (!src) continue;
 
-              // Convert relative URLs to absolute
               src = toAbsoluteUrl(src);
 
+              // Apply skip filters
               var srcLower = src.toLowerCase();
-              var skip = ['data:image/gif', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
-              var banner = ['banner', 'alert', 'promo', 'hero', 'slide', 'carousel', 'background'];
-              var badges = ['badge', 'award', 'usnews', 'ranking', 'seal', 'best-', 'top-', 'accredit', 'certif', 'rated', 'winner'];
-              var thirdParty = ['superpath', 'hubspot', 'mailchimp', 'constant-contact', 'salesforce', 'zendesk', 'intercom', 'drift', 'crisp', 'tawk', 'livechat', 'freshdesk', 'helpscout', 'calendly', 'typeform', 'jotform', 'formstack', 'wufoo', 'cognito', 'auth0', 'okta', 'stripe', 'paypal', 'square', 'classy', 'bloomerang', 'blackbaud', 'neon', 'givebutter', 'donorbox', 'networkforgood', 'double-the-donation', 'facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'snapchat'];
               var shouldSkip = false;
-              for (var t = 0; t < skip.length; t++) { if (srcLower.indexOf(skip[t]) !== -1) { shouldSkip = true; break; } }
+              for (var t = 0; t < skipWords.length; t++) { if (srcLower.indexOf(skipWords[t]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
-              for (var u = 0; u < banner.length; u++) { if (srcLower.indexOf(banner[u]) !== -1) { shouldSkip = true; break; } }
+              for (var u = 0; u < bannerWords.length; u++) { if (srcLower.indexOf(bannerWords[u]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
-              for (var v = 0; v < badges.length; v++) { if (srcLower.indexOf(badges[v]) !== -1) { shouldSkip = true; break; } }
+              for (var v = 0; v < badgeWords.length; v++) { if (srcLower.indexOf(badgeWords[v]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
-              // Also check alt text for badge-related keywords
               var altText = (img.alt || '').toLowerCase();
-              for (var w = 0; w < badges.length; w++) { if (altText.indexOf(badges[w]) !== -1) { shouldSkip = true; break; } }
+              for (var w = 0; w < badgeWords.length; w++) { if (altText.indexOf(badgeWords[w]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
-              for (var x = 0; x < thirdParty.length; x++) { if (srcLower.indexOf(thirdParty[x]) !== -1) { shouldSkip = true; break; } }
+              for (var x = 0; x < thirdPartyWords.length; x++) { if (srcLower.indexOf(thirdPartyWords[x]) !== -1) { shouldSkip = true; break; } }
               if (shouldSkip) continue;
               if (img.naturalWidth > 0 && img.naturalWidth < 30) continue;
 
-              // Skip third-party logos (domain doesn't match site or common CDNs)
+              // Skip third-party logos (domain validation)
               try {
                 var imgUrl = new URL(src);
                 var imgDomain = imgUrl.hostname.replace(/^www\\./, '');
-                var allowedCdns = ['cloudinary', 'imgix', 'cloudfront', 'amazonaws', 'squarespace', 'wixstatic', 'shopify', 'wordpress', 'wp.com', 'gravatar'];
                 var isOwnDomain = imgDomain.indexOf(siteDomain) !== -1 || siteDomain.indexOf(imgDomain.split('.').slice(-2).join('.')) !== -1;
                 var isCdn = allowedCdns.some(function(cdn) { return imgDomain.indexOf(cdn) !== -1; });
                 if (!isOwnDomain && !isCdn && imgDomain !== siteDomain) {
-                  continue; // Skip third-party logos
+                  continue;
                 }
-              } catch (e) {
-                // If URL parsing fails, allow it (might be relative URL)
+              } catch (e) {}
+
+              // Deduplicate
+              if (seenSrcs[src]) continue;
+              seenSrcs[src] = true;
+
+              // Score this candidate
+              var score = 0;
+
+              // +10 for "logo" in src URL
+              if (srcLower.indexOf('logo') !== -1) score += 10;
+
+              // +8 for "logo" in alt text
+              if (altText.indexOf('logo') !== -1) score += 8;
+
+              // +8 for "logo" in class/id of img or ancestors (up to 3 levels)
+              var imgClasses = (img.className || '').toLowerCase();
+              var imgId = (img.id || '').toLowerCase();
+              var hasLogoAncestor = imgClasses.indexOf('logo') !== -1 || imgId.indexOf('logo') !== -1;
+              var ancestor = img.parentElement;
+              for (var anc = 0; anc < 3 && ancestor && !hasLogoAncestor; anc++) {
+                var ancClasses = (ancestor.className || '').toLowerCase();
+                var ancId = (ancestor.id || '').toLowerCase();
+                if (ancClasses.indexOf('logo') !== -1 || ancId.indexOf('logo') !== -1) hasLogoAncestor = true;
+                ancestor = ancestor.parentElement;
+              }
+              if (hasLogoAncestor) score += 8;
+
+              // +6 for CMS logo classes (matched via specific selectors)
+              var selectorStr = imgSelectors[r].toLowerCase();
+              for (var cms = 0; cms < cmsLogoSelectors.length; cms++) {
+                if (selectorStr.indexOf(cmsLogoSelectors[cms]) !== -1) { score += 6; break; }
               }
 
-              return { logoUrl: src, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
+              // +4 for linked to homepage
+              var linkParent = img.closest('a');
+              if (linkParent) {
+                var href = linkParent.getAttribute('href') || '';
+                if (href === '/' || href === window.location.origin + '/' || href === window.location.origin) score += 4;
+              }
+
+              // +8 for found in header/nav area (strong signal for org logo)
+              var inHeader = !!img.closest('header, nav, .header, .navbar, [role="banner"]');
+              if (inHeader) score += 8;
+
+              // +1 for footer area only
+              var inFooter = !!img.closest('footer, .footer, [role="contentinfo"]');
+              if (!inHeader && inFooter) score += 1;
+
+              // Penalty for event/campaign images (not the org logo)
+              var eventWords = ['event', 'gala', 'fundraiser', 'concert', 'benefit', 'auction', 'luncheon', 'dinner', 'golf', 'tournament', 'banding', 'together', 'annual'];
+              for (var ew = 0; ew < eventWords.length; ew++) {
+                if (altText.indexOf(eventWords[ew]) !== -1 || srcLower.indexOf(eventWords[ew]) !== -1) { score -= 8; break; }
+              }
+
+              candidates.push({ src: src, score: score, inHeader: inHeader });
             }
           }
 
-          return { logoUrl: null, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
+          // Phase 3: Scan footer for multi-section matches (+15 bonus)
+          var footerImgs = document.querySelectorAll('footer img, .footer img, [role="contentinfo"] img');
+          for (var fi = 0; fi < footerImgs.length; fi++) {
+            var fImg = footerImgs[fi];
+            var fSrc = fImg.src || fImg.dataset.src || '';
+            fSrc = toAbsoluteUrl(fSrc);
+            if (!fSrc) continue;
+            var fFilename = fSrc.split('/').pop().split('?')[0].toLowerCase();
+            for (var ci = 0; ci < candidates.length; ci++) {
+              if (!candidates[ci].inHeader) continue;
+              var cFilename = candidates[ci].src.split('/').pop().split('?')[0].toLowerCase();
+              if (candidates[ci].src === fSrc || (fFilename && fFilename.length > 3 && cFilename === fFilename)) {
+                candidates[ci].score += 15;
+                break;
+              }
+            }
+          }
+
+          // Phase 4: Sort by score descending and return best
+          candidates.sort(function(a, b) { return b.score - a.score; });
+          if (candidates.length > 0) {
+            return { logoUrl: candidates[0].src, score: candidates[0].score, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
+          }
+          return { logoUrl: null, score: 0, headerBg: headerBg, headingFont: headingFont, bodyFont: bodyFont };
         })()
-      `) as Promise<{ logoUrl: string | null; headerBg: string | null; headingFont: string | null; bodyFont: string | null }>, 8000, { logoUrl: null as string | null, headerBg: '#ffffff', headingFont: null as string | null, bodyFont: null as string | null });
+      `) as Promise<{ logoUrl: string | null; score: number; headerBg: string | null; headingFont: string | null; bodyFont: string | null }>, 8000, { logoUrl: null as string | null, score: 0, headerBg: '#ffffff', headingFont: null as string | null, bodyFont: null as string | null });
 
       headerBgColor = result.headerBg;
       detectedFonts = { heading: result.headingFont, body: result.bodyFont };
 
-      // Prefer scraped logo over apistemic if found AND it's a valid image URL
+      // Prefer scraped logo over apistemic if found with strong signal (score >= 5)
       if (result.logoUrl) {
-        // Validate the URL is actually an image (not a webpage)
-        if (isValidImageUrl(result.logoUrl)) {
-          // Resolve any redirects to get the final URL
-          const resolvedUrl = await resolveRedirects(result.logoUrl);
-          // Re-validate after redirect resolution (might have redirected to homepage)
-          if (isValidImageUrl(resolvedUrl)) {
-            logoUrl = resolvedUrl;
-            logoSource = 'scraper';
-            console.log('[Logo Discovery] Found via DOM scrape:', logoUrl?.substring(0, 100));
+        console.log('[Logo Discovery] Best candidate score:', result.score, 'url:', result.logoUrl.substring(0, 100));
+        if (result.score >= 5) {
+          // Validate the URL is actually an image (not a webpage)
+          if (isValidImageUrl(result.logoUrl)) {
+            // Resolve any redirects to get the final URL
+            const resolvedUrl = await resolveRedirects(result.logoUrl);
+            // Re-validate after redirect resolution (might have redirected to homepage)
+            if (isValidImageUrl(resolvedUrl)) {
+              logoUrl = resolvedUrl;
+              logoSource = 'scraper';
+              console.log('[Logo Discovery] Found via DOM scrape (score ' + result.score + '):', logoUrl?.substring(0, 100));
+            } else {
+              console.log('[Logo Discovery] Scraped URL redirected to non-image, keeping Apistemic');
+            }
           } else {
-            console.log('[Logo Discovery] Scraped URL redirected to non-image, keeping Apistemic');
+            console.log('[Logo Discovery] Scraped URL is not a valid image URL:', result.logoUrl.substring(0, 80));
           }
         } else {
-          console.log('[Logo Discovery] Scraped URL is not a valid image URL:', result.logoUrl.substring(0, 80));
-          // Keep the Apistemic logo if we have one
+          console.log('[Logo Discovery] DOM scrape score too low (' + result.score + '), keeping Apistemic');
         }
       } else {
         console.log('[Logo Discovery] DOM scrape found no logo');

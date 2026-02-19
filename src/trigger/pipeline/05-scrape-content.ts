@@ -38,7 +38,13 @@ export function extractMetrics(aboutPageContent: string): ExtractedMetric[] {
     { regex: /(\d[\d,]*k?)\+?\s*meals?\s*(?:served|provided|distributed)?/gi, baseLabel: 'Meals Served' },
     { regex: /(\d[\d,]*k?)\+?\s*(?:people|individuals|clients|residents)\s*(?:served|helped|housed|assisted)?/gi, baseLabel: 'People Served' },
     { regex: /(\d[\d,]*k?)\+?\s*(?:beds?|nights?\s*of\s*shelter)/gi, baseLabel: 'Nights of Shelter' },
-    { regex: /(\d[\d,]*k?)\+?\s*(?:acres?|animals?|pets?|adoptions?)/gi, baseLabel: 'Impact' },
+    { regex: /(\d[\d,]*k?)\+?\s*acres?/gi, baseLabel: 'Acres Protected' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:animals?|pets?)\s*(?:rescued|saved|helped|adopted|served|housed|cared\s*for)?/gi, baseLabel: 'Animals Helped' },
+    { regex: /(\d[\d,]*k?)\+?\s*adoptions?/gi, baseLabel: 'Adoptions' },
+    { regex: /(\d+\.?\d*\s*(?:billion|million))\s*(?:spay|neuter|procedures?|surgeries|operations?)/gi, baseLabel: 'Procedures' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:spay|neuter|procedures?|surgeries|operations?)/gi, baseLabel: 'Procedures' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:rescues?|rescued)/gi, baseLabel: 'Rescues' },
+    { regex: /(\d[\d,]*k?)\+?\s*(?:species|breeds?)/gi, baseLabel: 'Species Protected' },
     { regex: /(\d[\d,]*k?)\+?\s*(?:visits?|appointments?|checkups?|screenings?|exams?)/gi, baseLabel: 'Visits' },
     { regex: /(\d[\d,]*k?)\+?\s*(?:offices?|clinics?|centers?|facilities|hospitals?)/gi, baseLabel: 'Locations' },
     { regex: /(\d[\d,]*k?)\+?\s*(?:providers?|doctors?|nurses?|physicians?|practitioners?|therapists?|counselors?)\s*(?:trained|certified|served|supported)?/gi, baseLabel: 'Providers' },
@@ -82,6 +88,13 @@ export function extractMetrics(aboutPageContent: string): ExtractedMetric[] {
         else if (ctxLower.includes('mentor')) label = 'Youth Mentored';
       } else if (p.baseLabel === 'Years of Service') {
         if (ctxLower.includes('mentor')) label = 'Years of Mentoring';
+      } else if (p.baseLabel === 'Animals Helped') {
+        if (ctxLower.includes('rescue')) label = 'Animals Rescued';
+        else if (ctxLower.includes('adopt')) label = 'Animals Adopted';
+        else if (ctxLower.includes('sanctuary') || ctxLower.includes('shelter')) label = 'Animals Sheltered';
+        else if (ctxLower.includes('spay') || ctxLower.includes('neuter')) label = 'Spay/Neuter Procedures';
+      } else if (p.baseLabel === 'Procedures') {
+        if (ctxLower.includes('spay') || ctxLower.includes('neuter')) label = 'Spay/Neuter Procedures';
       }
 
       const isDupe = metrics.some(m => m.value === value && m.label === label);

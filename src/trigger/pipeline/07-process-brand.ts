@@ -255,6 +255,17 @@ function processMetrics(preExtracted: ExtractedMetric[], claudeData: ClaudeAnaly
     }
   }
 
+  // Reject metrics with vague labels that don't describe what's being measured
+  const vagueLabels = ['impact', 'results', 'outcomes', 'success', 'stats', 'numbers'];
+  metrics = metrics.filter(m => {
+    const labelLower = m.label.toLowerCase().trim();
+    if (vagueLabels.includes(labelLower)) {
+      console.log('[Metrics] Rejected vague metric:', m.value, m.label);
+      return false;
+    }
+    return true;
+  });
+
   metrics = metrics.slice(0, 5);
 
   // Only add year-based metric if we have a valid founding year - skip generic fallbacks entirely
