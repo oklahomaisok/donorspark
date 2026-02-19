@@ -1,16 +1,19 @@
 'use client';
 
-import { SignIn } from '@clerk/nextjs';
+import { SignUp } from '@clerk/nextjs';
 
 interface ClaimSignUpProps {
   tempToken: string;
 }
 
 export function ClaimSignUp({ tempToken }: ClaimSignUpProps) {
+  const redirectUrl = `/claim/${tempToken}`;
+
   return (
-    <SignIn
-      forceRedirectUrl={`/claim/${tempToken}`}
-      signUpUrl={`/sign-up?redirect_url=${encodeURIComponent(`/claim/${tempToken}`)}`}
+    <SignUp
+      forceRedirectUrl={redirectUrl}
+      fallbackRedirectUrl={redirectUrl}
+      signInUrl={`/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`}
       appearance={{
         elements: {
           rootBox: 'w-full',
