@@ -95,7 +95,7 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
         <p style="color:#666;margin-bottom:0.75rem;font-size:0.95rem;font-family:system-ui,sans-serif;">This preview expires tomorrow.</p>
         <div id="countdown-timer" data-expires="${safeExpiresAt}" style="font-size:1.25rem;font-weight:600;color:#888;font-family:ui-monospace,SFMono-Regular,monospace;margin-bottom:1.25rem;letter-spacing:0.05em;"></div>
         <p style="color:#888;font-size:0.875rem;margin-bottom:1.5rem;font-family:system-ui,sans-serif;">Create a free account to save it permanently.</p>
-        <a href="${safeClaimUrl}" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 1.75rem;background:linear-gradient(135deg,#C15A36,#E07A50);color:white;border-radius:9999px;font-weight:600;font-size:0.95rem;text-decoration:none;box-shadow:0 4px 14px rgba(193,90,54,0.4);transition:transform 0.2s,box-shadow 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(193,90,54,0.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 14px rgba(193,90,54,0.4)'">
+        <a href="${safeClaimUrl}" target="_top" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.875rem 1.75rem;background:linear-gradient(135deg,#C15A36,#E07A50);color:white;border-radius:9999px;font-weight:600;font-size:0.95rem;text-decoration:none;box-shadow:0 4px 14px rgba(193,90,54,0.4);transition:transform 0.2s,box-shadow 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(193,90,54,0.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 14px rgba(193,90,54,0.4)'">
           Save My Deck
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </a>
@@ -150,7 +150,7 @@ function injectPreviewMode(html: string, claimUrl: string, expiresAt: string): s
                 <span style="color:rgba(255,255,255,0.9);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;font-family:system-ui,sans-serif;">Preview expires tomorrow</span>
                 <span id="banner-countdown" data-expires="${safeExpiresAt}" style="display:none;"></span>
               </div>
-              <a href="${safeClaimUrl}" style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 1rem;background:white;color:#C15A36;border-radius:9999px;font-weight:600;font-size:0.8rem;text-decoration:none;transition:transform 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+              <a href="${safeClaimUrl}" target="_top" style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 1rem;background:white;color:#C15A36;border-radius:9999px;font-weight:600;font-size:0.8rem;text-decoration:none;transition:transform 0.2s;font-family:system-ui,sans-serif;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 Save My Deck
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>

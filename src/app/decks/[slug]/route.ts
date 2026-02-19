@@ -122,7 +122,7 @@ function generateIframeWrapper(orgName: string, contentUrl: string, slug: string
 <body>
     <iframe src="${contentUrl}"
             title="${escapeHtml(orgName)} Impact Deck"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
             loading="eager"
             referrerpolicy="no-referrer"></iframe>
     <script>
