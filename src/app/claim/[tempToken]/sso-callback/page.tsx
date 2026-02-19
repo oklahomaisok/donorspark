@@ -1,4 +1,4 @@
-import { SignIn } from '@clerk/nextjs';
+import { AuthenticateWithRedirectCallback } from '@clerk/nextjs';
 
 export default async function ClaimSsoCallbackPage({
   params,
@@ -10,10 +10,13 @@ export default async function ClaimSsoCallbackPage({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream">
-      <SignIn
-        forceRedirectUrl={redirectUrl}
-        fallbackRedirectUrl={redirectUrl}
-        signUpUrl={`/sign-up?redirect_url=${encodeURIComponent(redirectUrl)}`}
+      <AuthenticateWithRedirectCallback
+        signInForceRedirectUrl={redirectUrl}
+        signInFallbackRedirectUrl={redirectUrl}
+        signUpForceRedirectUrl={redirectUrl}
+        signUpFallbackRedirectUrl={redirectUrl}
+        signInUrl="/sign-in"
+        signUpUrl="/sign-up"
       />
     </div>
   );
