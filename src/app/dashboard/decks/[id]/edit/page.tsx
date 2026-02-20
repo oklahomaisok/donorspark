@@ -8,8 +8,9 @@ import {
 } from 'lucide-react';
 import { SlideImageUploader } from '@/components/editor/slide-image-uploader';
 import { LockedFeature, LockedBadge } from '@/components/editor/locked-feature';
+import { FontSelector } from '@/components/editor/font-selector';
 import { generateDeckHtml } from '@/lib/templates/deck-template';
-import { HEADING_FONTS, BODY_FONTS } from '@/lib/editor-utils';
+import { getCuratedFontsLinkUrl, HEADING_FONTS, BODY_FONTS } from '@/lib/editor-utils';
 import type { BrandData, Testimonial, SocialLink, CustomImages, FocalPoint } from '@/lib/types';
 
 // Tool categories for the left rail
@@ -117,6 +118,35 @@ export default function EditDeckPage() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  // Inject Google Fonts <link> for all curated fonts + any non-curated current fonts
+  useEffect(() => {
+    const extraFonts: string[] = [];
+    if (brandData) {
+      if (!HEADING_FONTS.includes(brandData.fonts.headingFont)) {
+        extraFonts.push(brandData.fonts.headingFont);
+      }
+      if (!BODY_FONTS.includes(brandData.fonts.bodyFont)) {
+        extraFonts.push(brandData.fonts.bodyFont);
+      }
+    }
+    const linkId = 'editor-curated-fonts';
+    let link = document.getElementById(linkId) as HTMLLinkElement | null;
+    const href = getCuratedFontsLinkUrl(extraFonts.length > 0 ? extraFonts : undefined);
+    if (!link) {
+      link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    } else {
+      link.href = href;
+    }
+    return () => {
+      const el = document.getElementById(linkId);
+      if (el) el.remove();
+    };
+  }, [brandData?.fonts.headingFont, brandData?.fonts.bodyFont]);
 
   // Update brandData helper
   const updateBrandData = useCallback((updates: Partial<BrandData>) => {
@@ -563,30 +593,18 @@ export default function EditDeckPage() {
                       {userPlan === 'free' && <LockedBadge />}
                     </label>
                     <div className="space-y-3">
-                      <div>
-                        <span className="text-xs text-zinc-400 block mb-1">Heading Font</span>
-                        <select
-                          value={brandData.fonts.headingFont}
-                          onChange={(e) => handleFontChange('headingFont', e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
-                        >
-                          {HEADING_FONTS.map((font) => (
-                            <option key={font} value={font}>{font}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <span className="text-xs text-zinc-400 block mb-1">Body Font</span>
-                        <select
-                          value={brandData.fonts.bodyFont}
-                          onChange={(e) => handleFontChange('bodyFont', e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
-                        >
-                          {BODY_FONTS.map((font) => (
-                            <option key={font} value={font}>{font}</option>
-                          ))}
-                        </select>
-                      </div>
+                      <FontSelector
+                        label="Heading Font"
+                        value={brandData.fonts.headingFont}
+                        onChange={(v) => handleFontChange('headingFont', v)}
+                        type="heading"
+                      />
+                      <FontSelector
+                        label="Body Font"
+                        value={brandData.fonts.bodyFont}
+                        onChange={(v) => handleFontChange('bodyFont', v)}
+                        type="body"
+                      />
                     </div>
                   </div>
                 </LockedFeature>

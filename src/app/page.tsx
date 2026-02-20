@@ -436,6 +436,82 @@ export default function Home() {
           </div>
         </AnimatedSection>
 
+        {/* Use Cases — "One Link, Endless Ways to Share" */}
+        <AnimatedSection as="section" className="card bg-ink text-cream p-8 md:p-16 mt-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12 md:mb-16">
+              <h2 className="reveal-item text-4xl md:text-6xl mb-4">One link. A hundred ways to use it.</h2>
+              <p className="reveal-item text-lg opacity-60 max-w-2xl mx-auto">Your deck lives at a single URL. Here&apos;s how nonprofits are putting it to work.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="reveal-item group rounded-2xl border border-cream/10 p-6 hover:bg-cream/5 transition-colors duration-200">
+                <div className="w-10 h-10 rounded-full bg-salmon/20 flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-salmon">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl serif text-cream mb-2">Text it to a donor</h3>
+                <p className="text-sm opacity-50 leading-relaxed">Copy the link and text it. They tap, swipe through your story, and understand your impact in 60 seconds flat.</p>
+              </div>
+
+              <div className="reveal-item group rounded-2xl border border-cream/10 p-6 hover:bg-cream/5 transition-colors duration-200">
+                <div className="w-10 h-10 rounded-full bg-periwinkle/20 flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-periwinkle">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl serif text-cream mb-2">Post on social media</h3>
+                <p className="text-sm opacity-50 leading-relaxed">Share to LinkedIn, Facebook, or X. The auto-generated preview image stops the scroll and drives clicks.</p>
+              </div>
+
+              <div className="reveal-item group rounded-2xl border border-cream/10 p-6 hover:bg-cream/5 transition-colors duration-200">
+                <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-sage">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl serif text-cream mb-2">Pull it up at events</h3>
+                <p className="text-sm opacity-50 leading-relaxed">At a gala, conference, or coffee meeting? Open it on your phone. Your entire pitch deck lives in your pocket.</p>
+              </div>
+
+              <div className="reveal-item group rounded-2xl border border-cream/10 p-6 hover:bg-cream/5 transition-colors duration-200">
+                <div className="w-10 h-10 rounded-full bg-salmon/20 flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-salmon">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl serif text-cream mb-2">Drop into emails</h3>
+                <p className="text-sm opacity-50 leading-relaxed">Add the link to fundraising emails and newsletters. More compelling than a PDF — and it works on every device.</p>
+              </div>
+
+              <div className="reveal-item group rounded-2xl border border-cream/10 p-6 hover:bg-cream/5 transition-colors duration-200">
+                <div className="w-10 h-10 rounded-full bg-periwinkle/20 flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-periwinkle">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+                    <path d="M7 8h4"/><path d="M7 12h2"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl serif text-cream mb-2">Print the URL anywhere</h3>
+                <p className="text-sm opacity-50 leading-relaxed">Add it to business cards, brochures, event signage, or thank-you letters. One short link tells your whole story.</p>
+              </div>
+
+              <div className="reveal-item group rounded-2xl border border-cream/10 p-6 hover:bg-cream/5 transition-colors duration-200">
+                <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-sage">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl serif text-cream mb-2">Attach to grant applications</h3>
+                <p className="text-sm opacity-50 leading-relaxed">Include as a visual supplement to grants and board reports. It shows professionalism and makes your case instantly.</p>
+              </div>
+            </div>
+          </div>
+        </AnimatedSection>
+
         {/* Testimonials */}
         <AnimatedSection as="section" className="card bg-periwinkle mt-4 p-8 md:p-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 divide-y md:divide-y-0 md:divide-x divide-ink/10">
