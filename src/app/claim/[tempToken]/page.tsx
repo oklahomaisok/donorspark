@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
-import { getDeckByTempToken } from '@/db/queries';
+import { getDeckByTempToken, getUserByClerkId, getUserDecks } from '@/db/queries';
 import { auth } from '@clerk/nextjs/server';
+import { getDeckLimit } from '@/lib/stripe';
+import type { PlanType } from '@/lib/stripe';
 import Link from 'next/link';
 import { CountdownTimer } from './countdown-timer';
 import { ClaimSignUp } from './claim-signup';
@@ -97,7 +99,115 @@ export default async function ClaimPage({
   const { userId: clerkId } = await auth();
 
   if (clerkId) {
-    // User is signed in, redirect to the claim API to process the claim
+    // Check deck limit before attempting to claim
+    const user = await getUserByClerkId(clerkId);
+    if (user) {
+      const userDecks = await getUserDecks(user.id);
+      const parentDeckCount = userDecks.filter((d) => !d.parentDeckId && d.status === 'complete').length;
+      const deckLimit = getDeckLimit((user.plan || 'free') as PlanType);
+
+      if (parentDeckCount >= deckLimit) {
+        // Show deck limit reached page with upgrade option
+        return (
+          <div className="min-h-screen bg-neutral-50 flex flex-col">
+            <header className="bg-white border-b border-neutral-200 py-4 px-6">
+              <div className="max-w-6xl mx-auto flex items-center justify-between">
+                <Link href="/">
+                  <img src="/donorsparklogo.png" alt="DonorSpark" className="h-8" />
+                </Link>
+              </div>
+            </header>
+
+            <main className="flex-1 flex flex-col lg:flex-row">
+              {/* Deck Preview */}
+              <div className="flex-1 bg-neutral-100 p-6 lg:p-12 flex items-center justify-center">
+                <div className="w-full max-w-2xl">
+                  {deck.ogImageUrl ? (
+                    <img
+                      src={deck.ogImageUrl}
+                      alt={deck.orgName}
+                      className="w-full h-auto rounded-xl shadow-2xl"
+                    />
+                  ) : (
+                    <div className="w-full aspect-[1200/630] flex items-center justify-center bg-gradient-to-br from-[#1D2350] to-[#2d3560] rounded-xl shadow-2xl">
+                      <div className="text-center text-white p-6">
+                        <h2 className="text-2xl font-bold mb-2">{deck.orgName}</h2>
+                        <p className="text-white/70 text-sm">Impact Deck</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Limit Reached Message */}
+              <div className="w-full lg:w-[480px] bg-white p-8 lg:p-12 flex flex-col justify-center">
+                <div className="max-w-sm mx-auto w-full">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-medium mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" x2="12" y1="8" y2="12"/>
+                      <line x1="12" x2="12.01" y1="16" y2="16"/>
+                    </svg>
+                    Deck limit reached
+                  </div>
+                  <h1 className="text-3xl font-bold text-neutral-800 mb-2">
+                    You&apos;ve Hit Your Free Limit
+                  </h1>
+                  <p className="text-neutral-500 mb-2">
+                    Your <strong>{deck.orgName}</strong> deck looks great, but your free plan only includes {deckLimit} deck{deckLimit === 1 ? '' : 's'}.
+                  </p>
+                  <p className="text-neutral-500 mb-6">
+                    Upgrade to save this deck and unlock more.
+                  </p>
+
+                  <Link
+                    href="/pricing"
+                    className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#C15A36] text-white rounded-lg font-semibold hover:bg-[#a84d2e] transition-colors mb-3"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="m6 9 6-6 6 6"/>
+                      <path d="M12 3v14"/>
+                      <path d="M3 21h18"/>
+                    </svg>
+                    View Upgrade Plans
+                  </Link>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg font-medium hover:bg-neutral-200 transition-colors"
+                  >
+                    Go to Dashboard
+                  </Link>
+
+                  <div className="mt-6 pt-6 border-t border-neutral-100 space-y-3">
+                    <p className="text-xs font-medium text-neutral-400 uppercase tracking-wide mb-3">Upgrade includes</p>
+                    <div className="flex items-center gap-3 text-sm text-neutral-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Up to 5 or 10 saved decks
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-neutral-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Remove DonorSpark branding
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-neutral-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C15A36" strokeWidth="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Full deck editor access
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        );
+      }
+    }
+
+    // User is signed in and within limits, redirect to the claim API to process
     redirect(`/api/claim?tempToken=${tempToken}`);
   }
 

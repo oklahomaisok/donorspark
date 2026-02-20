@@ -297,7 +297,7 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
           }
 
           // Skip filter arrays (defined once outside loop)
-          var skipWords = ['data:image/gif', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
+          var skipWords = ['data:image/gif', 'data:image/svg+xml', '1x1', 'pixel', 'spacer', 'blank', 'tracking', 'spinner'];
           var bannerWords = ['banner', 'alert', 'promo', 'hero', 'slide', 'carousel', 'background'];
           var badgeWords = ['badge', 'award', 'usnews', 'ranking', 'seal', 'best-', 'top-', 'accredit', 'certif', 'rated', 'winner'];
           var thirdPartyWords = ['superpath', 'hubspot', 'mailchimp', 'constant-contact', 'salesforce', 'zendesk', 'intercom', 'drift', 'crisp', 'tawk', 'livechat', 'freshdesk', 'helpscout', 'calendly', 'typeform', 'jotform', 'formstack', 'wufoo', 'cognito', 'auth0', 'okta', 'stripe', 'paypal', 'square', 'classy', 'bloomerang', 'blackbaud', 'neon', 'givebutter', 'donorbox', 'networkforgood', 'double-the-donation', 'facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'snapchat'];
@@ -338,7 +338,12 @@ export async function discoverLogo(url: string, domain: string): Promise<LogoRes
               }
 
               if (!src) {
-                src = img.src || img.dataset.src || img.dataset.lazySrc || img.getAttribute('data-lazy-src');
+                // Check lazy-load data attributes FIRST - img.src may be a placeholder
+                var lazySrc = img.dataset.src || img.dataset.lazySrc || img.getAttribute('data-lazy-src') || img.getAttribute('data-original');
+                var rawSrc = img.src || '';
+                // If src is a data URI placeholder (empty SVG used by WP lazy loaders), prefer lazy src
+                var isPlaceholder = rawSrc.indexOf('data:image/svg+xml') === 0 || rawSrc.indexOf('data:image/gif') === 0;
+                src = lazySrc && isPlaceholder ? lazySrc : (lazySrc || rawSrc);
               }
               if (!src) continue;
 
