@@ -19,6 +19,7 @@ export default function StartPage() {
   const [error, setError] = useState('');
   const [runId, setRunId] = useState('');
   const [publicAccessToken, setPublicAccessToken] = useState('');
+  const [tempToken, setTempToken] = useState('');
   const [result, setResult] = useState<{ deckUrl: string; ogImageUrl: string; orgName: string; slug: string } | null>(null);
   const [ogFailed, setOgFailed] = useState(false);
 
@@ -101,6 +102,7 @@ export default function StartPage() {
       const data = await res.json();
       setRunId(data.runId);
       setPublicAccessToken(data.publicAccessToken);
+      if (data.tempToken) setTempToken(data.tempToken);
       setPhase('generating');
     } catch (err) {
       setPhase('error');
@@ -126,6 +128,7 @@ export default function StartPage() {
     setError('');
     setRunId('');
     setPublicAccessToken('');
+    setTempToken('');
     setResult(null);
     setOgFailed(false);
   };
@@ -204,20 +207,32 @@ export default function StartPage() {
             </a>
 
             <div className="mt-6 space-y-3">
-              <a
-                href={`/decks/${result.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-ink text-cream px-6 py-3 rounded-full font-medium text-sm hover:bg-ink/90 transition-colors"
-              >
-                View Your Deck
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" />
-                </svg>
-              </a>
+              {tempToken ? (
+                <a
+                  href={`/claim/${tempToken}`}
+                  className="inline-flex items-center gap-2 bg-salmon text-white px-6 py-3 rounded-full font-medium text-sm hover:bg-salmon/90 transition-colors"
+                >
+                  Save Your Deck — Create Free Account
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                  </svg>
+                </a>
+              ) : (
+                <a
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 bg-ink text-cream px-6 py-3 rounded-full font-medium text-sm hover:bg-ink/90 transition-colors"
+                >
+                  View on Dashboard
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                  </svg>
+                </a>
+              )}
               <p className="text-sm text-ink/50">
-                Want to save and customize your deck?{' '}
-                <a href="/sign-up" className="text-salmon font-medium hover:underline">Create a free account</a>
+                <a href={`/decks/${result.slug}`} target="_blank" rel="noopener noreferrer" className="text-ink/60 hover:text-ink transition-colors underline">
+                  Preview your deck
+                </a>
+                {tempToken && <span> &middot; Expires in 24 hours</span>}
               </p>
               <button onClick={resetForm} className="text-xs uppercase tracking-widest text-ink/30 hover:text-ink/50 transition-opacity cursor-pointer">
                 Generate another deck

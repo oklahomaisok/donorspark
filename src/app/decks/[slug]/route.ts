@@ -75,7 +75,14 @@ export async function GET(
 
   // Serve iframe wrapper page
   const ogImageUrl = deck.ogImageUrl ? `${config.siteUrl}/api/og/${slug}` : '';
-  const faviconUrl = deck.orgUrl ? `https://www.google.com/s2/favicons?domain=${new URL(deck.orgUrl).hostname}&sz=32` : '';
+  let faviconUrl = '';
+  if (deck.orgUrl) {
+    try {
+      faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(deck.orgUrl).hostname}&sz=32`;
+    } catch {
+      // Manual decks may have empty orgUrl
+    }
+  }
   const wrapperHtml = generateIframeWrapper(deck.orgName, contentUrl, slug, ogImageUrl, faviconUrl);
 
   return new NextResponse(wrapperHtml, {
