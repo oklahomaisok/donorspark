@@ -3,16 +3,12 @@ import { tasks } from '@trigger.dev/sdk/v3';
 import { nanoid } from 'nanoid';
 import { auth } from '@clerk/nextjs/server';
 import { slugify } from '@/lib/slugify';
-import { createDeck, getUserByClerkId, createOrganization, getUserOrganizations, getUserDecks, countRecentDeckGenerations } from '@/db/queries';
-import { generateOrgSlug } from '@/lib/utils/slug';
+import { createDeck, getUserByClerkId, getUserDecks, countRecentDeckGenerations } from '@/db/queries';
 import { getDeckLimit, type PlanType } from '@/lib/stripe';
-import { isPrivateUrl } from '@/lib/sanitize-url';
 import { checkRateLimit } from '@/lib/rate-limit';
-import type { generateDeckTask } from '@/trigger/tasks/generate-deck';
+import type { generateManualDeckTask } from '@/trigger/tasks/generate-manual-deck';
 
 const RATE_LIMIT = 10;
-
-// Anonymous deck TTL: 24 hours
 const ANONYMOUS_TTL_MS = 24 * 60 * 60 * 1000;
 
 // Get geolocation from IP using ip-api.com (free, no key required)
@@ -28,7 +24,7 @@ async function getGeoFromIp(ip: string): Promise<{
   }
   try {
     const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,regionName,country,lat,lon`, {
-      signal: AbortSignal.timeout(2000), // 2s timeout
+      signal: AbortSignal.timeout(2000),
     });
     const data = await res.json();
     if (data.status === 'success') {
@@ -41,22 +37,20 @@ async function getGeoFromIp(ip: string): Promise<{
       };
     }
   } catch {
-    // Silently fail - geolocation is not critical
+    // Geolocation is not critical
   }
   return null;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // Get client IP for geolocation (and fallback rate limiting)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || req.headers.get('x-real-ip')
       || 'unknown';
 
-    // Check if user is authenticated first (for rate limiting)
+    // Check auth
     const { userId: clerkId } = await auth();
     let dbUserId: number | null = null;
-    let organizationId: number | null = null;
     let dbUser: Awaited<ReturnType<typeof getUserByClerkId>> | null = null;
 
     if (clerkId) {
@@ -64,9 +58,8 @@ export async function POST(req: NextRequest) {
       if (dbUser) {
         dbUserId = dbUser.id;
 
-        // Check deck limit for authenticated users
+        // Check deck limit
         const userDecks = await getUserDecks(dbUser.id);
-        // Count parent decks only (not personalized donor decks)
         const parentDeckCount = userDecks.filter(d => !d.parentDeckId && d.status === 'complete').length;
         const deckLimit = getDeckLimit(dbUser.plan as PlanType);
 
@@ -83,13 +76,11 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        // Check weekly generation limit (5 decks per 7 days)
+        // Check weekly limit
         const WEEKLY_GENERATION_LIMIT = 5;
         const recentGenerations = await countRecentDeckGenerations(dbUser.id, 7);
 
         if (recentGenerations >= WEEKLY_GENERATION_LIMIT) {
-          // Calculate when they can generate again
-          // Find the oldest deck in the 7-day window
           const oldestInWindow = userDecks
             .filter(d => !d.parentDeckId)
             .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
@@ -120,10 +111,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Rate limit by user ID (if authenticated) or IP (if anonymous)
-    // This prevents IP spoofing bypass for authenticated users
+    // Rate limit
     const rateLimitKey = dbUserId ? `user:${dbUserId}` : `ip:${ip}`;
-
     const { allowed, remaining, resetAt } = checkRateLimit(rateLimitKey, RATE_LIMIT);
 
     if (!allowed) {
@@ -143,81 +132,75 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let url = (body.url || '').trim();
-    const orgName = body.orgName || '';
+    const {
+      orgName,
+      description,
+      beneficiaries,
+      sector,
+      location,
+      yearFounded,
+      programs,
+      metrics,
+      contactEmail,
+      donateUrl,
+      logoUrl,
+      primaryColor,
+      accentColor,
+    } = body;
 
-    if (!url) {
-      return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+    // Validate required fields
+    if (!orgName?.trim()) {
+      return NextResponse.json({ error: 'Organization name is required' }, { status: 400 });
     }
-
-    // Normalize URL: add https:// if no protocol specified
-    if (!url.match(/^https?:\/\//i)) {
-      url = `https://${url}`;
+    if (!description?.trim()) {
+      return NextResponse.json({ error: 'Description is required' }, { status: 400 });
     }
-
-    // Validate URL format
-    try {
-      new URL(url);
-    } catch {
-      return NextResponse.json({ error: 'Invalid URL format. Please enter a valid website URL.' }, { status: 400 });
+    if (!beneficiaries?.trim()) {
+      return NextResponse.json({ error: 'Beneficiaries information is required' }, { status: 400 });
     }
-
-    // Block private/internal URLs to prevent SSRF
-    if (isPrivateUrl(url)) {
-      return NextResponse.json({ error: 'Invalid URL. Please enter a public website URL.' }, { status: 400 });
-    }
-
-    // Continue with user/org setup if authenticated
-    if (dbUser) {
-      // Check if user already has an org for this website
-      const existingOrgs = await getUserOrganizations(dbUser.id);
-      const existingOrg = existingOrgs.find(
-        (org) => org.websiteUrl === url || org.name === orgName
-      );
-
-      if (existingOrg) {
-        organizationId = existingOrg.id;
-      } else {
-        // Create new organization
-        const orgSlug = await generateOrgSlug(orgName || url);
-        const newOrg = await createOrganization({
-          userId: dbUser.id,
-          name: orgName || new URL(url).hostname.replace('www.', ''),
-          slug: orgSlug,
-          websiteUrl: url,
-        });
-        organizationId = newOrg.id;
-      }
+    if (!sector?.trim()) {
+      return NextResponse.json({ error: 'Sector is required' }, { status: 400 });
     }
 
     // Generate unique slug
-    const baseSlug = slugify(orgName || url.replace(/^https?:\/\//, '').split('/')[0]);
+    const baseSlug = slugify(orgName.trim());
     const slug = `${baseSlug}-${nanoid(6)}`;
 
-    // Generate temp token for anonymous claim flow (only if not logged in)
+    // Generate temp token for anonymous claim
     const tempToken = dbUserId ? undefined : nanoid(32);
     const expiresAt = dbUserId ? undefined : new Date(Date.now() + ANONYMOUS_TTL_MS);
 
-    // Get geolocation (non-blocking, don't wait too long)
+    // Get geolocation
     const geo = await getGeoFromIp(ip);
 
-    // Trigger the generation task
-    const handle = await tasks.trigger<typeof generateDeckTask>('generate-deck', {
-      url,
-      orgName,
+    // Trigger the manual generation task
+    const handle = await tasks.trigger<typeof generateManualDeckTask>('generate-manual-deck', {
       deckSlug: slug,
+      orgName: orgName.trim(),
+      description: description.trim(),
+      beneficiaries: beneficiaries.trim(),
+      sector: sector.trim(),
+      location: location?.trim() || undefined,
+      yearFounded: yearFounded ? Number(yearFounded) : undefined,
+      programs: programs?.filter((p: string) => p.trim()) || undefined,
+      metrics: metrics?.filter((m: { value: string; label: string }) => m.value?.trim() && m.label?.trim()) || undefined,
+      contactEmail: contactEmail?.trim() || undefined,
+      donateUrl: donateUrl?.trim() || undefined,
+      logoUrl: logoUrl || undefined,
+      primaryColor: primaryColor || undefined,
+      accentColor: accentColor || undefined,
     });
 
-    // Create DB record with location data
+    // Create DB record
     await createDeck({
       userId: dbUserId,
-      organizationId,
       slug,
-      orgName: orgName || url,
-      orgUrl: url,
+      orgName: orgName.trim(),
+      orgUrl: '',
       triggerRunId: handle.id,
       tempToken,
       expiresAt,
+      source: 'manual',
       city: geo?.city,
       region: geo?.region,
       country: geo?.country,
@@ -225,13 +208,13 @@ export async function POST(req: NextRequest) {
       lng: geo?.lng,
     });
 
-    // Build response with cookie
+    // Build response
     const response = NextResponse.json(
       {
         slug,
         runId: handle.id,
         publicAccessToken: handle.publicAccessToken,
-        tempToken, // Return token for client-side use
+        tempToken,
       },
       {
         headers: {
@@ -242,13 +225,12 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Set httpOnly cookie for temp token (only for anonymous users)
     if (tempToken) {
       response.cookies.set('ds_temp_token', tempToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 48 * 60 * 60, // 48 hours in seconds
+        maxAge: 48 * 60 * 60,
         path: '/',
       });
     }
@@ -256,7 +238,7 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to start generation';
-    console.error('Generate error:', message);
+    console.error('Generate-manual error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

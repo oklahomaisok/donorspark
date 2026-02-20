@@ -1,0 +1,1 @@
+ALTER TABLE "decks" ADD COLUMN "source" text DEFAULT 'website' NOT NULL;

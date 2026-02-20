@@ -85,6 +85,8 @@ export const decks = pgTable('decks', {
   triggerRunId: text('trigger_run_id'),
   brandData: jsonb('brand_data'),
   errorMessage: text('error_message'),
+  // Source: 'website' (URL-based) or 'manual' (form-based)
+  source: text('source').default('website').notNull(),
   // Analytics
   viewCount: integer('view_count').default(0).notNull(),
   clickCount: integer('click_count').default(0).notNull(),

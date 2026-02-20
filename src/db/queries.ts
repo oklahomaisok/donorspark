@@ -190,6 +190,7 @@ export async function createDeck(data: {
   donorEmail?: string;
   donorAmount?: string;
   parentDeckId?: number;
+  source?: 'website' | 'manual';
 }) {
   const [deck] = await db.insert(decks).values({
     userId: data.userId ?? null,
@@ -211,6 +212,7 @@ export async function createDeck(data: {
     donorEmail: data.donorEmail,
     donorAmount: data.donorAmount,
     parentDeckId: data.parentDeckId,
+    source: data.source ?? 'website',
   }).returning();
   return deck;
 }

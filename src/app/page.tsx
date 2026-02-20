@@ -271,6 +271,9 @@ export default function Home() {
                       </svg>
                       Takes ~90 seconds
                     </p>
+                    <a href="/start" className="text-sm text-ink/40 hover:text-salmon transition-colors mt-1">
+                      Don&apos;t have a website? Start here &rarr;
+                    </a>
                   </div>
                 </>
               )}

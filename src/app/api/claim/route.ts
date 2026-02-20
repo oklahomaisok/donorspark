@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
       userId: user.id,
       name: deck.orgName,
       slug: orgSlug,
-      websiteUrl: deck.orgUrl,
+      websiteUrl: deck.orgUrl || undefined,
       brandData: deck.brandData as Record<string, unknown> | undefined,
     });
 
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       name: deck.orgName,
       slug: orgSlug,
-      websiteUrl: deck.orgUrl,
+      websiteUrl: deck.orgUrl || undefined,
       brandData: deck.brandData as Record<string, unknown> | undefined,
     });
 
