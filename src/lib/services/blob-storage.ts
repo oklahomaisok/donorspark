@@ -11,6 +11,17 @@ export async function uploadDeckHtml(slug: string, html: string): Promise<string
   return blob.url;
 }
 
+export async function uploadWebsiteHtml(orgSlug: string, html: string): Promise<string> {
+  const blob = await put(`sites/${orgSlug}/index.html`, html, {
+    access: 'public',
+    contentType: 'text/html; charset=utf-8',
+    cacheControlMaxAge: 3600,
+    addRandomSuffix: false,
+    allowOverwrite: true,
+  });
+  return blob.url;
+}
+
 export async function uploadOgImage(slug: string, pngBuffer: Buffer): Promise<string> {
   const blob = await put(`decks/${slug}/og-image.png`, pngBuffer, {
     access: 'public',

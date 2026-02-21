@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Save, Loader2, Plus, X, Eye, EyeOff, GripVertical, Upload,
-  Palette, Type, Image as ImageIcon, Layers, ChevronRight, ExternalLink, Lock
+  Palette, Type, Image as ImageIcon, Layers, ArrowLeft, ExternalLink, Lock
 } from 'lucide-react';
 import { SlideImageUploader } from '@/components/editor/slide-image-uploader';
 import { LockedFeature, LockedBadge } from '@/components/editor/locked-feature';
@@ -158,9 +158,18 @@ export default function EditDeckPage() {
   }, []);
 
   // Handle color changes
-  const handleColorChange = useCallback((colorType: 'primary' | 'secondary' | 'accent' | 'text', value: string) => {
+  const handleColorChange = useCallback((colorType: 'primary' | 'secondary' | 'accent' | 'text' | 'headerBg', value: string) => {
     setBrandData((prev) => {
       if (!prev) return prev;
+      if (colorType === 'headerBg') {
+        // Calculate headerTextDark from luminance
+        const hex = value.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return { ...prev, headerBgColor: value, headerTextDark: luminance > 0.5 };
+      }
       return { ...prev, colors: { ...prev.colors, [colorType]: value } };
     });
     setHasUnsavedChanges(true);
@@ -490,14 +499,12 @@ export default function EditDeckPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200"
           >
-            <div className="w-7 h-7 rounded bg-[#C15A36] text-white flex items-center justify-center font-bold text-sm">
-              D
-            </div>
-            <span className="text-sm font-medium text-zinc-300">DonorSpark</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Dashboard</span>
           </button>
-          <ChevronRight className="w-4 h-4 text-zinc-600" />
+          <span className="text-zinc-700">/</span>
           <span className="text-sm text-zinc-300">{orgName}</span>
         </div>
 
@@ -578,6 +585,7 @@ export default function EditDeckPage() {
                     </label>
                     <div className="space-y-3">
                       <ColorInput label="Background" value={brandData.colors.primary} onChange={(v) => handleColorChange('primary', v)} />
+                      <ColorInput label="Header" value={brandData.headerBgColor || brandData.colors.primary} onChange={(v) => handleColorChange('headerBg', v)} />
                       <ColorInput label="Text" value={brandData.colors.text || '#ffffff'} onChange={(v) => handleColorChange('text', v)} />
                       <ColorInput label="Accent" value={brandData.colors.accent} onChange={(v) => handleColorChange('accent', v)} />
                       <ColorInput label="Button" value={brandData.colors.secondary} onChange={(v) => handleColorChange('secondary', v)} />
@@ -748,10 +756,10 @@ export default function EditDeckPage() {
               className="relative w-[320px] h-[640px] bg-zinc-950 rounded-[2.5rem] overflow-hidden ring-1 ring-white/10"
               style={{ boxShadow: '0 0 0 8px #18181b, 0 20px 50px -10px rgba(0,0,0,0.5)' }}
             >
-              {/* Dynamic Notch - Semi-transparent to show header behind */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-zinc-900/70 backdrop-blur-sm rounded-b-2xl z-50 flex items-center justify-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-zinc-800/80" />
-                <div className="w-8 h-1.5 rounded-full bg-zinc-800/40" />
+              {/* Dynamic Island */}
+              <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-20 h-5 bg-black rounded-full z-50 flex items-center justify-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-zinc-800/60" />
+                <div className="w-6 h-1.5 rounded-full bg-zinc-800/30" />
               </div>
 
               {/* Iframe */}

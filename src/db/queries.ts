@@ -166,6 +166,20 @@ export async function updateOrganization(id: number, data: Partial<{
     .where(eq(organizations.id, id));
 }
 
+export async function updateOrganizationWebsite(
+  orgId: number,
+  websiteHtmlUrl: string | null,
+  websiteData?: Record<string, unknown> | null
+) {
+  const data: Record<string, unknown> = { websiteHtmlUrl, updatedAt: new Date() };
+  if (websiteData !== undefined) {
+    data.websiteData = websiteData;
+  }
+  await db.update(organizations)
+    .set(data)
+    .where(eq(organizations.id, orgId));
+}
+
 // ============================================================================
 // Deck queries
 // ============================================================================

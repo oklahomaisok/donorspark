@@ -174,6 +174,20 @@ export interface Testimonial {
   portrait?: string;
 }
 
+export interface WebsiteData {
+  heroHeadline?: string;
+  heroSubheadline?: string;
+  aboutText?: string;
+  ctaHeadline?: string;
+  ctaButtonText?: string;
+  ctaButtonUrl?: string;
+  showTestimonials?: boolean;
+  showPrograms?: boolean;
+  showMetrics?: boolean;
+  showChallenge?: boolean;
+  footerText?: string;
+}
+
 export interface PipelineContext {
   jobId: string;
   url: string;

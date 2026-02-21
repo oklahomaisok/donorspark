@@ -10,15 +10,20 @@ interface PrimaryDeckCardProps {
   deck: Deck;
   organization: Organization;
   siteUrl: string;
+  userPlan?: string;
 }
 
-export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCardProps) {
+export function PrimaryDeckCard({ deck, organization, siteUrl, userPlan = 'free' }: PrimaryDeckCardProps) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [generatingWebsite, setGeneratingWebsite] = useState(false);
 
   const deckUrl = `${siteUrl}/s/${organization.slug}`;
+  const websiteUrl = `${siteUrl}/s/${organization.slug}/site`;
+  const hasWebsite = !!organization.websiteHtmlUrl;
+  const isPaidUser = userPlan !== 'free';
 
   // Generate QR code on mount
   useEffect(() => {
@@ -44,6 +49,27 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
     link.download = `${organization.slug}-qr-code.png`;
     link.href = qrCodeUrl;
     link.click();
+  };
+
+  const handleGenerateWebsite = async () => {
+    if (!isPaidUser) {
+      router.push('/pricing');
+      return;
+    }
+    setGeneratingWebsite(true);
+    try {
+      const res = await fetch('/api/website/generate', { method: 'POST' });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to generate website');
+      }
+    } catch {
+      alert('Failed to generate website');
+    } finally {
+      setGeneratingWebsite(false);
+    }
   };
 
   // Pre-populated share messages
@@ -142,6 +168,32 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
               </button>
             </div>
           </div>
+
+          {/* Website URL (if exists) */}
+          {hasWebsite && (
+            <div className="mb-4">
+              <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2 block">
+                Website Link
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 font-mono text-sm text-neutral-600 truncate">
+                  {websiteUrl.replace('https://', '')}
+                </div>
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(websiteUrl);
+                  }}
+                  className="px-4 py-3 rounded-lg font-medium transition-all bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                  title="Copy website link"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Share & QR Row */}
           <div className="mb-6">
@@ -250,7 +302,7 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
 
           {/* Action Buttons */}
           <div className="mt-auto space-y-2">
-            {/* Edit Deck Button - All users can access editor (free users have limited features inside) */}
+            {/* Edit Deck Button */}
             <button
               onClick={() => router.push(`/dashboard/decks/${deck.id}/edit`)}
               className="w-full py-3 text-center rounded-lg font-medium transition-colors flex items-center justify-center gap-2 bg-neutral-800 text-white hover:bg-neutral-700"
@@ -261,6 +313,58 @@ export function PrimaryDeckCard({ deck, organization, siteUrl }: PrimaryDeckCard
               </svg>
               Edit Deck
             </button>
+
+            {/* Website Button */}
+            {hasWebsite ? (
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 text-center rounded-lg font-medium transition-colors flex items-center justify-center gap-2 border border-neutral-200 text-neutral-700 hover:bg-neutral-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M2 12h20"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                  View Site
+                </a>
+                <button
+                  onClick={() => router.push(`/dashboard/website/${organization.id}/edit`)}
+                  className="py-3 text-center rounded-lg font-medium transition-colors flex items-center justify-center gap-2 border border-neutral-200 text-neutral-700 hover:bg-neutral-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    <path d="m15 5 4 4"/>
+                  </svg>
+                  Edit Site
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleGenerateWebsite}
+                disabled={generatingWebsite}
+                className={`w-full py-3 text-center rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                  isPaidUser
+                    ? 'border border-[#C15A36] text-[#C15A36] hover:bg-[#C15A36]/5 disabled:opacity-50'
+                    : 'border border-neutral-200 text-neutral-500 hover:bg-neutral-50'
+                }`}
+              >
+                {!isPaidUser && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                )}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M2 12h20"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                {generatingWebsite ? 'Generating...' : isPaidUser ? 'Generate Website' : 'Generate Website (Upgrade)'}
+              </button>
+            )}
 
             {/* View Deck Button */}
             <a

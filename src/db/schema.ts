@@ -59,6 +59,8 @@ export const organizations = pgTable('organizations', {
   websiteUrl: text('website_url'),
   logoUrl: text('logo_url'),
   brandData: jsonb('brand_data'), // cached brand extraction
+  websiteHtmlUrl: text('website_html_url'),
+  websiteData: jsonb('website_data'), // website-specific overrides (headlines, about text, CTA)
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
