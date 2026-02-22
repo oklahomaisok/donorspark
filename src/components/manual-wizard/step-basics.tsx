@@ -57,7 +57,7 @@ export function StepBasics({ data, onChange }: StepBasicsProps) {
             type="text"
             value={data.orgName}
             onChange={(e) => update('orgName', e.target.value)}
-            placeholder="e.g. Permian Basin Boys & Girls Club"
+            placeholder="e.g. Sunrise Community Foundation"
             className="w-full bg-cream border border-ink/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-ink/20 focus:border-transparent transition-shadow"
           />
         </div>
@@ -69,7 +69,7 @@ export function StepBasics({ data, onChange }: StepBasicsProps) {
           <textarea
             value={data.description}
             onChange={(e) => update('description', e.target.value)}
-            placeholder="e.g. We provide after-school programs, mentoring, and academic support to kids in underserved communities across the Permian Basin region..."
+            placeholder="e.g. We provide job training, financial literacy workshops, and mentoring to families transitioning out of homelessness in the Greater Denver area..."
             rows={4}
             className="w-full bg-cream border border-ink/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-ink/20 focus:border-transparent transition-shadow resize-none"
           />
@@ -83,7 +83,7 @@ export function StepBasics({ data, onChange }: StepBasicsProps) {
             type="text"
             value={data.beneficiaries}
             onChange={(e) => update('beneficiaries', e.target.value)}
-            placeholder="e.g. Youth ages 6-18 in the Permian Basin region"
+            placeholder="e.g. Families and individuals experiencing homelessness in Denver, CO"
             className="w-full bg-cream border border-ink/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-ink/20 focus:border-transparent transition-shadow"
           />
         </div>
