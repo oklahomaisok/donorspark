@@ -186,6 +186,35 @@ export interface WebsiteData {
   showMetrics?: boolean;
   showChallenge?: boolean;
   footerText?: string;
+
+  // Images
+  heroImage?: string;
+  aboutImage?: string;
+
+  // About section
+  aboutTitle?: string;
+  coreValues?: string[];
+
+  // Challenge section
+  challengeHeadline?: string;
+  challengeDescription?: string;
+  solutionText?: string;
+
+  // Programs section
+  programsTitle?: string;
+  programs?: string[];
+
+  // Metrics section
+  metricsTitle?: string;
+  metrics?: { value: string; label: string }[];
+
+  // Testimonials section
+  testimonialsTitle?: string;
+  testimonials?: { quote: string; author: string; role: string; portrait?: string }[];
+
+  // CTA extras
+  ctaSubtext?: string;
+  contactEmail?: string;
 }
 
 export interface PipelineContext {

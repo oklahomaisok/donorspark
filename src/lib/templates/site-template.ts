@@ -36,13 +36,26 @@ export function generateSiteHtml(
   const heroHeadline = websiteData?.heroHeadline || donorHeadline;
   const heroSubheadline = websiteData?.heroSubheadline || heroHook;
   const aboutText = websiteData?.aboutText || mission;
+  const aboutTitle = websiteData?.aboutTitle || 'Our Mission';
+  const effectiveCoreValues = websiteData?.coreValues || coreValues;
+  const challengeHeadline = websiteData?.challengeHeadline || need.headline;
+  const challengeDescription = websiteData?.challengeDescription || need.description;
+  const solutionText = websiteData?.solutionText || solution;
+  const programsTitle = websiteData?.programsTitle || 'What We Offer';
+  const effectivePrograms = websiteData?.programs || programs;
+  const metricsTitle = websiteData?.metricsTitle || 'By The Numbers';
+  const effectiveMetrics = websiteData?.metrics || metrics;
+  const testimonialsTitle = websiteData?.testimonialsTitle || 'Success Stories';
+  const effectiveTestimonials = websiteData?.testimonials || testimonials;
   const ctaHeadline = websiteData?.ctaHeadline || brandCtaHeadline;
   const ctaButtonText = websiteData?.ctaButtonText || brandCtaButtonText;
   const ctaButtonUrl = sanitizeUrl(websiteData?.ctaButtonUrl) || sanitizeUrl(finalDonateUrl) || sanitizeUrl(originalUrl) || '#';
+  const ctaSubtext = websiteData?.ctaSubtext || 'Your support helps us continue making a difference in our community.';
+  const effectiveContactEmail = websiteData?.contactEmail || contactEmail;
   const footerText = websiteData?.footerText || '';
-  const showTestimonials = websiteData?.showTestimonials !== false && testimonials.length > 0;
-  const showPrograms = websiteData?.showPrograms !== false && programs.length > 0;
-  const showMetrics = websiteData?.showMetrics !== false && hasValidMetrics && metrics.length > 0;
+  const showTestimonials = websiteData?.showTestimonials !== false && effectiveTestimonials.length > 0;
+  const showPrograms = websiteData?.showPrograms !== false && effectivePrograms.length > 0;
+  const showMetrics = websiteData?.showMetrics !== false && (hasValidMetrics || (websiteData?.metrics && websiteData.metrics.length > 0)) && effectiveMetrics.length > 0;
   const showChallenge = websiteData?.showChallenge !== false;
 
   const primary = colors.primary || '#1D2350';
@@ -54,7 +67,7 @@ export function generateSiteHtml(
   const useTextLogo = !logoUrl || logoSource === 'none';
   const effectiveLogoUrl = useTextLogo ? '' : sanitizeUrl(logoUrl);
 
-  const heroImg = images?.hero || `${config.imageBaseUrl}/community-hero-leader.jpg`;
+  const heroImg = websiteData?.heroImage || images?.hero || `${config.imageBaseUrl}/community-hero-leader.jpg`;
   const siteUrl = config.siteUrl;
 
   // Button text color based on luminance of secondary
@@ -79,7 +92,7 @@ export function generateSiteHtml(
   ).join('\n');
 
   // Core values
-  const valuesHtml = coreValues.slice(0, 4).map(v =>
+  const valuesHtml = effectiveCoreValues.slice(0, 4).map(v =>
     `<div class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-neutral-100">
       <div class="w-10 h-10 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center flex-shrink-0">
         <svg class="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -89,7 +102,7 @@ export function generateSiteHtml(
   ).join('\n');
 
   // Programs
-  const programsHtml = programs.slice(0, 6).map((p, i) =>
+  const programsHtml = effectivePrograms.slice(0, 6).map((p, i) =>
     `<div class="animate-on-scroll bg-white rounded-xl shadow-sm border border-neutral-100 p-6 hover:shadow-md transition-shadow" style="animation-delay: ${i * 0.1}s">
       <div class="w-12 h-12 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center mb-4">
         <span class="text-lg font-bold text-[var(--primary)]">${i + 1}</span>
@@ -99,7 +112,7 @@ export function generateSiteHtml(
   ).join('\n');
 
   // Metrics
-  const metricsHtml = metrics.slice(0, 5).map((m, i) =>
+  const metricsHtml = effectiveMetrics.slice(0, 5).map((m, i) =>
     `<div class="animate-on-scroll text-center" style="animation-delay: ${i * 0.15}s">
       <div class="text-4xl md:text-5xl font-black text-white mb-2">
         <span class="count-up" data-target="${escAttr(m.value)}">${esc(m.value)}</span>
@@ -109,7 +122,7 @@ export function generateSiteHtml(
   ).join('\n');
 
   // Testimonials
-  const testimonialsHtml = testimonials.slice(0, 3).map((t, i) =>
+  const testimonialsHtml = effectiveTestimonials.slice(0, 3).map((t, i) =>
     `<div class="animate-on-scroll bg-white rounded-2xl shadow-sm border border-neutral-100 p-8" style="animation-delay: ${i * 0.15}s">
       <svg class="w-8 h-8 text-[var(--accent)] mb-4 opacity-60" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
       <p class="text-neutral-600 mb-6 leading-relaxed italic">"${esc(t.quote)}"</p>
@@ -253,16 +266,16 @@ export function generateSiteHtml(
         <div>
           <div class="animate-on-scroll text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-4">About Us</div>
           <h2 class="animate-on-scroll font-display text-3xl md:text-4xl font-bold text-neutral-900 mb-6 leading-tight">
-            Our Mission
+            ${esc(aboutTitle)}
           </h2>
           <p class="animate-on-scroll text-neutral-600 leading-relaxed text-lg mb-8">
             ${esc(aboutText)}
           </p>
-          ${coreValues.length > 0 ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${valuesHtml}</div>` : ''}
+          ${effectiveCoreValues.length > 0 ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${valuesHtml}</div>` : ''}
         </div>
         <div class="animate-on-scroll relative">
           <div class="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl">
-            <img src="${brandData.customImages?.mission || images?.action || `${config.imageBaseUrl}/community-action-neighbors.jpg`}" alt="Our mission" class="w-full h-full object-cover"/>
+            <img src="${websiteData?.aboutImage || brandData.customImages?.mission || images?.action || `${config.imageBaseUrl}/community-action-neighbors.jpg`}" alt="Our mission" class="w-full h-full object-cover"/>
           </div>
           ${yearFounded ? `<div class="absolute -bottom-4 -left-4 bg-[var(--primary)] text-white px-5 py-3 rounded-xl shadow-lg">
             <div class="text-2xl font-bold font-display">${new Date().getFullYear() - yearFounded}+</div>
@@ -288,15 +301,15 @@ export function generateSiteHtml(
           <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center mb-5">
             <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
           </div>
-          <h3 class="text-xl font-bold text-neutral-900 mb-3 font-display">${esc(need.headline)}</h3>
-          <p class="text-neutral-600 leading-relaxed">${esc(need.description)}</p>
+          <h3 class="text-xl font-bold text-neutral-900 mb-3 font-display">${esc(challengeHeadline)}</h3>
+          <p class="text-neutral-600 leading-relaxed">${esc(challengeDescription)}</p>
         </div>
         <div class="animate-on-scroll bg-[var(--primary)] rounded-2xl p-8 text-white" style="animation-delay: 0.15s">
           <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
           </div>
           <h3 class="text-xl font-bold mb-3 font-display">Our Solution</h3>
-          <p class="text-white/80 leading-relaxed">${esc(solution)}</p>
+          <p class="text-white/80 leading-relaxed">${esc(solutionText)}</p>
         </div>
       </div>
     </div>
@@ -309,7 +322,7 @@ export function generateSiteHtml(
       <div class="text-center mb-16">
         <div class="animate-on-scroll text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-4">Programs</div>
         <h2 class="animate-on-scroll font-display text-3xl md:text-4xl font-bold text-neutral-900 leading-tight">
-          What We Offer
+          ${esc(programsTitle)}
         </h2>
       </div>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -328,10 +341,10 @@ export function generateSiteHtml(
       <div class="text-center mb-16">
         <div class="animate-on-scroll text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-4">Impact</div>
         <h2 class="animate-on-scroll font-display text-3xl md:text-4xl font-bold text-white leading-tight">
-          By The Numbers
+          ${esc(metricsTitle)}
         </h2>
       </div>
-      <div class="grid grid-cols-2 ${metrics.length >= 4 ? 'lg:grid-cols-4' : metrics.length === 3 ? 'lg:grid-cols-3' : ''} gap-8 md:gap-12 max-w-4xl mx-auto">
+      <div class="grid grid-cols-2 ${effectiveMetrics.length >= 4 ? 'lg:grid-cols-4' : effectiveMetrics.length === 3 ? 'lg:grid-cols-3' : ''} gap-8 md:gap-12 max-w-4xl mx-auto">
         ${metricsHtml}
       </div>
     </div>
@@ -344,10 +357,10 @@ export function generateSiteHtml(
       <div class="text-center mb-16">
         <div class="animate-on-scroll text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-4">Testimonials</div>
         <h2 class="animate-on-scroll font-display text-3xl md:text-4xl font-bold text-neutral-900 leading-tight">
-          Success Stories
+          ${esc(testimonialsTitle)}
         </h2>
       </div>
-      <div class="grid md:grid-cols-${Math.min(testimonials.length, 3)} gap-8 max-w-5xl mx-auto">
+      <div class="grid md:grid-cols-${Math.min(effectiveTestimonials.length, 3)} gap-8 max-w-5xl mx-auto">
         ${testimonialsHtml}
       </div>
     </div>
@@ -363,15 +376,15 @@ export function generateSiteHtml(
         ${esc(ctaHeadline)}
       </h2>
       <p class="animate-on-scroll text-lg text-white/70 mb-10 max-w-xl mx-auto">
-        Your support helps us continue making a difference in our community.
+        ${esc(ctaSubtext)}
       </p>
       <div class="animate-on-scroll flex flex-wrap justify-center gap-4">
         <a href="${ctaButtonUrl}" target="_blank" rel="noopener noreferrer" class="px-10 py-4 rounded-full text-lg font-semibold transition-all hover:opacity-90 hover:scale-105 shadow-lg" style="background-color: var(--secondary); color: ${btnTextColor};">
           ${esc(ctaButtonText)}
         </a>
       </div>
-      ${contactEmail ? `<p class="animate-on-scroll mt-8 text-white/50 text-sm">
-        Or reach us at <a href="mailto:${escAttr(contactEmail)}" class="text-white/70 underline hover:text-white transition-colors">${esc(contactEmail)}</a>
+      ${effectiveContactEmail ? `<p class="animate-on-scroll mt-8 text-white/50 text-sm">
+        Or reach us at <a href="mailto:${escAttr(effectiveContactEmail)}" class="text-white/70 underline hover:text-white transition-colors">${esc(effectiveContactEmail)}</a>
       </p>` : ''}
     </div>
   </section>
