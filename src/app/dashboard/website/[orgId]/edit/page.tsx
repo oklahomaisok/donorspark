@@ -63,13 +63,34 @@ export default function WebsiteEditorPage() {
     setHasChanges(true);
   }, []);
 
-  // Generate preview HTML via srcDoc
+  // Generate preview HTML
   const previewHtml = useMemo(() => {
     if (!brandData || !orgSlug) return '';
     return generateSiteHtml(orgSlug, brandData, websiteData);
   }, [brandData, websiteData, orgSlug]);
 
-  // Scroll iframe to section when expanded
+  // Write content to iframe via contentDocument (preserves scroll position)
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe || !previewHtml) return;
+    const doc = iframe.contentDocument;
+    if (!doc) return;
+
+    const scrollTop = doc.documentElement?.scrollTop || 0;
+
+    doc.open();
+    doc.write(previewHtml);
+    doc.close();
+
+    // Restore scroll position after content write
+    requestAnimationFrame(() => {
+      if (doc.documentElement) {
+        doc.documentElement.scrollTop = scrollTop;
+      }
+    });
+  }, [previewHtml]);
+
+  // Scroll iframe to section when expanded section changes
   useEffect(() => {
     if (!expandedSection) return;
     const timer = setTimeout(() => {
@@ -86,7 +107,7 @@ export default function WebsiteEditorPage() {
           el?.scrollIntoView({ behavior: 'smooth' });
         }
       }
-    }, 150);
+    }, 200);
     return () => clearTimeout(timer);
   }, [expandedSection]);
 
@@ -419,10 +440,8 @@ export default function WebsiteEditorPage() {
           <div className="h-full bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
             <iframe
               ref={iframeRef}
-              srcDoc={previewHtml}
               className="w-full h-full"
               title="Website Preview"
-              sandbox="allow-scripts allow-same-origin"
             />
           </div>
         </div>
